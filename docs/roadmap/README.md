@@ -11,7 +11,7 @@ This directory contains Helling's implementation roadmap and planning documents.
 
 **Contains:**
 
-- Architecture Decisions (ADRs 001-043)
+- Architecture Decisions (ADRs 001-044)
 - Automation & Tooling Index (28 tools)
 - Version gates and feature lists for v0.1-v1.0
 - Post-v1 feature ideas
@@ -65,6 +65,22 @@ This directory contains Helling's implementation roadmap and planning documents.
 - Exception policy and verification checklist
 
 **Use this when:** You need to prove parity coverage before marking Phase 0 complete.
+
+---
+
+### 🗺️ [migration-manifest-2026-04-20.md](./migration-manifest-2026-04-20.md) - Pivot Execution Manifest
+
+**Purpose:** Execute the Huma + hey-api migration and audit-drift cleanup in phased order
+**Audience:** Developers driving migration delivery
+
+**Contains:**
+
+- Phase-by-phase checklist (freeze, spike, migration, tooling, drift cleanup)
+- ADR linkage for 043-048
+- Acceptance criteria per phase
+- Backlog of pending documentation and tooling tasks
+
+**Use this when:** You are executing the migration top-to-bottom and need a single tracking artifact.
 
 ---
 

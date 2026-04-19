@@ -49,6 +49,7 @@
 | 041 | URI major versioning for Helling-owned API surfaces           | Accepted              |
 | 042 | Security scanning stack consolidation                         | Accepted              |
 | 043 | Huma with humago for Helling-owned HTTP layer                 | Accepted              |
+| 044 | hey-api/openapi-ts for WebUI code generation                  | Proposed              |
 
 ---
 
@@ -56,36 +57,36 @@
 
 All automation surfaces, with version assignments. See docs/design/full-automation-pipeline.md for details on each.
 
-| #   | Tool                                | What It Automates                                   | Version      |
-| --- | ----------------------------------- | --------------------------------------------------- | ------------ |
-| 1   | oapi-codegen (strict-server)        | Go server interface + router from ~60-endpoint spec | v0.1.0-alpha |
-| 2   | oapi-codegen (client)               | Go typed HTTP client for CLI                        | v0.1.0-alpha |
-| 3   | orval                               | TS React Query hooks + types from Helling spec      | v0.1.0-alpha |
-| 4   | Makefile generate + check-generated | Pipeline glue, CI gate                              | v0.1.0-alpha |
-| 5   | vacuum / @redocly/cli               | OpenAPI spec linting                                | v0.1.0-alpha |
-| 6   | nilaway + exhaustive                | Go static analysis                                  | v0.1.0-alpha |
-| 7   | git-cliff                           | CHANGELOG from conventional commits                 | v0.1.0-alpha |
-| 8   | .devcontainer                       | Reproducible dev environment                        | v0.1.0-alpha |
-| 9   | Extended pre-commit hooks           | Spec lint, staleness, SPDX, tidy, commit lint       | v0.1.0-alpha |
-| 10  | sqlc + goose                        | SQL-first query generation and migrations           | v0.1.0-beta  |
-| 11  | invopop/jsonschema                  | Config JSON Schema from Go struct                   | v0.1.0-beta  |
-| 12  | cupaloy                             | API response snapshot testing                       | v0.1.0-beta  |
-| 13  | SPICE browser console               | VM VGA console in browser                           | v0.1.0-beta  |
-| 14  | Cloud-init templates                | Validated preseed templates per distro              | v0.1.0-beta  |
-| 15  | tygo                                | Go → TypeScript event type generation               | v0.2.0       |
-| 16  | Scalar / Redoc                      | Embedded API docs in dashboard                      | v0.2.0       |
-| 17  | Prometheus promauto                 | Structured metric definitions                       | v0.3.0       |
-| 18  | grafonnet                           | Grafana dashboard JSON from metrics                 | v0.3.0       |
-| 19  | Schemathesis                        | API fuzzing from spec in CI                         | v0.8.0       |
-| 20  | goss + packer                       | VM-level system validation                          | v0.8.0       |
-| 21  | Cobra doc generation                | Man pages + markdown CLI reference                  | v1.0.0       |
-| 22  | nfpm                                | .deb packaging                                      | v1.0.0       |
-| 23  | live-build / mkosi                  | Bootable ISO image                                  | v1.0.0       |
-| 24  | nfpm + signed APT repo              | .deb publish + indexed/signed repository updates    | v1.0.0       |
-| 25  | GoReleaser                          | Release pipeline                                    | v1.0.0       |
-| 26  | Cosign + SLSA                       | Artifact signing + provenance                       | v1.0.0       |
-| 27  | Syft                                | SBOM (CycloneDX + SPDX)                             | v1.0.0       |
-| 28  | go-licenses + license-checker       | License compliance CI gate                          | v1.0.0       |
+| #   | Tool                                | What It Automates                                  | Version      |
+| --- | ----------------------------------- | -------------------------------------------------- | ------------ |
+| 1   | Huma v2 + humago                    | Go HTTP operations + generated OpenAPI from code   | v0.1.0-alpha |
+| 2   | oapi-codegen (client)               | Go typed HTTP client for CLI                       | v0.1.0-alpha |
+| 3   | hey-api/openapi-ts                  | TS SDK + fetch client + TanStack Query integration | v0.1.0-alpha |
+| 4   | Makefile generate + check-generated | Pipeline glue, CI gate                             | v0.1.0-alpha |
+| 5   | vacuum / @redocly/cli               | OpenAPI spec linting                               | v0.1.0-alpha |
+| 6   | nilaway + exhaustive                | Go static analysis                                 | v0.1.0-alpha |
+| 7   | git-cliff                           | CHANGELOG from conventional commits                | v0.1.0-alpha |
+| 8   | .devcontainer                       | Reproducible dev environment                       | v0.1.0-alpha |
+| 9   | Extended pre-commit hooks           | Spec lint, staleness, SPDX, tidy, commit lint      | v0.1.0-alpha |
+| 10  | sqlc + goose                        | SQL-first query generation and migrations          | v0.1.0-beta  |
+| 11  | invopop/jsonschema                  | Config JSON Schema from Go struct                  | v0.1.0-beta  |
+| 12  | cupaloy                             | API response snapshot testing                      | v0.1.0-beta  |
+| 13  | SPICE browser console               | VM VGA console in browser                          | v0.1.0-beta  |
+| 14  | Cloud-init templates                | Validated preseed templates per distro             | v0.1.0-beta  |
+| 15  | tygo                                | Go → TypeScript event type generation              | v0.2.0       |
+| 16  | Scalar / Redoc                      | Embedded API docs in dashboard                     | v0.2.0       |
+| 17  | Prometheus promauto                 | Structured metric definitions                      | v0.3.0       |
+| 18  | grafonnet                           | Grafana dashboard JSON from metrics                | v0.3.0       |
+| 19  | Schemathesis                        | API fuzzing from spec in CI                        | v0.8.0       |
+| 20  | goss + packer                       | VM-level system validation                         | v0.8.0       |
+| 21  | Cobra doc generation                | Man pages + markdown CLI reference                 | v1.0.0       |
+| 22  | nfpm                                | .deb packaging                                     | v1.0.0       |
+| 23  | live-build / mkosi                  | Bootable ISO image                                 | v1.0.0       |
+| 24  | nfpm + signed APT repo              | .deb publish + indexed/signed repository updates   | v1.0.0       |
+| 25  | GoReleaser                          | Release pipeline                                   | v1.0.0       |
+| 26  | Cosign + SLSA                       | Artifact signing + provenance                      | v1.0.0       |
+| 27  | Syft                                | SBOM (CycloneDX + SPDX)                            | v1.0.0       |
+| 28  | go-licenses + license-checker       | License compliance CI gate                         | v1.0.0       |
 
 ---
 
