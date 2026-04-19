@@ -1,22 +1,19 @@
 # ADR-033: k3s via cloud-init for v0.1 Kubernetes provisioning
 
-> Status: Accepted (2026-04-19)
+> Status: Superseded by ADR-005 (2026-04-19)
 
 ## Context
 
-v0.1 needs practical Kubernetes provisioning without introducing a management cluster and CAPI controller complexity.
+This ADR duplicated ADR-005 with equivalent scope and decision text.
 
 ## Decision
 
-Use cloud-init driven k3s bootstrap on Incus VMs for v0.1.
+ADR-005 is the canonical decision for v0.1 Kubernetes provisioning:
 
-- Control-plane VM(s) provisioned first
-- Worker VMs join using generated token
-- kubeconfig returned through Helling API/CLI
-
-CAPN remains a deferred v0.5+ option.
+- cloud-init driven k3s bootstrap on Incus VMs
+- kubeconfig retrieval via Helling API/CLI
+- CAPN deferred to later roadmap phases
 
 ## Consequences
 
-- Lower implementation risk and operational complexity in v0.1
-- Predictable homelab and small-cluster bootstrap path
+- Keep a single source of truth for v0.1 Kubernetes provisioning behavior.

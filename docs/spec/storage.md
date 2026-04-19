@@ -1,6 +1,6 @@
 # Storage Specification
 
-All Incus storage operations go through the proxy (ADR-014). hellingd forwards requests from `/api/incus/*` to the Incus Unix socket.
+All Incus storage operations go through the proxy (ADR-014). hellingd forwards requests from `/api/incus/*` to the Incus HTTPS listener on `127.0.0.1:8443` using the caller's per-user TLS certificate identity.
 
 For the full Incus storage API, see [Incus REST API](https://linuxcontainers.org/incus/docs/main/rest-api-spec/).
 
@@ -25,6 +25,7 @@ POST /api/v1/schedules → creates systemd timer + service unit
 ```
 
 The timer's service unit runs:
+
 ```
 ExecStart=/usr/local/bin/helling schedule run backup <instance-name>
 ```
@@ -32,6 +33,7 @@ ExecStart=/usr/local/bin/helling schedule run backup <instance-name>
 Which calls the Incus backup API via the proxy.
 
 Schedule types:
+
 - Instance backup: `incus export` via proxy
 - Instance snapshot: `incus snapshot create` via proxy
 - Volume snapshot: `incus storage volume snapshot create` via proxy

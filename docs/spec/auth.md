@@ -7,7 +7,7 @@ This document defines the only supported auth model for Helling v0.1.
 - Authentication: PAM + JWT
 - Incus authorization boundary: per-user TLS client certificates issued by Helling internal CA
 - Roles: fixed `admin`, `user`, `auditor` (ADR-032)
-- Password hashing: argon2id (ADR-030)
+- Password verification: delegated to PAM for user credentials; argon2id for Helling-managed secrets (ADR-030)
 - JWT signing: Ed25519 (ADR-031)
 
 Future enterprise IAM features (LDAP, OIDC, custom roles, WebAuthn, policy engines) are tracked in [auth-v0.5.md](auth-v0.5.md) and are out of scope for v0.1.
@@ -86,7 +86,9 @@ Helling v0.1 does not rely on query parameter project scoping for authorization.
 
 As defined by ADR-024:
 
-1. On first successful login, hellingd creates or loads a user-specific Incus client certificate.
+- Incus HTTPS listener must be enabled on loopback (`core.https_address=127.0.0.1:8443`) for delegated-user proxy calls.
+
+1. At user creation/provisioning time, hellingd creates or loads a user-specific Incus client certificate.
 2. The certificate is signed by Helling's internal CA.
 3. The private key is encrypted at rest in SQLite.
 4. For proxied Incus requests, hellingd presents the user's certificate.
@@ -96,7 +98,7 @@ This makes Incus the enforcement point and keeps auth decisions auditable throug
 
 ### 3.3 Certificate Lifecycle
 
-- Issuance: automatic on first authenticated use
+- Issuance: automatic at user creation/provisioning
 - Rotation: admin-triggered or automatic by expiry threshold
 - Revocation: immediate on user disable/delete
 - Storage: encrypted key material in database, never returned to clients

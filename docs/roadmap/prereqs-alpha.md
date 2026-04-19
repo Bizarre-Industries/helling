@@ -20,6 +20,6 @@ This file tracks minimum prerequisites before v0.1.0-alpha implementation work c
 ## Exit Criteria
 
 - No contradictory references to superseded auth/query-param model
-- No contradictory references to SPICE as default console
+- No contradictory references to any non-noVNC default console path
 - No contradictory references to CAPN as v0.1 default path
 - No contradictory references to microVM runtime in v0.1 scope

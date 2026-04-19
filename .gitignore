@@ -6,6 +6,8 @@ IMPLEMENTATION-PLAN.md
 # Claude Code
 .claude/
 .remember/
+CLAUDE.md
+LESSONS.md
 
 # Go
 /bin/
@@ -57,7 +59,12 @@ coverage.out
 *.pem
 jwt.secret
 
-# Docker local
-.docker/
+# Local environment files
+.env
+.env.local
+.env.*.local
 
+# Misc
 refs/
+
+

@@ -31,6 +31,7 @@ Proxmox is ugly. ExtJS, cramped fonts, grey everything. But admins who manage 20
 ## Helling's Design Rules
 
 ### Rule 1: Tables by Default, Cards by Exception
+
 ```
 Tables for:
   - Instance list (VMs, CTs, containers)
@@ -54,6 +55,7 @@ Cards ONLY for:
 ```
 
 ### Rule 2: Information Density
+
 ```
 DO:
   - Show 20+ rows per table without scrolling (compact row height)
@@ -71,6 +73,7 @@ DON'T:
 ```
 
 ### Rule 3: Zero Unnecessary Animation
+
 ```
 ALLOWED animations:
   - Progress bars (backup progress, migration progress)
@@ -90,6 +93,7 @@ BANNED animations:
 ```
 
 ### Rule 4: Everything Selectable and Copyable
+
 ```
 All technical values must be plain text, selectable:
   - IP addresses
@@ -110,6 +114,7 @@ Add a tiny copy button (📋) next to values users frequently copy:
 ```
 
 ### Rule 5: Data Loads Instantly or Shows Why It Can't
+
 ```
 Target: <100ms for any page transition with data visible
 
@@ -128,11 +133,12 @@ NEVER:
 ```
 
 ### Rule 6: Summary Tab Shows Everything
+
 ```
 Instance detail → Summary tab must show (without scrolling on 1080p):
   - Status badge + uptime
   - CPU: allocated / usage gauge
-  - RAM: allocated / usage gauge  
+  - RAM: allocated / usage gauge
   - Disk: each disk with size + usage
   - Network: each NIC with IP, MAC, traffic counters
   - Config summary: CPU cores, RAM, OS, architecture, boot order
@@ -144,6 +150,7 @@ All on ONE SCREEN. No scrolling for basic info.
 ```
 
 ### Rule 7: Two-Click Maximum for Any Action
+
 ```
 Action                          Clicks from any page
 ─────────────────────────────── ─────────────────────
@@ -162,6 +169,7 @@ NEVER: more than 4 clicks for any operation
 ```
 
 ### Rule 8: Responsive ≠ Mobile-First
+
 ```
 Design for 1920x1080 first. This is a server management tool.
 Most users sit at a desk with a real monitor.
@@ -177,6 +185,7 @@ Phone (<768px): Single-panel, navigation drawer, big action buttons
 ```
 
 ### Rule 9: No JavaScript Framework Bloat
+
 ```
 Current: 340KB main chunk (86KB gzipped). This is the ceiling, not the floor.
 
@@ -184,7 +193,7 @@ Every new dependency must justify its bundle size:
   - TanStack Table: YES (complex data tables are hard)
   - TanStack Query: YES (caching + deduplication)
   - xterm.js: YES (terminal emulation is hard)
-  - noVNC: YES (SPICE VGA console, ADR-010)
+  - noVNC: YES (VM VGA browser console, ADR-010)
   - @monaco-editor/react: MAYBE (large bundle, only load on pages that need it)
   - D3: MAYBE (only for network topology visualization)
   - Three.js: NO (why would we need 3D?)
@@ -198,6 +207,7 @@ Dynamic imports for heavy components:
 ```
 
 ### Rule 10: Consistent Visual Language
+
 ```
 Status colors (same everywhere):
   Green  (#22c55e) = Running, Healthy, Success, Connected
@@ -220,7 +230,7 @@ Typography:
   Monospace for: IPs, MACs, UUIDs, paths, commands, config values, hashes
   Regular for: everything else
   No serif fonts anywhere (this isn't a blog)
-  
+
 Table density:
   Row height: 36px (compact), 44px (comfortable — default)
   Font size in tables: 13px (not 16px — information density)
@@ -237,21 +247,28 @@ The dashboard uses React 19 + antd 6 + @refinedev/antd + @tanstack/react-query (
 /* antd compact theme overrides for information-dense admin UI */
 
 /* Tighter tables (configured via antd theme tokens) */
-.table th, .table td {
+.table th,
+.table td {
   padding: 0.4rem 0.6rem;
   font-size: 0.8125rem;
 }
 
 /* Compact form controls */
-.input, .select, .btn {
+.input,
+.select,
+.btn {
   height: 2rem;
   min-height: 2rem;
   font-size: 0.8125rem;
 }
 
 /* Less rounded everything */
-.btn, .card, .input, .select, .badge {
-  border-radius: 0.25rem;  /* not 0.5rem */
+.btn,
+.card,
+.input,
+.select,
+.badge {
+  border-radius: 0.25rem; /* not 0.5rem */
 }
 
 /* Smaller badges */

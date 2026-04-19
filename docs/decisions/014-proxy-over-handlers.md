@@ -21,12 +21,12 @@ Replace per-endpoint handlers with a generic authenticated reverse proxy middlew
 3. Audit logging (async, to systemd journal)
 4. Auto-snapshot hook (before destructive operations)
 
-The proxy middleware is ~200-300 lines of Go. It uses `net/http/httputil.ReverseProxy` to forward requests to Unix sockets.
+The proxy middleware is ~200-300 lines of Go. It uses `net/http/httputil.ReverseProxy` to forward Incus requests to the local Incus HTTPS API and Podman requests to the local Podman Unix socket.
 
-Helling-specific features that Incus/Podman don't provide keep dedicated handlers (~25 endpoints):
+Helling-specific features that Incus/Podman don't provide keep dedicated handlers (approximately 40 endpoints):
 
 - Auth (login, JWT, TOTP, API tokens)
-- Users (PAM CRUD)
+- Users (role/status and Incus trust identity lifecycle)
 - Schedules (systemd timer management)
 - Webhooks (HMAC event delivery)
 - BMC (bmclib integration)
@@ -34,11 +34,11 @@ Helling-specific features that Incus/Podman don't provide keep dedicated handler
 - System (config, upgrade, diagnostics)
 - Host firewall (nftables via nft CLI)
 
-Everything else — instances, containers, storage, networks, images, profiles, projects, cluster, operations, events, metrics, warnings, certificates — is proxied to the upstream socket.
+Everything else — instances, containers, storage, networks, images, profiles, projects, cluster, operations, events, metrics, warnings, certificates — is proxied to the upstream API surface.
 
 Proxy routes:
 
-- `/api/incus/*` → `/var/lib/incus/unix.socket`
+- `/api/incus/*` → local Incus HTTPS API (per-user mTLS identity)
 - `/api/podman/*` → `/run/podman/podman.sock`
 - `/api/v1/*` → Helling-specific handlers
 
@@ -50,7 +50,7 @@ Proxy routes:
 - OpenAPI spec shrinks from ~300 endpoints to ~40
 - CLI shrinks from ~392 commands to ~15 (users use `incus`/`podman` directly)
 - Codebase shrinks by ~80%
-- hellingd has 6 Go dependencies instead of 20+
+- hellingd keeps a small, focused dependency set
 - No type synchronization between Helling Go types and Incus/Podman types
 
 **Harder:**

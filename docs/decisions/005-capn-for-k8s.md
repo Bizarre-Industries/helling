@@ -1,6 +1,6 @@
 # ADR-005: k3s via cloud-init for v0.1 Kubernetes
 
-> Status: Accepted (2026-04-19)
+> Status: Accepted (canonical for v0.1, 2026-04-19)
 
 ## Context
 
@@ -20,6 +20,8 @@ Baseline flow:
 4. Return kubeconfig to the requesting user.
 
 CAPN (Cluster API Provider for Incus) is deferred to v0.5+ as an optional advanced mode.
+
+ADR-033 is superseded to avoid duplicate decision scope.
 
 ## Consequences
 

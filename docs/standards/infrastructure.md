@@ -6,7 +6,24 @@ How Helling is deployed, monitored, backed up, and operated. Based on SRE princi
 
 ## 1. Deployment Standards
 
+### Incus Transport Listener Policy
+
+```
+RULE: Delegated-user Incus operations must use the local HTTPS listener with mTLS identity.
+
+Requirements:
+  - Set `core.https_address` to `127.0.0.1:8443` on the host.
+  - `/api/incus/*` requests from hellingd must present the caller's per-user TLS certificate.
+  - Incus Unix socket is reserved for host administrator CLI operations only.
+  - Do not use query-parameter project scoping as an authorization boundary.
+
+Verify:
+  - `incus config get core.https_address` returns `127.0.0.1:8443`
+  - Delegated user calls are denied when trust restrictions do not allow the action.
+```
+
 ### Build Reproducibility
+
 ```
 RULE: Any commit on main produces identical artifacts regardless of who builds it.
 
@@ -23,6 +40,7 @@ Verify: `make build` on fresh clone produces byte-identical binaries
 ```
 
 ### Release Process
+
 ```
 1. Feature freeze: merge window closes
 2. Release branch: cut from main
@@ -46,6 +64,7 @@ Tooling:
 ```
 
 ### Upgrade Safety
+
 ```
 RULE: Upgrades must be safe, reversible, and non-destructive.
 RULE: Primary upgrade path is APT-based: apt-get update && apt-get upgrade helling
@@ -87,6 +106,7 @@ columns are ignored). This allows rollback without schema rollback.
 ## 2. Monitoring Standards
 
 ### Golden Signals (Google SRE)
+
 ```
 Monitor these four signals for hellingd:
 
@@ -111,6 +131,7 @@ Monitor these four signals for hellingd:
 ```
 
 ### USE Method (Brendan Gregg) for Infrastructure
+
 ```
 For every resource (CPU, RAM, disk, network):
 
@@ -131,6 +152,7 @@ Errors: error count
 ```
 
 ### RED Method for API Endpoints
+
 ```
 For every API endpoint:
 
@@ -145,6 +167,7 @@ Duration:  Time per request
 ```
 
 ### Structured Logging Standard
+
 ```json
 {
   "timestamp": "2026-04-13T14:22:01.234Z",
@@ -163,6 +186,7 @@ Duration:  Time per request
 ```
 
 Fields:
+
 - `timestamp`: RFC 3339 with milliseconds
 - `level`: debug, info, warn, error (lowercase)
 - `message`: human-readable description (lowercase, no period)
@@ -176,6 +200,7 @@ Fields:
 ## 3. Backup Standards
 
 ### 3-2-1 Rule
+
 ```
 3 copies of data
 2 different storage types
@@ -188,6 +213,7 @@ Helling's implementation:
 ```
 
 ### Backup Schedule Default
+
 ```
 Instances (VMs + CTs):
   Daily: 01:00 AM, retain 7
@@ -203,6 +229,7 @@ Verification: weekly automatic restore test
 ```
 
 ### Recovery Time Objectives
+
 ```
 RTO (Recovery Time Objective):
   hellingd crash:     < 30 seconds (systemd auto-restart)
@@ -221,6 +248,7 @@ RPO (Recovery Point Objective):
 ## 4. Capacity Planning
 
 ### Resource Thresholds
+
 ```
 Green (healthy):     < 70% utilization
 Yellow (warning):    70-85% utilization
@@ -236,6 +264,7 @@ Actions:
 ```
 
 ### Growth Tracking
+
 ```
 hellingd tracks 30-day trends for:
   - Total CPU allocation across all instances
@@ -255,6 +284,7 @@ Report: Monthly capacity report (email, PDF)
 ## 5. Change Management
 
 ### Change Categories
+
 ```
 Standard (no approval needed):
   - Start/stop/restart instances
@@ -285,6 +315,7 @@ Emergency (double confirmation + audit alert):
 ```
 
 ### Maintenance Windows
+
 ```
 Scheduled maintenance:
   - Define recurring windows in /settings
@@ -304,6 +335,7 @@ Unscheduled maintenance:
 ## 6. SRE Practices
 
 ### SLOs (Service Level Objectives)
+
 ```
 Helling platform SLOs:
 
@@ -328,6 +360,7 @@ Tracking enables data-driven improvement decisions.
 ```
 
 ### Error Budgets
+
 ```
 99.9% availability = 0.1% error budget = 8.7 hours/year
 
@@ -344,6 +377,7 @@ When error budget is healthy:
 ```
 
 ### Incident Severity Levels
+
 ```
 P1 (Critical): Platform completely down, all users affected
   Response: Immediate (< 15 min), all-hands
@@ -363,6 +397,7 @@ P4 (Low): Cosmetic or minor inconvenience
 ```
 
 ### Post-Incident Review
+
 ```
 After every P1/P2 incident:
 
@@ -413,6 +448,7 @@ Not exposed to users — internal quality metric.
 ## 8. Documentation Standards
 
 ### Code Documentation
+
 ```
 Go:
   - Package comment on every package (// Package X provides...)
@@ -426,6 +462,7 @@ React:
 ```
 
 ### User Documentation
+
 ```
 Structure (docs/ or documentation site):
   Getting Started:
@@ -433,7 +470,7 @@ Structure (docs/ or documentation site):
     - Installation (bare metal)
     - First VM tutorial
     - First container tutorial
-    
+
   Guides:
     - Networking setup
     - Storage configuration
@@ -441,13 +478,13 @@ Structure (docs/ or documentation site):
     - Kubernetes clusters
     - Clustering and HA
     - Security hardening
-    
+
   Reference:
     - API documentation (generated from OpenAPI)
     - CLI reference (generated from Cobra)
     - Configuration reference (helling.yaml)
     - Architecture overview
-    
+
   Troubleshooting:
     - Common issues and solutions
     - Diagnostics (`helling doctor`)
@@ -460,6 +497,7 @@ RULE: Screenshots are real (not mockups) and updated with each release.
 ```
 
 ### API Documentation
+
 ```
 OpenAPI spec (api/openapi.yaml) is the source of truth.
 

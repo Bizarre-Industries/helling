@@ -10,15 +10,16 @@ Security requirements for Helling at every layer: application, infrastructure, s
 
 ```
 Passwords:
-  - Hash: bcrypt or argon2id (NOT SHA-256, NOT MD5)
+  - User password verification: delegated to PAM
+  - Helling-managed secret hashing: argon2id (NOT SHA-256, NOT MD5)
   - Minimum length: 8 characters
-  - No maximum length (up to 72 bytes for bcrypt)
+  - No maximum length enforced by Helling auth layer
   - No composition rules (no "must have uppercase + number + symbol")
   - Check against HaveIBeenPwned top 100K passwords (offline list)
   - Rate limit: 5 attempts per 15 minutes per IP + per username
 
 JWT:
-  - Algorithm: EdDSA (Ed25519) or ES256 (ECDSA P-256). NEVER HS256 with weak secret.
+  - Algorithm: EdDSA (Ed25519). NEVER HS256.
   - Access token expiry: 15 minutes (short-lived)
   - Refresh token expiry: 7 days (stored server-side, revocable)
   - Include: user ID, username, roles, issued_at, expiry, jti (unique ID)
@@ -45,16 +46,16 @@ API Tokens:
 ### Proxy Auth Model (ADR-014)
 
 ```
-The proxy validates JWT before forwarding to Incus/Podman sockets. For Incus calls,
+The proxy validates JWT before forwarding. For Incus calls,
 the proxy presents the authenticated user's dedicated TLS client certificate. Incus
-trust restrictions enforce scope. The Unix sockets themselves are only accessible by
-hellingd (running as root).
+trust restrictions enforce scope. Podman requests are forwarded over the Podman
+Unix socket, accessible only by hellingd (running as root).
 
 Auth flow for proxied requests:
   1. Client sends request with JWT (Authorization header or cookie)
   2. hellingd middleware validates JWT, extracts user + roles
   3. Middleware loads user Incus TLS client certificate
-  4. Request forwarded to Incus/Podman Unix socket using user identity context
+  4. Request forwarded to Incus HTTPS API using per-user mTLS identity, or to Podman via Unix socket
   5. Audit middleware logs the action (user, resource, method, timestamp)
 
 Auth flow for Helling-specific endpoints:
@@ -99,7 +100,7 @@ At rest:
 
 In transit:
   - All API traffic: TLS (self-signed minimum, ACME recommended)
-  - Incus socket: Unix socket (no network exposure)
+  - Incus API: HTTPS with mutual TLS using per-user client certificates
   - Podman socket: Unix socket (no network exposure)
   - Cluster communication: TLS mutual authentication (Incus handles)
   - Backup transfer: TLS to remote targets

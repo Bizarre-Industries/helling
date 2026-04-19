@@ -24,15 +24,15 @@ Linux PAM provides the local authentication backend. hellingd authenticates user
 
 Summary of normative constraints (defined in security.md):
 
-| Parameter             | Requirement                                             |
-| --------------------- | ------------------------------------------------------- |
-| Algorithm             | EdDSA (Ed25519) or ES256. Never HS256 with weak secret. |
-| Access token expiry   | 15 minutes                                              |
-| Refresh token expiry  | 7 days, stored server-side, revocable                   |
-| Access token storage  | Memory only (not localStorage)                          |
-| Refresh token storage | httpOnly, Secure, SameSite=Strict cookie                |
-| Claims                | user ID, username, roles, issued_at, expiry, jti        |
-| Key rotation          | Documented procedure, JWKS-based rollover               |
+| Parameter             | Requirement                                      |
+| --------------------- | ------------------------------------------------ |
+| Algorithm             | EdDSA (Ed25519). Never HS256.                    |
+| Access token expiry   | 15 minutes                                       |
+| Refresh token expiry  | 7 days, stored server-side, revocable            |
+| Access token storage  | Memory only (not localStorage)                   |
+| Refresh token storage | httpOnly, Secure, SameSite=Strict cookie         |
+| Claims                | user ID, username, roles, issued_at, expiry, jti |
+| Key rotation          | Documented procedure, JWKS-based rollover        |
 
 Token lifecycle:
 

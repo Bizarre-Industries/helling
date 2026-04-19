@@ -5,10 +5,12 @@ This directory contains Helling's implementation roadmap and planning documents.
 ## Documents Overview
 
 ### 📋 [plan.md](./plan.md) - High-Level Roadmap
+
 **Purpose:** Strategic overview of what to build and when
 **Audience:** Project leads, stakeholders, new contributors
 
 **Contains:**
+
 - Architecture Decisions (ADRs 001-025)
 - Automation & Tooling Index (28 tools)
 - Version gates and feature lists for v0.1-v1.0
@@ -19,10 +21,12 @@ This directory contains Helling's implementation roadmap and planning documents.
 ---
 
 ### 📖 [implementation-guide.md](./implementation-guide.md) - Detailed Implementation Steps
+
 **Purpose:** Actionable, code-level implementation instructions
 **Audience:** Developers implementing features
 
 **Contains:**
+
 - Step-by-step implementation instructions
 - Code examples and file structures
 - Configuration snippets
@@ -34,10 +38,12 @@ This directory contains Helling's implementation roadmap and planning documents.
 ---
 
 ### ✅ [checklist.md](./checklist.md) - Verification Gates
+
 **Purpose:** Verification criteria for each release
 **Audience:** QA, release managers, developers
 
 **Contains:**
+
 - Testable verification commands for each version gate
 - Build/test/lint requirements
 - Code hygiene checks
@@ -95,34 +101,35 @@ Follow this sequence from [implementation-guide.md](./implementation-guide.md):
 ## Architecture Quick Reference
 
 **Core Principle:** Proxy-first (ADR-014)
+
 - ~300 lines of proxy code replaces ~150 endpoint handlers
 - Incus/Podman APIs exposed natively at `/api/incus/*` and `/api/podman/*`
 - Only ~40 Helling-specific endpoints for auth, scheduling, webhooks, etc.
 
 **Key ADRs:**
+
 - ADR-014: Proxy over per-endpoint handlers
 - ADR-016: CLI for Helling features only (~15 commands, not ~392)
 - ADR-017: systemd timers over in-process cron
 - ADR-018: Shell out over Go libraries
 - ADR-021: ISO-only deployment
 
-**Dependencies:** Only 6 Go dependencies
-- chi (router), jwt, viper (config), bmclib, gorm, sqlite
+**Dependencies:** Keep backend dependencies minimal and justify each addition against proxy-first architecture.
 
 ---
 
 ## Version Overview
 
-| Version | Gate | Focus |
-|---------|------|-------|
-| v0.1.0-alpha | Dashboard shows real data from proxies | Foundation: proxy, auth, OpenAPI spec |
-| v0.1.0-beta | Create VM → SPICE console works | Consoles: WebSocket, SPICE, xterm.js |
-| v0.2.0 | Schedule creates backup, firewall works | Platform: schedules, webhooks, firewall |
-| v0.3.0 | Prometheus scrapes /metrics | Observability: metrics, notifications |
-| v0.4.0 | K8s cluster created, BMC powers on | Integration: K8s, BMC, clustering |
-| v0.5.0 | LDAP user logs in, quota enforced | Enterprise: LDAP, OIDC, WebAuthn |
-| v0.8.0 | All E2E pass, p95 <200ms | Hardening: fuzzing, performance, security |
-| v1.0.0 | ISO boots and installs | Release: packaging, SBOM, signing |
+| Version      | Gate                                    | Focus                                     |
+| ------------ | --------------------------------------- | ----------------------------------------- |
+| v0.1.0-alpha | Dashboard shows real data from proxies  | Foundation: proxy, auth, OpenAPI spec     |
+| v0.1.0-beta  | Create VM -> noVNC VGA console works    | Consoles: WebSocket, noVNC, xterm.js      |
+| v0.2.0       | Schedule creates backup, firewall works | Platform: schedules, webhooks, firewall   |
+| v0.3.0       | Prometheus scrapes /metrics             | Observability: metrics, notifications     |
+| v0.4.0       | K8s cluster created, BMC powers on      | Integration: K8s, BMC, clustering         |
+| v0.5.0       | LDAP user logs in, quota enforced       | Enterprise: LDAP, OIDC, WebAuthn          |
+| v0.8.0       | All E2E pass, p95 <200ms                | Hardening: fuzzing, performance, security |
+| v1.0.0       | ISO boots and installs                  | Release: packaging, SBOM, signing         |
 
 ---
 

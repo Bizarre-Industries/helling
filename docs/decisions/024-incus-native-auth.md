@@ -14,11 +14,24 @@ Incus already supports trust-scoped client certificates and project restrictions
 
 From v0.1 onward, Helling uses per-user Incus client certificates.
 
+Prerequisite transport requirement:
+
+- Incus HTTPS must be enabled on loopback (`core.https_address=127.0.0.1:8443`) so hellingd can present per-user TLS identities to Incus.
+
 1. Each Helling user has a dedicated Incus client certificate identity.
 2. Certificates are issued by an internal Helling CA.
 3. The user keypair and certificate are stored encrypted at rest in SQLite.
 4. For every proxied Incus call, hellingd presents the calling user's certificate.
 5. Incus trust restrictions and project limits enforce resource visibility and allowed operations.
+
+Certificate identity split model:
+
+- Admin certificate identity: used by hellingd for Incus trust administration and project-level management operations.
+- Per-user certificate identity: used for delegated user resource operations proxied through `/api/incus/*`.
+
+Issuance timing:
+
+- Per-user certificates are issued during user creation/provisioning (not on first request).
 
 Helling does not use query-parameter project injection as an authorization mechanism.
 

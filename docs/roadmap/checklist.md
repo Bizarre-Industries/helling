@@ -78,7 +78,7 @@
 
 ### Console
 
-- [ ] SPICE console opens for a running VM
+- [ ] noVNC VGA console opens for a running VM
 - [ ] Serial console opens for a running CT
 - [ ] Exec terminal works for Podman container
 - [ ] WebSocket proxy handles upgrade correctly

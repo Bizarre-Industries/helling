@@ -26,6 +26,7 @@
 ### What is Helling?
 
 Helling is a Proxmox-style hypervisor platform built on Debian 13, combining:
+
 - **Incus** (VMs via QEMU/KVM + system containers via LXC)
 - **Podman** (application containers, Docker-compatible)
 - **Cloud Hypervisor** (microVMs for ephemeral workloads)
@@ -48,8 +49,9 @@ All accessible through a unified React dashboard with a proxy-first architecture
    - Boot ISO → answer 3 questions → running system
 
 4. **Minimal dependencies**
-   - 6 Go dependencies: chi, jwt, viper, bmclib, gorm, sqlite
-   - Everything else via proxy or system tools
+
+- Keep Go dependencies minimal and aligned to proxy-first architecture
+- Everything else via proxy or system tools
 
 ---
 
@@ -58,6 +60,7 @@ All accessible through a unified React dashboard with a proxy-first architecture
 **As of 2026-04-15:**
 
 ✅ **Exists:**
+
 - Basic structure: 3 Go apps (hellingd, helling-cli, helling-proxy)
 - Some handlers: auth, system, schedules, webhooks, microvm
 - Frontend: 20 React page components
@@ -65,6 +68,7 @@ All accessible through a unified React dashboard with a proxy-first architecture
 - Database models in internal/auth/models.go, internal/db/
 
 ⚠️ **Needs Work:**
+
 - Proxy middleware implementation (critical)
 - Code generation pipeline (oapi-codegen + orval)
 - Complete OpenAPI spec (~40 endpoints)
@@ -92,41 +96,41 @@ All accessible through a unified React dashboard with a proxy-first architecture
 
 ```yaml
 # Auth endpoints (8)
-/auth/setup:          # POST - first admin (one-time)
-/auth/login:          # POST - PAM → JWT
-/auth/refresh:        # POST - refresh access token
-/auth/logout:         # POST - clear refresh cookie
-/auth/mfa/complete:   # POST - verify TOTP
-/auth/totp/setup:     # POST - enable 2FA
-/auth/totp/verify:    # POST - confirm TOTP setup
-/auth/totp:           # DELETE - disable 2FA
-/auth/tokens:         # GET, POST - API token CRUD
-/auth/tokens/{id}:    # DELETE - revoke token
+/auth/setup: # POST - first admin (one-time)
+/auth/login: # POST - PAM → JWT
+/auth/refresh: # POST - refresh access token
+/auth/logout: # POST - clear refresh cookie
+/auth/mfa/complete: # POST - verify TOTP
+/auth/totp/setup: # POST - enable 2FA
+/auth/totp/verify: # POST - confirm TOTP setup
+/auth/totp: # DELETE - disable 2FA
+/auth/tokens: # GET, POST - API token CRUD
+/auth/tokens/{id}: # DELETE - revoke token
 
 # Users endpoints (5)
-/users:               # GET, POST
-/users/{id}:          # GET, PUT, DELETE
+/users: # GET, POST
+/users/{id}: # GET, PUT, DELETE
 
 # Schedules endpoints (6)
-/schedules:           # GET, POST
-/schedules/{id}:      # GET, PUT, DELETE
-/schedules/{id}/run:  # POST
+/schedules: # GET, POST
+/schedules/{id}: # GET, PUT, DELETE
+/schedules/{id}/run: # POST
 
 # Webhooks endpoints (6)
-/webhooks:            # GET, POST
-/webhooks/{id}:       # GET, PUT, DELETE
-/webhooks/{id}/test:  # POST
+/webhooks: # GET, POST
+/webhooks/{id}: # GET, PUT, DELETE
+/webhooks/{id}/test: # POST
 
 # System endpoints (5)
-/system/info:         # GET
-/system/hardware:     # GET
-/system/config:       # GET, PUT
-/system/diagnostics:  # GET
-/system/upgrade:      # POST
+/system/info: # GET
+/system/hardware: # GET
+/system/config: # GET, PUT
+/system/diagnostics: # GET
+/system/upgrade: # POST
 
 # Platform endpoints (2)
-/health:              # GET (public)
-/events:              # GET (SSE stream)
+/health: # GET (public)
+/events: # GET (SSE stream)
 ```
 
 2. **Define complete schemas:**
@@ -150,34 +154,34 @@ components:
         meta:
           type: object
           properties:
-            total: {type: integer}
-            page: {type: integer}
-            per_page: {type: integer}
+            total: { type: integer }
+            page: { type: integer }
+            per_page: { type: integer }
 
     ErrorResponse:
       type: object
       required: [error]
       properties:
-        error: {type: string}
-        code: {type: string}
-        action: {type: string}
-        doc_link: {type: string}
+        error: { type: string }
+        code: { type: string }
+        action: { type: string }
+        doc_link: { type: string }
 
     # Auth types
     LoginRequest:
       type: object
       required: [username, password]
       properties:
-        username: {type: string}
-        password: {type: string}
-        totp_code: {type: string}
+        username: { type: string }
+        password: { type: string }
+        totp_code: { type: string }
 
     AuthTokens:
       type: object
       properties:
-        access_token: {type: string}
-        refresh_token: {type: string}
-        expires_in: {type: integer}
+        access_token: { type: string }
+        refresh_token: { type: string }
+        expires_in: { type: integer }
 
     # ... (continue for all request/response types)
 ```
@@ -188,16 +192,16 @@ components:
 parameters:
   - name: page
     in: query
-    schema: {type: integer, default: 1}
+    schema: { type: integer, default: 1 }
   - name: per_page
     in: query
-    schema: {type: integer, default: 50, maximum: 100}
+    schema: { type: integer, default: 50, maximum: 100 }
   - name: sort
     in: query
-    schema: {type: string}
+    schema: { type: string }
   - name: order
     in: query
-    schema: {type: string, enum: [asc, desc]}
+    schema: { type: string, enum: [asc, desc] }
 ```
 
 **Verification:**
@@ -237,6 +241,7 @@ output: api/generated.go
 ```
 
 **What it generates:**
+
 - `StrictServerInterface` with typed method signatures
 - Chi router factory function
 - All request/response model structs
@@ -302,23 +307,23 @@ func systemInfoCmd(cmd *cobra.Command, args []string) error {
 **File:** `web/orval.config.ts`
 
 ```typescript
-import { defineConfig } from 'orval';
+import { defineConfig } from "orval";
 
 export default defineConfig({
   helling: {
-    input: '../api/openapi.yaml',
+    input: "../api/openapi.yaml",
     output: {
-      target: 'src/api/generated/helling.ts',
-      client: 'react-query',
-      mode: 'tags-split',
+      target: "src/api/generated/helling.ts",
+      client: "react-query",
+      mode: "tags-split",
       override: {
         mutator: {
-          path: 'src/api/fetcher.ts',
-          name: 'customFetch'
-        }
-      }
-    }
-  }
+          path: "src/api/fetcher.ts",
+          name: "customFetch",
+        },
+      },
+    },
+  },
 });
 ```
 
@@ -326,17 +331,15 @@ export default defineConfig({
 
 ```typescript
 // src/api/fetcher.ts
-export const customFetch = async <T>(
-  config: RequestConfig
-): Promise<T> => {
-  const token = localStorage.getItem('access_token');
+export const customFetch = async <T>(config: RequestConfig): Promise<T> => {
+  const token = localStorage.getItem("access_token");
 
   const response = await fetch(config.url, {
     ...config,
     headers: {
       ...config.headers,
-      ...(token && { Authorization: `Bearer ${token}` })
-    }
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
   });
 
   if (!response.ok) {
@@ -412,6 +415,7 @@ git status
 **Priority:** CRITICAL - Core of ADR-014
 
 **Files:**
+
 - `apps/hellingd/internal/proxy/proxy.go` - core proxy handler
 - `apps/hellingd/internal/proxy/incus.go` - Incus-specific logic
 - `apps/hellingd/internal/proxy/podman.go` - Podman-specific logic
@@ -664,6 +668,7 @@ curl http://localhost:8006/api/incus/1.0/instances
 **Priority:** HIGH - Required for login
 
 **Files:**
+
 - `apps/hellingd/internal/auth/service.go`
 - `apps/hellingd/internal/auth/jwt.go`
 - `apps/hellingd/internal/auth/totp.go`
@@ -748,18 +753,21 @@ curl -X POST http://localhost:8006/api/v1/auth/login \
 **File:** `web/src/api/incus.ts`
 
 ```typescript
-import axios from 'axios';
+import axios from "axios";
 
 export interface IncusInstance {
   name: string;
   status: string;
-  type: 'container' | 'virtual-machine';
+  type: "container" | "virtual-machine";
   state: {
     cpu: { usage: number };
     memory: { usage: number; total: number };
-    network: Record<string, {
-      addresses: Array<{ family: string; address: string }>;
-    }>;
+    network: Record<
+      string,
+      {
+        addresses: Array<{ family: string; address: string }>;
+      }
+    >;
   };
 }
 
@@ -773,7 +781,7 @@ export class IncusClient {
   async listInstances(project?: string): Promise<IncusInstance[]> {
     const url = project
       ? `/api/incus/1.0/instances&recursion=2`
-      : '/api/incus/1.0/instances?recursion=2';
+      : "/api/incus/1.0/instances?recursion=2";
 
     const { data } = await axios.get<IncusResponse<IncusInstance[]>>(url);
     return data.metadata;
@@ -784,7 +792,7 @@ export class IncusClient {
       ? `/api/incus/1.0/instances/${name}/state`
       : `/api/incus/1.0/instances/${name}/state`;
 
-    await axios.put(url, { action: 'start' });
+    await axios.put(url, { action: "start" });
   }
 
   async stopInstance(name: string, project?: string): Promise<void> {
@@ -792,7 +800,7 @@ export class IncusClient {
       ? `/api/incus/1.0/instances/${name}/state`
       : `/api/incus/1.0/instances/${name}/state`;
 
-    await axios.put(url, { action: 'stop', force: true });
+    await axios.put(url, { action: "stop", force: true });
   }
 
   // ... more methods
@@ -816,7 +824,7 @@ export interface PodmanContainer {
 export class PodmanClient {
   async listContainers(): Promise<PodmanContainer[]> {
     const { data } = await axios.get<PodmanContainer[]>(
-      '/api/podman/v5.0/libpod/containers/json?all=true'
+      "/api/podman/v5.0/libpod/containers/json?all=true",
     );
     return data;
   }
@@ -1077,19 +1085,21 @@ grep -c "operationId:" api/openapi.yaml # ~40
 
 ## Phase 2: v0.1.0-beta - Core Dashboard
 
-**Gate:** Create VM → SPICE console → exec into CT → browse storage pools
+**Gate:** Create VM -> noVNC VGA console -> exec into CT -> browse storage pools
 
 ### 2.1 WebSocket Proxy for Consoles
 
-**Priority:** HIGH - Required for SPICE/serial/exec
+**Priority:** HIGH - Required for noVNC/serial/exec
 
 **Implementation:** Extend proxy.go with WebSocket detection and forwarding
 
 **Key files:**
+
 - `apps/hellingd/internal/proxy/websocket.go`
 
 **Endpoints:**
-- `/api/incus/1.0/instances/{name}/console?type=vga` - SPICE
+
+- `/api/incus/1.0/instances/{name}/console?type=vga` - noVNC VGA
 - `/api/incus/1.0/instances/{name}/console?type=console` - Serial
 - `/api/incus/1.0/instances/{name}/exec` - Exec PTY
 
@@ -1097,12 +1107,14 @@ grep -c "operationId:" api/openapi.yaml # ~40
 
 ```javascript
 // In browser console
-const ws = new WebSocket('ws://localhost:8006/api/incus/1.0/instances/test/console?type=vga');
-ws.onmessage = (e) => console.log('Received:', e.data);
-// Should see SPICE protocol frames
+const ws = new WebSocket(
+  "ws://localhost:8006/api/incus/1.0/instances/test/console?type=vga",
+);
+ws.onmessage = (e) => console.log("Received:", e.data);
+// Should see VGA console stream frames
 ```
 
-### 2.2 SPICE Console Component
+### 2.2 noVNC Console Component
 
 **Priority:** HIGH
 
@@ -1110,8 +1122,8 @@ ws.onmessage = (e) => console.log('Received:', e.data);
 
 ```bash
 cd web
-bun add @spice/novnc
-# Or vendor files to public/spice/
+bun add @novnc/novnc
+# Or vendor files to public/novnc/
 ```
 
 **Component:** `web/src/components/VncConsole.tsx`
@@ -1130,6 +1142,7 @@ bun add @xterm/xterm
 ```
 
 **Components:**
+
 - `web/src/components/SerialConsole.tsx` - for serial TTY
 - `web/src/components/ExecTerminal.tsx` - for exec shell
 
@@ -1146,9 +1159,10 @@ bun add @xterm/xterm
 ## Phase 3: v0.2.0 - Platform Core
 
 **Features:**
+
 - Schedules (systemd timers)
 - Host firewall (nft CLI)
-- Tags (Incus user.* config)
+- Tags (Incus user.\* config)
 - Embedded API docs (Scalar/Redoc)
 
 ---
@@ -1180,21 +1194,25 @@ bun add @xterm/xterm
 ## Risk Mitigation
 
 **WebSocket proxy complexity:**
+
 - Use proven libraries (gorilla/websocket)
-- Extensive testing with real SPICE/serial/exec sessions
+- Extensive testing with real noVNC/serial/exec sessions
 - Fallback: direct connections if proxy fails
 
 **PAM reliability:**
+
 - Thorough testing on Debian 13
 - Clear error messages for failures
 - Document PAM config requirements
 
 **Upstream API changes:**
+
 - Version pin Incus/Podman in ISO
 - Monitor changelogs
 - Document supported versions
 
 **Database migrations:**
+
 - Always backup before upgrade
 - Test migrations on copy first
 - Atlas generates safe SQL
@@ -1212,6 +1230,7 @@ bun add @xterm/xterm
 ---
 
 **Next Steps:**
+
 1. Complete OpenAPI spec
 2. Set up code generation
 3. Implement proxy middleware

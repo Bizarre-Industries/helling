@@ -87,6 +87,7 @@ Replaces GORM AutoMigrate. Atlas diffs GORM model structs against live DB and ge
 **Tool:** `invopop/jsonschema`
 
 Generates JSON Schema from Go config struct. Outputs:
+
 1. Startup validation with proper error messages
 2. Settings page form generation (antd ProForm from JSON Schema)
 3. Config documentation
@@ -152,6 +153,7 @@ Generates TypeScript interfaces from Go event structs. Shared schema between Go 
 **Tool:** `Scalar` or `Redoc`
 
 Renders interactive API docs from the embedded OpenAPI spec. Dashboard routes:
+
 - `/api/docs` → Scalar (interactive, try-it-out)
 - `/api/reference` → Redoc (clean reference)
 
@@ -165,11 +167,11 @@ Templates in `/var/lib/helling/templates/cloud-init/` (Ubuntu, Debian, Fedora, A
 
 **Version:** v0.1.0-beta | **Priority:** Medium
 
-### Layer 16: SPICE Console
+### Layer 16: noVNC Console
 
 **Tool:** `noVNC` or static `noVNC`
 
-VM VGA console in the browser (ADR-010). Dynamic import to avoid loading SPICE library on non-console pages.
+VM VGA console in the browser (ADR-010). Dynamic import to avoid loading console libraries on non-console pages.
 
 **Version:** v0.1.0-beta | **Priority:** Must-have
 
@@ -298,11 +300,11 @@ service:
     enabled: true
     running: true
 file:
-  /var/lib/incus/unix.socket:
-    exists: true
   /run/podman/podman.sock:
     exists: true
 port:
+  tcp:8443:
+    listening: true
   tcp:8006:
     listening: true
 ```
@@ -313,11 +315,11 @@ port:
 
 ## Summary by Version
 
-| Version | Automation added |
-|---|---|
+| Version      | Automation added                                                                                                                 |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
 | v0.1.0-alpha | oapi-codegen (server + client), orval, Makefile pipeline, vacuum, nilaway/exhaustive, git-cliff, dev container, pre-commit hooks |
-| v0.1.0-beta | Atlas migrations, config JSON Schema, snapshot testing, SPICE console, cloud-init templates |
-| v0.2.0 | tygo event types, embedded API docs (Scalar/Redoc) |
-| v0.3.0 | Prometheus metrics, Grafana dashboard generation |
-| v0.8.0 | Schemathesis fuzzing, goss system validation |
-| v1.0.0 | nfpm .deb, ISO builder, APT repo, GoReleaser, Cosign, SLSA, SBOM, license checks, man pages, completions |
+| v0.1.0-beta  | Atlas migrations, config JSON Schema, snapshot testing, noVNC console, cloud-init templates                                      |
+| v0.2.0       | tygo event types, embedded API docs (Scalar/Redoc)                                                                               |
+| v0.3.0       | Prometheus metrics, Grafana dashboard generation                                                                                 |
+| v0.8.0       | Schemathesis fuzzing, goss system validation                                                                                     |
+| v1.0.0       | nfpm .deb, ISO builder, APT repo, GoReleaser, Cosign, SLSA, SBOM, license checks, man pages, completions                         |

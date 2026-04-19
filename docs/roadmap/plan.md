@@ -12,26 +12,26 @@
 
 ## Architecture Decisions (ADRs 001-025)
 
-| #   | Decision                                               | Replaces                                                 |
-| --- | ------------------------------------------------------ | -------------------------------------------------------- |
-| 001 | Incus over libvirt                                     | Custom QEMU/KVM/LXC management                           |
-| 003 | React + Ant Design + refine over SvelteKit             | Manual CRUD boilerplate                                  |
-| 010 | noVNC as primary VM browser console for VM VGA console             | Wrong protocol                                           |
-| 011 | Proxy to Podman socket, no Go bindings                 | API version mismatch, `containers/podman/v5` dep         |
-| 012 | Incus Network ACLs for VM/CT firewalling               | Custom nftables code                                     |
-| 013 | Incus project limits for VM/CT quotas                  | Custom quota enforcement                                 |
-| 014 | Authenticated reverse proxy over handler-per-endpoint  | ~150 handlers wrapping upstream APIs                     |
-| 015 | Native upstream response formats for proxied endpoints | Re-enveloping every response                             |
-| 016 | Helling CLI for Helling features only                  | ~392 CLI commands wrapping upstream                      |
-| 017 | systemd timers over in-process cron (gocron)           | Custom Go scheduler                                      |
-| 018 | Shell out over Go libraries for host ops               | google/nftables, go-systemd                              |
-| 019 | systemd journal over SQLite for audit                  | Custom audit tables + files                              |
-| 020 | Incus config keys over SQLite for tags                 | Custom tag tables + sync                                 |
-| 021 | ISO-only installation                                  | Docker try-it mode + manual Debian install               |
-| 022 | No CAPMVM / Flintlock                                  | K8s nodes = Incus VMs (k3s cloud-init in v0.1), no microVM K8s             |
-| 023 | No custom image format                                 | Native formats per runtime; app templates = compose YAML |
-| 024 | Incus per-user TLS auth from v0.1                             | JWT project query stopgap removed                     |
-| 025 | GitHub Releases as APT source                          | No aptly/reprepro infra; nfpm .deb on Release assets     |
+| #   | Decision                                               | Replaces                                                       |
+| --- | ------------------------------------------------------ | -------------------------------------------------------------- |
+| 001 | Incus over libvirt                                     | Custom QEMU/KVM/LXC management                                 |
+| 003 | React + Ant Design + refine over SvelteKit             | Manual CRUD boilerplate                                        |
+| 010 | noVNC as primary VM browser console for VM VGA console | Wrong protocol                                                 |
+| 011 | Proxy to Podman socket, no Go bindings                 | API version mismatch, `containers/podman/v5` dep               |
+| 012 | Incus Network ACLs for VM/CT firewalling               | Custom nftables code                                           |
+| 013 | Incus project limits for VM/CT quotas                  | Custom quota enforcement                                       |
+| 014 | Authenticated reverse proxy over handler-per-endpoint  | ~150 handlers wrapping upstream APIs                           |
+| 015 | Native upstream response formats for proxied endpoints | Re-enveloping every response                                   |
+| 016 | Helling CLI for Helling features only                  | ~392 CLI commands wrapping upstream                            |
+| 017 | systemd timers over in-process cron (gocron)           | Custom Go scheduler                                            |
+| 018 | Shell out over Go libraries for host ops               | google/nftables, go-systemd                                    |
+| 019 | systemd journal over SQLite for audit                  | Custom audit tables + files                                    |
+| 020 | Incus config keys over SQLite for tags                 | Custom tag tables + sync                                       |
+| 021 | ISO-only installation                                  | Docker try-it mode + manual Debian install                     |
+| 022 | No CAPMVM / Flintlock                                  | K8s nodes = Incus VMs (k3s cloud-init in v0.1), no microVM K8s |
+| 023 | No custom image format                                 | Native formats per runtime; app templates = compose YAML       |
+| 024 | Incus per-user TLS auth from v0.1                      | JWT project query stopgap removed                              |
+| 025 | GitHub Releases as APT source                          | No aptly/reprepro infra; nfpm .deb on Release assets           |
 
 ---
 
@@ -53,7 +53,7 @@ All automation surfaces, with version assignments. See docs/design/full-automati
 | 10  | Atlas + GORM provider               | Database migrations (replaces AutoMigrate)          | v0.1.0-beta  |
 | 11  | invopop/jsonschema                  | Config JSON Schema from Go struct                   | v0.1.0-beta  |
 | 12  | cupaloy                             | API response snapshot testing                       | v0.1.0-beta  |
-| 13  | noVNC console (/novnc)            | VM VGA console in browser                           | v0.1.0-beta  |
+| 13  | noVNC console (/novnc)              | VM VGA console in browser                           | v0.1.0-beta  |
 | 14  | Cloud-init templates                | Validated preseed templates per distro              | v0.1.0-beta  |
 | 15  | tygo                                | Go → TypeScript event type generation               | v0.2.0       |
 | 16  | Scalar / Redoc                      | Embedded API docs in dashboard                      | v0.2.0       |
@@ -85,7 +85,7 @@ All automation surfaces, with version assignments. See docs/design/full-automati
 - [ ] RBAC: per-user Incus TLS certificate identity enforcement
 - [ ] Audit logging to systemd journal (ADR-019)
 - [ ] Auth handlers: setup, login (PAM), refresh, logout, TOTP, API tokens
-- [ ] User handlers: CRUD (PAM useradd/userdel)
+- [ ] User handlers: CRUD (role/status and Incus trust identity lifecycle)
 - [ ] System handlers: info, hardware, config, diagnostics
 - [ ] Health endpoint
 - [ ] SSE events endpoint (aggregates Incus events)

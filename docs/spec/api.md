@@ -3,7 +3,7 @@
 hellingd exposes three API surfaces:
 
 1. **Helling API** (`/api/v1/*`) for Helling-specific features.
-2. **Incus Proxy** (`/api/incus/*`) forwarded to `/var/lib/incus/unix.socket`.
+2. **Incus Proxy** (`/api/incus/*`) forwarded to the local Incus HTTPS API with per-user mTLS identity.
 3. **Podman Proxy** (`/api/podman/*`) forwarded to `/run/podman/podman.sock`.
 
 Proxied requests are authenticated and audited. Incus proxy requests run under the caller's dedicated TLS certificate identity (ADR-024).
@@ -130,7 +130,8 @@ Proxied requests are authenticated and audited. Incus proxy requests run under t
 
 ## Proxy Paths
 
-- `/api/incus/*` forwards to Incus REST API via Unix socket.
+- `/api/incus/*` forwards to Incus REST API via local HTTPS endpoint with per-user client certificate authentication.
 - `/api/podman/*` forwards to Podman libpod API via Unix socket.
+- Incus Unix socket access is reserved for host administrator CLI operations and is not used for delegated user proxy authorization.
 
 MicroVM API and Cloud Hypervisor proxy routes are deferred from v0.1 (ADR-006).

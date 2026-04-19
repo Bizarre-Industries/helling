@@ -1,6 +1,6 @@
 # Networking Specification
 
-All Incus network operations go through the proxy (ADR-014). hellingd forwards requests from `/api/incus/*` to the Incus Unix socket.
+All Incus network operations go through the proxy (ADR-014). hellingd forwards requests from `/api/incus/*` to the Incus HTTPS listener on `127.0.0.1:8443` using the caller's per-user TLS certificate identity.
 
 For the full Incus networking API, see [Incus REST API](https://linuxcontainers.org/incus/docs/main/rest-api-spec/).
 

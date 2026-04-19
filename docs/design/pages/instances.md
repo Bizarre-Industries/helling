@@ -22,7 +22,7 @@ Sidebar: node group expanded, VMs/CTs visible in resource tree. List view: full-
 - `DELETE /api/incus/1.0/instances/:name` -- delete
 - `POST /api/incus/1.0/instances/:name/snapshots` -- take snapshot
 - `POST /api/incus/1.0/instances/:name/backups` -- backup now
-- `GET /api/incus/1.0/instances/:name/console` -- WebSocket (SPICE/serial)
+- `GET /api/incus/1.0/instances/:name/console` -- WebSocket (VGA/serial)
 - `GET /api/incus/1.0/instances/:name/exec` -- WebSocket (exec)
 - `GET /api/incus/1.0/instances/:name/files` -- file browser
 - `GET /api/incus/1.0/events` -- live status updates (SSE)
@@ -30,6 +30,7 @@ Sidebar: node group expanded, VMs/CTs visible in resource tree. List view: full-
 ## Components
 
 ### List (`/instances`)
+
 - `ProTable` -- columns: status Badge, name, type Tag (VM/CT), CPU%, RAM%, IPs (monospace), node, tags. `rowSelection` for bulk. `search` filterType light. `options` density toggle.
 - `Button` (primary) -- "Create Instance" in toolbar
 - `StepsForm` -- create wizard (Type, Image, Hardware, Network, Cloud-Init, Review)
@@ -39,7 +40,7 @@ Sidebar: node group expanded, VMs/CTs visible in resource tree. List view: full-
 
 **Summary tab:** `Descriptions` (status, uptime, vCPUs, RAM, disks, IPs, MACs, tags, notes). `Progress` gauges for CPU/RAM/disk. `Button.Group` quick actions (Start, Stop, Restart, Console, Snapshot, Backup).
 
-**Console tab:** SPICE VGA console (noVNC, dynamic import, ADR-010) for VMs with Ctrl+Alt+Del Button, clipboard, fullscreen. Serial console (xterm.js) for CTs. `Segmented` to switch SPICE/serial.
+**Console tab:** noVNC VGA console (dynamic import, ADR-010) for VMs with Ctrl+Alt+Del Button, clipboard, fullscreen. Serial console (xterm.js) for CTs. `Segmented` to switch VGA/serial.
 
 **Hardware tab:** `ProTable` of devices (CPU, RAM, disks, NICs, USB, PCI, GPU). Add/Edit/Detach per row. Disk resize `Slider`. GPU passthrough with IOMMU group display.
 
@@ -63,12 +64,15 @@ Sidebar: node group expanded, VMs/CTs visible in resource tree. List view: full-
 ## States
 
 ### Empty State
+
 "No virtual machines or system containers yet." [Create Instance] [Deploy from Template]. "New to Helling? Create your first VM in 60 seconds. [Quick Start]"
 
 ### Loading State
+
 Cached data shown immediately. SSE pushes status changes. No skeleton for repeat visits.
 
 ### Error State
+
 Incus unavailable: banner "Incus service is unavailable. VM and container management is offline." [View System Logs] [Restart Incus]. Show last cached list with "(stale)".
 
 ## User Actions

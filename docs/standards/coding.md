@@ -240,16 +240,17 @@ func SecurityHeaders(next http.Handler) http.Handler {
 
 ```
 Most resources are proxied to Incus/Podman sockets (ADR-014). Only Helling-specific
-endpoints (~25) have handler implementations. These include: auth, users, settings,
+endpoints (approximately 40) have handler implementations. These include: auth, users, settings,
 tasks, warnings, webhooks, audit, and metrics.
 
 Proxied requests:
-    - hellingd validates JWT, loads user Incus TLS identity, forwards to Unix socket
+        - hellingd validates JWT, loads user Incus TLS identity, forwards to local Incus HTTPS API (mTLS)
+        - Podman requests forward to the local Podman Unix socket
   - No handler code needed for standard Incus/Podman CRUD operations
   - Auth + audit middleware still runs on proxied requests
 
 Helling-specific handlers:
-  - Implement ~25 Helling-specific handlers. All Incus/Podman operations go through the proxy (ADR-014).
+    - Implement approximately 40 Helling-specific handlers. All Incus/Podman operations go through the proxy (ADR-014).
   - Call service layer, never access DB directly
   - Follow the patterns below for API design, validation, and error handling
 ```
