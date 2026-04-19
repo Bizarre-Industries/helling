@@ -55,5 +55,5 @@ If custom repo unreachable: inline warning on that repo card. Built-in templates
 
 ## Cross-References
 
-- Spec: docs/refs/spec/webui-spec.md (Templates section)
+- Spec: docs/spec/webui-spec.md (Templates section)
 - Identity: docs/design/identity.md (First Action -- template deploy flow)

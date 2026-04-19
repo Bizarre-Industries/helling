@@ -67,5 +67,5 @@ Invalid credentials: inline Alert below form (not a toast). "Invalid username or
 
 ## Cross-References
 
-- Spec: docs/refs/spec/webui-spec.md (Setup + Login section)
+- Spec: docs/spec/webui-spec.md (Setup + Login section)
 - Identity: docs/design/identity.md (First 5 Minutes, Session Management)

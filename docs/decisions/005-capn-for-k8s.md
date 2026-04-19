@@ -1,27 +1,29 @@
-# ADR-005: CAPN for Kubernetes
+# ADR-005: k3s via cloud-init for v0.1 Kubernetes
 
-> Status: Accepted (updated 2026-04-15)
+> Status: Accepted (2026-04-19)
 
 ## Context
 
-Needed Kubernetes cluster lifecycle management. Options: Flintlock + CAPMVM (microVM-based), CAPN (Cluster API Provider for Incus), or manual kubeadm scripting.
+Helling v0.1 needs pragmatic Kubernetes cluster creation on Incus VMs with low implementation risk.
 
-CAPMVM was explicitly rejected — see ADR-022.
+Cluster API integration (including CAPN, ClusterClass management, and lifecycle reconciliation) introduces significant control-plane complexity for the first release.
 
 ## Decision
 
-Use CAPN (Cluster API Provider for Incus), maintained under the lxc organization. Standard Cluster API interface.
+For v0.1, Helling provisions Kubernetes using k3s installed by cloud-init on Incus VMs.
 
-Helling generates CAPI manifests (ClusterClass, Cluster, KubeadmControlPlane, MachineDeployment) and applies them to a management cluster via `kubectl`. Helling is a CAPI consumer, not a CAPI provider. K8s nodes are Incus VMs.
+Baseline flow:
 
-K8s on Cloud Hypervisor microVMs is explicitly deferred — use Incus VMs for K8s nodes.
+1. Create control-plane and worker Incus VMs.
+2. Inject cloud-init for deterministic k3s install and bootstrap.
+3. Join workers using generated token workflow.
+4. Return kubeconfig to the requesting user.
+
+CAPN (Cluster API Provider for Incus) is deferred to v0.5+ as an optional advanced mode.
 
 ## Consequences
 
-- Standard Cluster API workflow (create, scale, upgrade, delete)
-- Incus VMs as K8s nodes (full isolation)
-- Maintained by lxc community
-- Dependent on CAPN release cadence
-- Cluster API is complex but well-documented
-- No CAPMVM/Flintlock dependency — avoids bankrupt upstream (ADR-022)
-- microVM-based K8s deferred until Cloud Hypervisor integration matures
+- Faster path to reliable Kubernetes support in v0.1
+- Smaller operational surface for first-release debugging
+- No dependency on CAPI controller stack in the baseline install
+- CAPN can be introduced later without breaking v0.1 contract

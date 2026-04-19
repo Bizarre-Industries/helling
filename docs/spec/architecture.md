@@ -27,7 +27,7 @@ Helling is an OS. Boot the ISO, answer 3 questions (hostname, disk, admin passwo
 │  │                                                            │  │
 │  │  Before forwarding:                                        │  │
 │  │    1. Validate JWT                                         │  │
-│  │    2. Map user → Incus project (?project= param)          │  │
+│  │    2. Load user Incus TLS client cert                     │  │
 │  │    3. Log to journal (async)                               │  │
 │  │    4. Auto-snapshot before destructive ops                 │  │
 │  └──────────────────────────────────────────────────────────┘  │
@@ -39,7 +39,7 @@ Helling is an OS. Boot the ISO, answer 3 questions (hostname, disk, admin passwo
 │  │  Schedules: systemd timer management                       │  │
 │  │  Webhooks: HMAC event delivery                             │  │
 │  │  BMC: bmclib power/sensors/SEL                             │  │
-│  │  K8s: CAPN cluster provisioning                            │  │
+│  │  K8s: k3s bootstrap via cloud-init                         │  │
 │  │  System: config, upgrade, diagnostics                      │  │
 │  │  Host Firewall: nft CLI (for Podman networking)            │  │
 │  └──────────────────────────────────────────────────────────┘  │
@@ -48,7 +48,7 @@ Helling is an OS. Boot the ISO, answer 3 questions (hostname, disk, admin passwo
 │  │ State (SQLite — Helling state only)                        │  │
 │  │  users, tokens, sessions, schedules, webhooks,             │  │
 │  │  webhook_deliveries, bmc_servers, k8s_clusters,            │  │
-│  host_firewall_rules, notifications, microvm_instances     │  │
+│  host_firewall_rules, notifications                         │  │
 │  │                                                            │  │
 │  │  NO instance state, NO storage state, NO network state     │  │
 │  │  (Incus and Podman are the source of truth for their data) │  │
@@ -59,9 +59,9 @@ Helling is an OS. Boot the ISO, answer 3 questions (hostname, disk, admin passwo
 │                   Debian 13 "Trixie" (ISO)                      │
 │  incusd ── QEMU/KVM ── LXC ── OCI ── ZFS ── OVN ── Cowsql    │
 │  podman ── compose ── pods ── containers ── registries          │
-│  cloud-hypervisor ── per-VM sockets ── hellingd process mgr     │
+│  cloud-hypervisor (deferred from v0.1)                          │
 │  nftables ── smartmontools ── systemd ── AppArmor ── chrony     │
-│  bmclib (optional) ── CAPN ── distrobuilder                     │
+│  bmclib (optional) ── k3s bootstrap scripts ── distrobuilder    │
 └────────────────────────────────────────────────────────────────┘
 │  Bare Metal: BMC/IPMI/Redfish via bmclib (power, sensors, KVM) │
 └────────────────────────────────────────────────────────────────┘
@@ -75,7 +75,7 @@ Helling is an OS. Boot the ISO, answer 3 questions (hostname, disk, admin passwo
 Browser → helling-proxy (TLS)
   → hellingd Unix socket
     → JWT validation
-    → User → Incus project mapping (RBAC)
+    → User identity via per-user Incus TLS cert
     → Audit log (slog → systemd journal, async)
     → httputil.ReverseProxy → Incus/Podman Unix socket
     → Native upstream response → pass through to browser
@@ -100,42 +100,40 @@ Browser → helling-proxy (TLS, WebSocket upgrade)
     → JWT validation
     → httputil.ReverseProxy with WebSocket support
     → Incus/Podman WebSocket endpoint
-    → Bidirectional stream (SPICE VGA, serial terminal, exec PTY)
+    → Bidirectional stream (noVNC VGA, serial terminal, exec PTY)
 ```
 
 ## What hellingd Implements vs. What It Proxies
 
 ### Implements (Helling-specific, ~60 endpoints)
 
-| Domain        | Endpoints                                       | Why                                                                      |
-| ------------- | ----------------------------------------------- | ------------------------------------------------------------------------ |
-| Auth          | login, setup, refresh, logout, TOTP, API tokens | Helling auth layer — Incus/Podman don't have user management             |
-| Users         | CRUD                                            | PAM user management — maps to Incus projects for RBAC                    |
-| Schedules     | CRUD                                            | systemd timer management — Incus doesn't have scheduling                 |
-| Webhooks      | CRUD                                            | HMAC event delivery — Incus has events but no webhooks                   |
-| BMC           | CRUD, power, sensors                            | bmclib integration — Incus doesn't manage BMC                            |
-| K8s           | create, list, delete, kubeconfig                | CAPN cluster provisioning — Incus provides VMs, Helling orchestrates K8s |
-| System        | info, config, upgrade, diagnostics              | Helling system management                                                |
-| Host Firewall | CRUD                                            | nftables host rules via nft CLI — Incus ACLs handle VM/CT firewalling    |
-| Health        | health check                                    | hellingd + Incus + Podman status                                         |
-| Events        | SSE stream                                      | Aggregates Incus events + Helling events                                 |
+| Domain        | Endpoints                                       | Why                                                                   |
+| ------------- | ----------------------------------------------- | --------------------------------------------------------------------- |
+| Auth          | login, setup, refresh, logout, TOTP, API tokens | Helling auth layer — Incus/Podman don't have user management          |
+| Users         | CRUD                                            | PAM user management — maps users to Incus trust identity              |
+| Schedules     | CRUD                                            | systemd timer management — Incus doesn't have scheduling              |
+| Webhooks      | CRUD                                            | HMAC event delivery — Incus has events but no webhooks                |
+| BMC           | CRUD, power, sensors                            | bmclib integration — Incus doesn't manage BMC                         |
+| K8s           | create, list, delete, kubeconfig                | k3s bootstrap on Incus VMs via cloud-init                             |
+| System        | info, config, upgrade, diagnostics              | Helling system management                                             |
+| Host Firewall | CRUD                                            | nftables host rules via nft CLI — Incus ACLs handle VM/CT firewalling |
+| Health        | health check                                    | hellingd + Incus + Podman status                                      |
+| Events        | SSE stream                                      | Aggregates Incus events + Helling events                              |
 
 ### Proxies (upstream, everything else)
 
 - **Incus:** Instances, storage, networks, profiles, projects, cluster, images, operations, events, metrics, warnings, certificates — full Incus REST API at `/api/incus/1.0/*`
 - **Podman:** Containers, pods, images, volumes, networks, secrets, system — full Podman libpod API at `/api/podman/v5.0/libpod/*`
-- **Cloud Hypervisor:** Full CH REST API per microVM at `/api/ch/{name}/*`, routed to per-VM Unix socket at `/run/ch-{name}/api.sock`
 
-## Compute: Four Workload Types
+## Compute: Three Workload Types
 
-| Type                    | Engine           | Boot   | Use Case                                   |
-| ----------------------- | ---------------- | ------ | ------------------------------------------ |
-| VMs (QEMU/KVM)          | Incus            | 2-5s   | Full isolation, Windows, different kernels |
-| System Containers (LXC) | Incus            | <1s    | Lightweight Linux, shared kernel           |
-| App Containers (OCI)    | Podman (host)    | <1s    | Docker-compatible, compose, pods           |
-| microVMs                | Cloud Hypervisor | <100ms | Ephemeral workloads, CI runners, sandboxes |
+| Type                    | Engine        | Boot | Use Case                                   |
+| ----------------------- | ------------- | ---- | ------------------------------------------ |
+| VMs (QEMU/KVM)          | Incus         | 2-5s | Full isolation, Windows, different kernels |
+| System Containers (LXC) | Incus         | <1s  | Lightweight Linux, shared kernel           |
+| App Containers (OCI)    | Podman (host) | <1s  | Docker-compatible, compose, pods           |
 
-All four are always available. The ISO ships with Incus, Podman, and Cloud Hypervisor.
+MicroVM support is deferred from v0.1 (ADR-006).
 
 ## Storage
 
@@ -176,9 +174,7 @@ Every API mutation logged via slog to systemd journal (ADR-019). Queryable via `
    b. Open + auto-migrate SQLite (Helling state only)
    c. Verify Incus socket exists (required — fail if not)
    d. Verify Podman socket exists (required — fail if not)
-   e. Verify cloud-hypervisor binary exists (required — fail if not)
-   f. Load microVM instance table from SQLite (resume CH processes for any recorded running instances)
-   g. Open Unix socket → register proxy + handlers → serve
+  e. Open Unix socket → register proxy + handlers → serve
 5. helling-proxy starts:
    a. Generate self-signed cert if none exists
    b. Serve React SPA on :8006, proxy /api/* to hellingd socket

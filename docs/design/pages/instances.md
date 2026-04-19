@@ -39,7 +39,7 @@ Sidebar: node group expanded, VMs/CTs visible in resource tree. List view: full-
 
 **Summary tab:** `Descriptions` (status, uptime, vCPUs, RAM, disks, IPs, MACs, tags, notes). `Progress` gauges for CPU/RAM/disk. `Button.Group` quick actions (Start, Stop, Restart, Console, Snapshot, Backup).
 
-**Console tab:** SPICE VGA console (spice-js, dynamic import, ADR-010) for VMs with Ctrl+Alt+Del Button, clipboard, fullscreen. Serial console (xterm.js) for CTs. `Segmented` to switch SPICE/serial.
+**Console tab:** SPICE VGA console (noVNC, dynamic import, ADR-010) for VMs with Ctrl+Alt+Del Button, clipboard, fullscreen. Serial console (xterm.js) for CTs. `Segmented` to switch SPICE/serial.
 
 **Hardware tab:** `ProTable` of devices (CPU, RAM, disks, NICs, USB, PCI, GPU). Add/Edit/Detach per row. Disk resize `Slider`. GPU passthrough with IOMMU group display.
 
@@ -82,5 +82,5 @@ Incus unavailable: banner "Incus service is unavailable. VM and container manage
 
 ## Cross-References
 
-- Spec: docs/refs/spec/webui-spec.md (Instance List + Instance Detail)
+- Spec: docs/spec/webui-spec.md (Instance List + Instance Detail)
 - Patterns: docs/design/patterns/detail-tabs.md, docs/design/patterns/console.md

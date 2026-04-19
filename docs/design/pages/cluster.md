@@ -60,4 +60,4 @@ Node offline: card shows red Badge. Quorum lost: top-level Alert with recovery i
 
 ## Cross-References
 
-- Spec: docs/refs/spec/webui-spec.md (Cluster section)
+- Spec: docs/spec/webui-spec.md (Cluster section)

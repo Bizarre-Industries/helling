@@ -63,4 +63,4 @@ Log source unavailable: inline Alert per source. Other sources still functional.
 
 ## Cross-References
 
-- Spec: docs/refs/spec/webui-spec.md (Audit, Logs, Tasks, Schedules sections)
+- Spec: docs/spec/webui-spec.md (Audit, Logs, Tasks, Schedules sections)

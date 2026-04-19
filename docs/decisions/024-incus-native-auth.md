@@ -1,25 +1,31 @@
-# ADR-024: Incus native auth for per-user resource isolation
+# ADR-024: Incus per-user TLS auth from v0.1
 
-> Status: Accepted (2026-04-15)
+> Status: Accepted (2026-04-19)
 
 ## Context
 
-Helling needs per-user Incus resource isolation (user A cannot see user B's VMs). Two approaches were considered:
+Helling must enforce per-user isolation for proxied Incus operations from the first release.
 
-1. **v0.1–v0.4 (current):** JWT → `?project=` query param injection. hellingd reads the JWT `project` claim and appends `?project=<user-project>` to every proxied Incus request. Incus enforces project isolation.
+The previous stopgap model (JWT claim to `?project=` query parameter injection) creates a split-brain authorization model where Helling middleware decides scope while Incus executes requests. This is brittle and hard to audit.
 
-2. **v0.5+:** Incus fine-grained authorization (OpenFGA backend, auth groups, per-user TLS client certificates). Each user gets a dedicated TLS certificate; the proxy presents the user's cert on their behalf.
+Incus already supports trust-scoped client certificates and project restrictions, which can be used as the primary enforcement boundary.
 
 ## Decision
 
-Implement JWT + `?project=` injection for v0.1–v0.4. Plan migration to Incus fine-grained auth in v0.5.
+From v0.1 onward, Helling uses per-user Incus client certificates.
 
-In v0.5, when the user authenticates to Helling, the proxy retrieves (or generates on-demand) a user-specific TLS certificate issued by Helling's internal CA, and presents it to Incus for each proxied request. Incus OpenFGA maps cert identity → auth group → allowed resources. This provides defense-in-depth: even if a JWT is compromised, the per-user cert scope limits blast radius.
+1. Each Helling user has a dedicated Incus client certificate identity.
+2. Certificates are issued by an internal Helling CA.
+3. The user keypair and certificate are stored encrypted at rest in SQLite.
+4. For every proxied Incus call, hellingd presents the calling user's certificate.
+5. Incus trust restrictions and project limits enforce resource visibility and allowed operations.
+
+Helling does not use `?project=` query parameter injection as an authorization mechanism.
 
 ## Consequences
 
-- v0.1–v0.4: simple, works today, no Incus config changes required
-- v0.5: Incus OpenFGA must be configured; per-user cert issuance adds complexity
-- Per-user cert approach is more auditable (Incus logs show per-cert identity)
-- Migration path: `?project=` and cert auth can coexist during transition
-- No custom authorization engine in Helling — reuse Incus OpenFGA
+- v0.1 has a single authorization boundary for Incus calls: Incus certificate identity
+- Auditability improves because Incus logs and trust state reflect per-user identities
+- hellingd must implement certificate issuance, storage encryption, rotation, and revocation
+- User disable/delete must also revoke corresponding Incus trust entries
+- Future fine-grained policy systems can be layered later without changing the v0.1 boundary

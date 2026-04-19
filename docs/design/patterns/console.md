@@ -1,11 +1,11 @@
 # Console
 
-> Console is the most latency-sensitive component in the dashboard. SPICE (spice-js or spice-html5) for VM VGA consoles (see ADR-010), xterm.js for serial consoles, container exec, and log streaming. All heavy libraries loaded via dynamic import. Console must work over slow connections and SSH tunnels.
+> Console is the most latency-sensitive component in the dashboard. SPICE (noVNC) for VM VGA consoles (see ADR-010), xterm.js for serial consoles, container exec, and log streaming. All heavy libraries loaded via dynamic import. Console must work over slow connections and SSH tunnels.
 
 ## Ant Design Components
 
 - `antd`: `Tabs`, `Segmented`, `Button`, `Space`, `Select`, `Switch`, `Input.Search`, `Tooltip`
-- External: `spice-js` or `spice-html5` (dynamic import, for VGA console per ADR-010), `xterm.js` + `@xterm/addon-fit` + `@xterm/addon-search` (dynamic import)
+- External: `noVNC` or `noVNC` (dynamic import, for VGA console per ADR-010), `xterm.js` + `@xterm/addon-fit` + `@xterm/addon-search` (dynamic import)
 - `monaco-editor`: not used in console, but adjacent in the Options tab for cloud-init YAML
 
 ## Design Rules
@@ -31,7 +31,7 @@ import { Button, Space, Segmented, Spin, Alert, Tooltip } from 'antd';
 import { Maximize, Clipboard, Camera, Keyboard } from 'lucide-react';
 
 // Dynamic import -- only loaded when Console tab opens
-const loadNoVNC = () => import('spice-js/core/rfb');
+const loadNoVNC = () => import('noVNC/core/rfb');
 
 interface VncConsoleProps {
   instanceName: string;
@@ -310,8 +310,8 @@ export function InstanceConsole({ instance }: { instance: Instance }) {
 ## Standards References
 
 - `docs/design/philosophy.md` -- Rule 9 (no framework bloat, dynamic imports for heavy components)
-- `docs/refs/spec/webui-spec.md` -- Console tab: VNC + serial for VMs, exec + logs for containers
-- `CLAUDE.md` -- xterm.js for terminal, spice-js for VM VGA console
+- `docs/spec/webui-spec.md` -- Console tab: VNC + serial for VMs, exec + logs for containers
+- `CLAUDE.md` -- xterm.js for terminal, noVNC for VM VGA console
 - `lessons.md` -- SPICE client was installed but never imported; must actually build VncConsole
 
 ## Pages Using This Pattern

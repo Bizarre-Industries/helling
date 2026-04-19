@@ -61,4 +61,4 @@ Remote server unreachable: inline alert on Remote tab. Local images still shown.
 
 ## Cross-References
 
-- Spec: docs/refs/spec/webui-spec.md (Images section)
+- Spec: docs/spec/webui-spec.md (Images section)

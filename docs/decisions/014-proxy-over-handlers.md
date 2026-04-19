@@ -17,7 +17,7 @@ Helling wraps Incus and Podman. The previous architecture implemented individual
 Replace per-endpoint handlers with a generic authenticated reverse proxy middleware. hellingd forwards requests to Incus and Podman Unix sockets after:
 
 1. JWT validation
-2. RBAC project scoping (maps Helling user to Incus project via `?project=` param)
+2. Per-user Incus trust identity (proxy uses user TLS client cert)
 3. Audit logging (async, to systemd journal)
 4. Auto-snapshot hook (before destructive operations)
 
@@ -30,13 +30,14 @@ Helling-specific features that Incus/Podman don't provide keep dedicated handler
 - Schedules (systemd timer management)
 - Webhooks (HMAC event delivery)
 - BMC (bmclib integration)
-- K8s (CAPN cluster provisioning)
+- K8s (k3s bootstrap via cloud-init)
 - System (config, upgrade, diagnostics)
 - Host firewall (nftables via nft CLI)
 
 Everything else — instances, containers, storage, networks, images, profiles, projects, cluster, operations, events, metrics, warnings, certificates — is proxied to the upstream socket.
 
 Proxy routes:
+
 - `/api/incus/*` → `/var/lib/incus/unix.socket`
 - `/api/podman/*` → `/run/podman/podman.sock`
 - `/api/v1/*` → Helling-specific handlers
@@ -44,6 +45,7 @@ Proxy routes:
 ## Consequences
 
 **Easier:**
+
 - New Incus/Podman features work automatically (zero Helling changes)
 - OpenAPI spec shrinks from ~300 endpoints to ~40
 - CLI shrinks from ~392 commands to ~15 (users use `incus`/`podman` directly)
@@ -52,6 +54,7 @@ Proxy routes:
 - No type synchronization between Helling Go types and Incus/Podman types
 
 **Harder:**
+
 - Frontend must handle two response formats (Helling envelope for Helling endpoints, native Incus/Podman format for proxied endpoints)
 - Can't transform or enrich proxied responses without breaking the transparent proxy (use Helling-specific endpoints for enrichment)
 - WebSocket upgrade (console, exec) needs careful proxy handling

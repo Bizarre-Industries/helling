@@ -60,5 +60,5 @@ Pool degraded (ZFS): red Badge with status (degraded, resilvering). Show scrub r
 
 ## Cross-References
 
-- Spec: docs/refs/spec/webui-spec.md (Storage section)
+- Spec: docs/spec/webui-spec.md (Storage section)
 - Patterns: docs/design/patterns/empty-states.md

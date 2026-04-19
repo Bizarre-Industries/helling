@@ -1,7 +1,7 @@
 # Tools & Frameworks
 
 **Date:** 2026-04-15
-**Principle:** Use what the OS gives you. Shell out instead of importing. Proxy instead of reimplementing. Six Go dependencies.
+**Principle:** Use what the OS gives you. Shell out instead of importing. Proxy instead of reimplementing. approximately 10-12 Go dependencies.
 
 ---
 
@@ -83,7 +83,7 @@ Six dependencies. Everything else is stdlib, systemd, or CLI tools.
 | CRUD framework | `@refinedev/core` + `@refinedev/antd` |
 | Data fetching | `@tanstack/react-query` (via orval for Helling API) |
 | Terminal | `@xterm/xterm` |
-| SPICE console | `spice-js` or `spice-html5` (dynamic import) |
+| SPICE console | `noVNC` or `noVNC` (dynamic import) |
 | Code editor | `@monaco-editor/react` (dynamic import) |
 | Routing | `react-router-dom` v7 |
 | HTTP | `axios` (JWT interceptor) |

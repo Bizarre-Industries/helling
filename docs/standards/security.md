@@ -7,6 +7,7 @@ Security requirements for Helling at every layer: application, infrastructure, s
 ## 1. Application Security
 
 ### Authentication
+
 ```
 Passwords:
   - Hash: bcrypt or argon2id (NOT SHA-256, NOT MD5)
@@ -36,23 +37,24 @@ API Tokens:
 2FA:
   - TOTP: RFC 6238, 6-digit, 30-second step, SHA-1 (compatibility)
   - WebAuthn: Level 2, discoverable credentials, user verification preferred
-  - Recovery codes: 10 codes, 16 chars each, bcrypt hashed, single-use
+  - Recovery codes: 10 codes, 16 chars each, argon2id hashed, single-use
   - 2FA lockout: 5 failed attempts → require recovery code
   - Recovery: documented process requiring identity verification
 ```
 
 ### Proxy Auth Model (ADR-014)
+
 ```
-The proxy validates JWT before forwarding to Incus/Podman sockets. The proxy maps
-the authenticated user to an Incus project via ?project= query parameter. Non-admin
-users are restricted to their assigned project. The Unix sockets themselves are only
-accessible by hellingd (running as root).
+The proxy validates JWT before forwarding to Incus/Podman sockets. For Incus calls,
+the proxy presents the authenticated user's dedicated TLS client certificate. Incus
+trust restrictions enforce scope. The Unix sockets themselves are only accessible by
+hellingd (running as root).
 
 Auth flow for proxied requests:
   1. Client sends request with JWT (Authorization header or cookie)
   2. hellingd middleware validates JWT, extracts user + roles
-  3. Middleware maps user → Incus project (from user's project assignment)
-  4. Request forwarded to Incus/Podman Unix socket with ?project= injected
+  3. Middleware loads user Incus TLS client certificate
+  4. Request forwarded to Incus/Podman Unix socket using user identity context
   5. Audit middleware logs the action (user, resource, method, timestamp)
 
 Auth flow for Helling-specific endpoints:
@@ -63,6 +65,7 @@ Auth flow for Helling-specific endpoints:
 ```
 
 ### Session Security
+
 ```
   - Session timeout: 30 minutes inactivity (configurable)
   - Concurrent sessions: unlimited (but viewable + individually revocable)
@@ -72,6 +75,7 @@ Auth flow for Helling-specific endpoints:
 ```
 
 ### Request Security
+
 ```
   - CORS: restrict to dashboard origin only
   - CSRF: SameSite=Strict cookies + custom X-Helling-Token header
@@ -84,6 +88,7 @@ Auth flow for Helling-specific endpoints:
 ```
 
 ### Data Security
+
 ```
 At rest:
   - SQLite: file permissions 0600 (owner read/write only)
@@ -112,6 +117,7 @@ Sanitization:
 ## 2. Infrastructure Security
 
 ### Host Hardening
+
 ```
 Debian 13 base:
   - Automatic security updates: unattended-upgrades for security pocket
@@ -126,6 +132,7 @@ Debian 13 base:
 ```
 
 ### systemd Hardening (hellingd)
+
 ```
 [Service]
 # Process isolation
@@ -169,6 +176,7 @@ RestartSec=5
 ```
 
 ### Container Security Defaults
+
 ```
 Podman containers created via Helling:
   - Run as non-root by default (rootless Podman)
@@ -192,6 +200,7 @@ Incus containers:
 ## 3. Supply Chain Security
 
 ### Build Pipeline
+
 ```
 SLSA Level 3 target:
   - Source: GitHub with branch protection, signed commits encouraged
@@ -224,6 +233,7 @@ Production Helling deploys as a .deb package on bare metal (ISO install).
 ```
 
 ### Release Signing
+
 ```
 Every release artifact is signed:
   - Go binaries: Cosign keyless signature + SLSA provenance
@@ -240,6 +250,7 @@ Every release artifact is signed:
 ## 4. Vulnerability Management
 
 ### Scanning Pipeline
+
 ```
 Every push:
   - govulncheck (Go vulnerability database)
@@ -259,6 +270,7 @@ Weekly:
 ```
 
 ### Vulnerability Response
+
 ```
 SECURITY.md defines:
   - Report to: security@bizarre.industries
@@ -285,6 +297,7 @@ CVE process:
 ## 5. Secrets Management
 
 ### In Helling Codebase
+
 ```
   - No secrets in source code (gitleaks enforced)
   - No secrets in environment variables baked into container images
@@ -295,6 +308,7 @@ CVE process:
 ```
 
 ### For Users
+
 ```
   - Secrets in containers: Podman secrets API (not environment variables for sensitive data)
   - Secrets in K8s: Kubernetes Secrets (base64, not encrypted by default)
@@ -308,6 +322,7 @@ CVE process:
 ## 6. Incident Response
 
 ### Preparation
+
 ```
   - Runbooks for common incidents documented in docs/runbooks/
   - Contact list for security team in SECURITY.md
@@ -317,6 +332,7 @@ CVE process:
 ```
 
 ### Detection
+
 ```
 Helling detects and alerts on:
   - Failed login attempts (>5 from same IP)
@@ -330,6 +346,7 @@ Helling detects and alerts on:
 ```
 
 ### Response
+
 ```
   1. Detect: alert triggers via warning engine or external monitoring
   2. Contain: revoke compromised tokens, isolate affected resources
@@ -344,6 +361,7 @@ Helling detects and alerts on:
 ## 7. Network Security
 
 ### TLS Configuration
+
 ```go
 tlsConfig := &tls.Config{
     MinVersion:               tls.VersionTLS12,
@@ -364,11 +382,12 @@ tlsConfig := &tls.Config{
 ```
 
 ### API Security Middleware Stack
+
 ```
 Request flow through middleware (order matters):
 
 1. Rate Limiter         → Block excessive requests
-2. Request ID           → Generate/propagate X-Request-ID  
+2. Request ID           → Generate/propagate X-Request-ID
 3. Security Headers     → CSP, HSTS, X-Frame-Options, etc.
 4. CORS                 → Restrict origins
 5. Request Logger       → Log method, path, source IP, request ID
@@ -385,6 +404,7 @@ Request flow through middleware (order matters):
 ## 8. Compliance Readiness
 
 ### What Helling enables (not implements itself)
+
 ```
 SOC 2:
   - Audit logging → hellingd audit log

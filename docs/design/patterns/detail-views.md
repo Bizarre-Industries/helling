@@ -162,7 +162,7 @@ function HardwareConfig({ instance }: { instance: Instance }) {
 ## Standards References
 
 - `docs/design/philosophy.md` -- Rule 6 (Summary tab shows everything), Rule 7 (two-click max)
-- `docs/refs/spec/webui-spec.md` -- 8 tabs per instance, Descriptions for summary, ProTable for sub-lists
+- `docs/spec/webui-spec.md` -- 8 tabs per instance, Descriptions for summary, ProTable for sub-lists
 - `CLAUDE.md` -- Descriptions replaces PropertyGrid, zero custom CSS
 
 ## Pages Using This Pattern

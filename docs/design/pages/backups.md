@@ -60,5 +60,5 @@ Backup failed: status Badge red with error message in expandable row. Toast: "Ba
 
 ## Cross-References
 
-- Spec: docs/refs/spec/webui-spec.md (Backups section)
+- Spec: docs/spec/webui-spec.md (Backups section)
 - Identity: docs/design/identity.md (Health Score -- backup deductions)

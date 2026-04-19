@@ -77,5 +77,5 @@ Cluster unhealthy: status Badge shows degraded. Events tab highlights errors. AP
 
 ## Cross-References
 
-- Spec: docs/refs/spec/webui-spec.md (Kubernetes sections)
+- Spec: docs/spec/webui-spec.md (Kubernetes sections)
 - Patterns: docs/design/patterns/console.md

@@ -167,7 +167,7 @@ Templates in `/var/lib/helling/templates/cloud-init/` (Ubuntu, Debian, Fedora, A
 
 ### Layer 16: SPICE Console
 
-**Tool:** `spice-js` or static `spice-html5`
+**Tool:** `noVNC` or static `noVNC`
 
 VM VGA console in the browser (ADR-010). Dynamic import to avoid loading SPICE library on non-console pages.
 

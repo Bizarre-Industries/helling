@@ -70,4 +70,4 @@ BMC unreachable: connection status Badge red. Sensors show last known values wit
 
 ## Cross-References
 
-- Spec: docs/refs/spec/webui-spec.md (BMC sections)
+- Spec: docs/spec/webui-spec.md (BMC sections)

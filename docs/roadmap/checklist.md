@@ -126,7 +126,7 @@
 
 ## v0.4.0 Gate
 
-- [ ] K8s cluster created via CAPN (VMs provisioned, K8s running)
+- [ ] K8s cluster created via k3s cloud-init (VMs provisioned, K8s running)
 - [ ] `helling k8s kubeconfig <name>` returns valid kubeconfig
 - [ ] BMC power on/off works via bmclib
 - [ ] BMC sensor data displayed in dashboard

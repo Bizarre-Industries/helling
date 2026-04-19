@@ -772,7 +772,7 @@ export interface IncusResponse<T> {
 export class IncusClient {
   async listInstances(project?: string): Promise<IncusInstance[]> {
     const url = project
-      ? `/api/incus/1.0/instances?project=${project}&recursion=2`
+      ? `/api/incus/1.0/instances&recursion=2`
       : '/api/incus/1.0/instances?recursion=2';
 
     const { data } = await axios.get<IncusResponse<IncusInstance[]>>(url);
@@ -781,7 +781,7 @@ export class IncusClient {
 
   async startInstance(name: string, project?: string): Promise<void> {
     const url = project
-      ? `/api/incus/1.0/instances/${name}/state?project=${project}`
+      ? `/api/incus/1.0/instances/${name}/state`
       : `/api/incus/1.0/instances/${name}/state`;
 
     await axios.put(url, { action: 'start' });
@@ -789,7 +789,7 @@ export class IncusClient {
 
   async stopInstance(name: string, project?: string): Promise<void> {
     const url = project
-      ? `/api/incus/1.0/instances/${name}/state?project=${project}`
+      ? `/api/incus/1.0/instances/${name}/state`
       : `/api/incus/1.0/instances/${name}/state`;
 
     await axios.put(url, { action: 'stop', force: true });
@@ -1110,11 +1110,11 @@ ws.onmessage = (e) => console.log('Received:', e.data);
 
 ```bash
 cd web
-bun add @spice-project/spice-html5
+bun add @spice/novnc
 # Or vendor files to public/spice/
 ```
 
-**Component:** `web/src/components/SpiceConsole.tsx`
+**Component:** `web/src/components/VncConsole.tsx`
 
 **Usage in detail page:** Add to `InstanceDetailPage.tsx` console tab
 

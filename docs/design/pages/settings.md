@@ -71,5 +71,5 @@ ACME failure: inline Alert with error. Notification test failure: toast with rea
 
 ## Cross-References
 
-- Spec: docs/refs/spec/webui-spec.md (Settings section)
+- Spec: docs/spec/webui-spec.md (Settings section)
 - Identity: docs/design/identity.md (Branding, Update Experience, Notification Architecture)

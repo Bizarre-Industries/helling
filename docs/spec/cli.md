@@ -33,7 +33,7 @@ helling auth token revoke ID           # Revoke API token
 helling user list                      # List users
 helling user create USERNAME           # Create user (PAM)
 helling user delete USERNAME           # Delete user (PAM)
-helling user set-project USER PROJECT  # Assign user to Incus project (RBAC)
+helling user set-scope USER SCOPE  # Assign user trust scope
 ```
 
 ### Schedules
@@ -68,7 +68,7 @@ helling bmc sensors ID                 # Read sensor data
 
 ```
 helling k8s list                       # List K8s clusters
-helling k8s create NAME                # Create cluster (CAPN wizard)
+helling k8s create NAME                # Create cluster (k3s via cloud-init wizard)
 helling k8s delete NAME                # Delete cluster
 helling k8s scale NAME --workers N     # Scale worker pool
 helling k8s upgrade NAME --version V   # Rolling upgrade

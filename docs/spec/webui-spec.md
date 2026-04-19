@@ -11,7 +11,7 @@ antd 6                          → Core components
 @tanstack/react-query           → Data fetching (via orval-generated hooks for Helling API)
 react-router-dom v7             → Routing
 xterm.js                        → Terminal (serial console, exec, logs)
-spice-js or spice-html5         → VM VGA console (SPICE protocol, dynamic import, ADR-010)
+@novnc/novnc                    → VM VGA console (noVNC protocol path, ADR-010)
 @monaco-editor/react            → YAML editor (cloud-init, compose, hookscripts, dynamic import)
 lucide-react                    → Icons
 axios                           → HTTP client with JWT interceptor
@@ -131,6 +131,7 @@ Task log: bottom drawer (`<Drawer>` placement=bottom, collapsible). Compact `<Ta
   toolBarRender={() => [<Button type="primary">Create Instance</Button>]}
 />
 ```
+
 Inline row actions: Start/Stop/Console (no drill-down needed). Bulk actions bar on selection.
 
 ### /instances/:name — Instance Detail
@@ -139,7 +140,7 @@ Inline row actions: Start/Stop/Console (no drill-down needed). Bulk actions bar 
 
 **Summary:** `<Descriptions>` (status, uptime, CPU, RAM, disk, IPs, MACs, config, tags, notes). `<Progress>` gauges. Quick action `<Button.Group>`. ALL on one screen, no scrolling on 1080p.
 
-**Console:** `<SpiceConsole>` (spice-js, dynamic import, ADR-010) for VMs: Ctrl+Alt+Del `<Button>`, clipboard, screenshot, fullscreen. `<SerialConsole>` (xterm.js) for CTs.
+**Console:** `<NoVncConsole>` (`@novnc/novnc`, dynamic import, ADR-010) for VMs: Ctrl+Alt+Del `<Button>`, clipboard, screenshot, fullscreen. `<SerialConsole>` (xterm.js) for CTs.
 
 **Hardware:** `<ProTable>` of devices (CPU, RAM, disks, NICs, USB, PCI, GPU). Add/Edit/Detach actions. Disk resize `<Slider>`. GPU passthrough with IOMMU group display.
 
@@ -188,7 +189,10 @@ Image update detection: `<Badge dot>` on container row when newer digest availab
   grid={{ column: 4 }}
   dataSource={templates}
   renderItem={(t) => (
-    <Card cover={<img src={t.logo} />} actions={[<Button type="primary">Deploy</Button>]}>
+    <Card
+      cover={<img src={t.logo} />}
+      actions={[<Button type="primary">Deploy</Button>]}
+    >
       <Card.Meta title={t.title} description={t.description} />
       <Tag>{t.category}</Tag>
     </Card>

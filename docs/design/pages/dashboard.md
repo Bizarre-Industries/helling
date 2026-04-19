@@ -60,6 +60,6 @@ Banner: "Connection lost. Showing cached data." All data shows stale timestamp. 
 
 ## Cross-References
 
-- Spec: docs/refs/spec/webui-spec.md (Dashboard section)
+- Spec: docs/spec/webui-spec.md (Dashboard section)
 - Patterns: docs/design/patterns/empty-states.md
 - Identity: docs/design/identity.md (First 5 Minutes, Health Score)

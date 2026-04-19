@@ -60,4 +60,4 @@ Network interface down: status Badge shows error. Connected instances listed wit
 
 ## Cross-References
 
-- Spec: docs/refs/spec/webui-spec.md (Networking section)
+- Spec: docs/spec/webui-spec.md (Networking section)

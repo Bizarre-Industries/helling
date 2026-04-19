@@ -76,5 +76,5 @@ Podman socket unavailable: "Podman service is not responding. Container manageme
 
 ## Cross-References
 
-- Spec: docs/refs/spec/webui-spec.md (Container List + Container Detail)
+- Spec: docs/spec/webui-spec.md (Container List + Container Detail)
 - Patterns: docs/design/patterns/console.md

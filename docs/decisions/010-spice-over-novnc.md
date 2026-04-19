@@ -1,23 +1,29 @@
-# ADR-010: SPICE Client over noVNC for VM VGA Console
+# ADR-010: noVNC as primary VM browser console, SPICE as fallback
 
-> Status: Accepted (2026-04-14)
+> Status: Accepted (2026-04-19)
 
 ## Context
 
-Incus uses SPICE protocol for VM VGA console access. noVNC implements VNC protocol. These are incompatible — noVNC literally cannot connect to an Incus SPICE console.
+Helling needs a browser-native VM console that works reliably in common desktop browsers without client installation.
+
+SPICE in browser depends on aging client implementations and inconsistent compatibility. noVNC is broadly deployed, active, and aligned with expected browser console UX.
+
+Incus default VM console wiring may use SPICE, but Helling controls VM launch parameters and can expose a VNC socket for browser use.
 
 ## Decision
 
-Use spice-js or spice-html5 for VGA console in the browser. Drop noVNC entirely.
+Use noVNC as the default in-browser VM console in v0.1.
+
+Implementation:
+
+1. VM definitions include QEMU VNC socket configuration (`raw.qemu`) on a local Unix socket.
+2. hellingd proxies that socket to WebSocket for browser clients.
+3. WebUI uses noVNC as the primary viewer.
+4. SPICE remains available only as an optional external-client fallback (for example, `.vv` download workflow).
 
 ## Consequences
 
-- VGA console works correctly with Incus VMs
-- SPICE provides better features (clipboard, USB redirect, audio) than VNC
-- Need to add spice-js or spice-html5 as frontend dependency
-
-## Addendum (2026-04-15)
-
-Tested `@novnc/novnc` v1.7.0-beta. The top-level `await` bundling issue **is resolved** in Vite v8 (rolldown). The 190 KB noVNC bundle was included cleanly with zero build errors.
-
-However, the **protocol incompatibility remains the blocking issue**: Incus VM consoles speak SPICE-over-WebSocket, not VNC/RFB. noVNC v1.7 would connect to the Incus WebSocket but fail immediately at handshake. This ADR stands.
+- Browser console path is standardized around noVNC
+- Console experience matches operator expectations from comparable virtualization UIs
+- Helling must maintain secure socket-to-WebSocket proxying and access checks
+- SPICE remains optional, not the default dependency for WebUI console

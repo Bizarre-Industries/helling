@@ -1,6 +1,6 @@
 # Helling Implementation Plan v4
 
-> Proxy-first architecture (ADR-014). ISO-only deployment (ADR-021). Six Go dependencies.
+> Proxy-first architecture (ADR-014). ISO-only deployment (ADR-021). approximately 10-12 Go dependencies.
 >
 > **📖 For detailed implementation steps, see:** [implementation-guide.md](./implementation-guide.md)
 >
@@ -16,7 +16,7 @@
 | --- | ------------------------------------------------------ | -------------------------------------------------------- |
 | 001 | Incus over libvirt                                     | Custom QEMU/KVM/LXC management                           |
 | 003 | React + Ant Design + refine over SvelteKit             | Manual CRUD boilerplate                                  |
-| 010 | SPICE client over noVNC for VM VGA console             | Wrong protocol                                           |
+| 010 | noVNC as primary VM browser console for VM VGA console             | Wrong protocol                                           |
 | 011 | Proxy to Podman socket, no Go bindings                 | API version mismatch, `containers/podman/v5` dep         |
 | 012 | Incus Network ACLs for VM/CT firewalling               | Custom nftables code                                     |
 | 013 | Incus project limits for VM/CT quotas                  | Custom quota enforcement                                 |
@@ -28,9 +28,9 @@
 | 019 | systemd journal over SQLite for audit                  | Custom audit tables + files                              |
 | 020 | Incus config keys over SQLite for tags                 | Custom tag tables + sync                                 |
 | 021 | ISO-only installation                                  | Docker try-it mode + manual Debian install               |
-| 022 | No CAPMVM / Flintlock                                  | K8s nodes = Incus VMs (CAPN), no microVM K8s             |
+| 022 | No CAPMVM / Flintlock                                  | K8s nodes = Incus VMs (k3s cloud-init in v0.1), no microVM K8s             |
 | 023 | No custom image format                                 | Native formats per runtime; app templates = compose YAML |
-| 024 | Incus native auth in v0.5+                             | JWT + project injection in v0.1–v0.4                     |
+| 024 | Incus per-user TLS auth from v0.1                             | JWT project query stopgap removed                     |
 | 025 | GitHub Releases as APT source                          | No aptly/reprepro infra; nfpm .deb on Release assets     |
 
 ---
@@ -53,7 +53,7 @@ All automation surfaces, with version assignments. See docs/design/full-automati
 | 10  | Atlas + GORM provider               | Database migrations (replaces AutoMigrate)          | v0.1.0-beta  |
 | 11  | invopop/jsonschema                  | Config JSON Schema from Go struct                   | v0.1.0-beta  |
 | 12  | cupaloy                             | API response snapshot testing                       | v0.1.0-beta  |
-| 13  | SPICE console (spice-js)            | VM VGA console in browser                           | v0.1.0-beta  |
+| 13  | noVNC console (/novnc)            | VM VGA console in browser                           | v0.1.0-beta  |
 | 14  | Cloud-init templates                | Validated preseed templates per distro              | v0.1.0-beta  |
 | 15  | tygo                                | Go → TypeScript event type generation               | v0.2.0       |
 | 16  | Scalar / Redoc                      | Embedded API docs in dashboard                      | v0.2.0       |
@@ -82,7 +82,7 @@ All automation surfaces, with version assignments. See docs/design/full-automati
 
 - [ ] Proxy middleware: `/api/incus/*` → Incus socket, `/api/podman/*` → Podman socket
 - [ ] JWT validation on proxy requests
-- [ ] RBAC: user → Incus project mapping via `?project=` param
+- [ ] RBAC: per-user Incus TLS certificate identity enforcement
 - [ ] Audit logging to systemd journal (ADR-019)
 - [ ] Auth handlers: setup, login (PAM), refresh, logout, TOTP, API tokens
 - [ ] User handlers: CRUD (PAM useradd/userdel)
@@ -126,18 +126,18 @@ All automation surfaces, with version assignments. See docs/design/full-automati
 
 ### v0.1.0-beta — Core Dashboard Feature-Complete
 
-**Gate:** Create VM → SPICE console → exec into CT → browse storage pools → see network topology.
+**Gate:** Create VM → noVNC console → exec into CT → browse storage pools → see network topology.
 
 #### Backend
 
-- [ ] WebSocket proxy for SPICE/serial/exec (upgrade forwarding)
+- [ ] WebSocket proxy for noVNC/serial/exec (upgrade forwarding)
 - [ ] Auto-snapshot before destructive operations (proxy hook)
 - [ ] VM screenshot thumbnails (capture + cache)
 - [ ] Atlas database migrations (replace AutoMigrate)
 
 #### Frontend
 
-- [ ] SPICE console component (ADR-010)
+- [ ] noVNC console component (ADR-010)
 - [ ] Serial console via xterm.js
 - [ ] Exec terminal via xterm.js
 - [ ] Instance detail page: 8 tabs
@@ -186,7 +186,7 @@ All automation surfaces, with version assignments. See docs/design/full-automati
 
 **Gate:** K8s cluster created, nodes running. BMC powers on server.
 
-- [ ] K8s handlers: CAPN create/delete/scale/upgrade/kubeconfig
+- [ ] K8s handlers: k3s cloud-init create/delete/scale/upgrade/kubeconfig
 - [ ] BMC handlers: CRUD + power + sensors + SEL (bmclib)
 - [ ] Cluster status visible via Incus proxy
 - [ ] Dashboard: K8s page with create wizard, BMC page, cluster page

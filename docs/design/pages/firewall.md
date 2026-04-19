@@ -66,4 +66,4 @@ nftables unavailable: banner with link to system logs. Rules shown as read-only 
 
 ## Cross-References
 
-- Spec: docs/refs/spec/webui-spec.md (Firewall section)
+- Spec: docs/spec/webui-spec.md (Firewall section)

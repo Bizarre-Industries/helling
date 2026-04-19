@@ -70,5 +70,5 @@ PAM unavailable: banner with link to system logs. Users shown as cached.
 
 ## Cross-References
 
-- Spec: docs/refs/spec/webui-spec.md (Users section)
+- Spec: docs/spec/webui-spec.md (Users section)
 - Identity: docs/design/identity.md (Session Management)
