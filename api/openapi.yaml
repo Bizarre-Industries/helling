@@ -1,0 +1,1243 @@
+openapi: 3.1.0
+info:
+  title: Helling API
+  version: 0.1.0
+  summary: Helling-owned control-plane API for authentication, users, schedules, webhooks, Kubernetes, system, firewall, audit, and events.
+  description: |
+    Normative contract for Helling-owned endpoints under /api/v1.
+
+    Notes:
+    - /api/incus/* and /api/podman/* are transparent proxy surfaces and are not modeled here.
+    - Success and error envelopes are defined in components/schemas and used consistently.
+servers:
+  - url: https://{host}:8006
+    variables:
+      host:
+        default: localhost
+tags:
+  - name: Auth
+  - name: Users
+  - name: Schedules
+  - name: Webhooks
+  - name: Kubernetes
+  - name: System
+  - name: Firewall
+  - name: Audit
+  - name: Events
+paths:
+  /api/v1/auth/setup:
+    post:
+      tags: [ Auth ]
+      operationId: authSetup
+      summary: First admin creation (one-time)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthSetupRequest'
+      responses:
+        '201':
+          description: Setup completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeAuthSetupResponse'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+  /api/v1/auth/login:
+    post:
+      tags: [ Auth ]
+      operationId: authLogin
+      summary: PAM authenticate and issue JWT pair
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthLoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeAuthLoginResponse'
+        '202':
+          description: MFA challenge required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeMfaChallengeResponse'
+        '401':
+          $ref: '#/components/responses/AuthError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+  /api/v1/auth/refresh:
+    post:
+      tags: [ Auth ]
+      operationId: authRefresh
+      summary: Refresh access token
+      responses:
+        '200':
+          description: Access token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeAuthRefreshResponse'
+        '401':
+          $ref: '#/components/responses/AuthError'
+  /api/v1/auth/logout:
+    post:
+      tags: [ Auth ]
+      operationId: authLogout
+      summary: Revoke current session
+      responses:
+        '200':
+          description: Session revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSimpleOk'
+  /api/v1/auth/mfa/complete:
+    post:
+      tags: [ Auth ]
+      operationId: authMfaComplete
+      summary: Complete MFA challenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaCompleteRequest'
+      responses:
+        '200':
+          description: MFA completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeAuthLoginResponse'
+        '401':
+          $ref: '#/components/responses/AuthError'
+  /api/v1/auth/totp/setup:
+    post:
+      tags: [ Auth ]
+      operationId: authTotpSetup
+      summary: Start TOTP enrollment
+      responses:
+        '200':
+          description: Enrollment material
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeTotpSetupResponse'
+  /api/v1/auth/totp/verify:
+    post:
+      tags: [ Auth ]
+      operationId: authTotpVerify
+      summary: Verify TOTP enrollment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TotpVerifyRequest'
+      responses:
+        '200':
+          description: TOTP enabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSimpleOk'
+        '401':
+          $ref: '#/components/responses/AuthError'
+  /api/v1/auth/totp:
+    delete:
+      tags: [ Auth ]
+      operationId: authTotpDisable
+      summary: Disable TOTP
+      responses:
+        '200':
+          description: TOTP disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSimpleOk'
+  /api/v1/auth/tokens:
+    get:
+      tags: [ Auth ]
+      operationId: authTokenList
+      summary: List API tokens for current user
+      responses:
+        '200':
+          description: Token list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeTokenList'
+    post:
+      tags: [ Auth ]
+      operationId: authTokenCreate
+      summary: Create API token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTokenRequest'
+      responses:
+        '201':
+          description: Token created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeCreateTokenResponse'
+  /api/v1/auth/tokens/{id}:
+    delete:
+      tags: [ Auth ]
+      operationId: authTokenRevoke
+      summary: Revoke API token
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Token revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSimpleOk'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /api/v1/users:
+    get:
+      tags: [ Users ]
+      operationId: userList
+      summary: List users
+      parameters:
+        - $ref: '#/components/parameters/PageLimit'
+        - $ref: '#/components/parameters/PageCursor'
+      responses:
+        '200':
+          description: User list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeUserList'
+    post:
+      tags: [ Users ]
+      operationId: userCreate
+      summary: Create user and provision trust identity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeUser'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+  /api/v1/users/{id}:
+    get:
+      tags: [ Users ]
+      operationId: userGet
+      summary: Get user detail
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: User detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeUser'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    put:
+      tags: [ Users ]
+      operationId: userUpdate
+      summary: Update user role/status
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeUser'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    delete:
+      tags: [ Users ]
+      operationId: userDelete
+      summary: Delete user and revoke trust identity
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: User deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSimpleOk'
+
+  /api/v1/schedules:
+    get:
+      tags: [ Schedules ]
+      operationId: scheduleList
+      summary: List schedules
+      parameters:
+        - $ref: '#/components/parameters/PageLimit'
+        - $ref: '#/components/parameters/PageCursor'
+      responses:
+        '200':
+          description: Schedule list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeScheduleList'
+    post:
+      tags: [ Schedules ]
+      operationId: scheduleCreate
+      summary: Create schedule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateScheduleRequest'
+      responses:
+        '201':
+          description: Schedule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSchedule'
+  /api/v1/schedules/{id}:
+    get:
+      tags: [ Schedules ]
+      operationId: scheduleGet
+      summary: Get schedule detail
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Schedule detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSchedule'
+    put:
+      tags: [ Schedules ]
+      operationId: scheduleUpdate
+      summary: Update schedule
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateScheduleRequest'
+      responses:
+        '200':
+          description: Schedule updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSchedule'
+    delete:
+      tags: [ Schedules ]
+      operationId: scheduleDelete
+      summary: Delete schedule
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Schedule deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSimpleOk'
+  /api/v1/schedules/{id}/run:
+    post:
+      tags: [ Schedules ]
+      operationId: scheduleRunNow
+      summary: Run schedule now
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '202':
+          description: Trigger accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSimpleOk'
+
+  /api/v1/webhooks:
+    get:
+      tags: [ Webhooks ]
+      operationId: webhookList
+      summary: List webhooks
+      responses:
+        '200':
+          description: Webhook list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeWebhookList'
+    post:
+      tags: [ Webhooks ]
+      operationId: webhookCreate
+      summary: Create webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWebhookRequest'
+      responses:
+        '201':
+          description: Webhook created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeWebhook'
+  /api/v1/webhooks/{id}:
+    get:
+      tags: [ Webhooks ]
+      operationId: webhookGet
+      summary: Get webhook
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Webhook detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeWebhook'
+    put:
+      tags: [ Webhooks ]
+      operationId: webhookUpdate
+      summary: Update webhook
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWebhookRequest'
+      responses:
+        '200':
+          description: Webhook updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeWebhook'
+    delete:
+      tags: [ Webhooks ]
+      operationId: webhookDelete
+      summary: Delete webhook
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Webhook deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSimpleOk'
+  /api/v1/webhooks/{id}/test:
+    post:
+      tags: [ Webhooks ]
+      operationId: webhookTest
+      summary: Send test delivery
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '202':
+          description: Test delivery accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSimpleOk'
+
+  /api/v1/kubernetes:
+    get:
+      tags: [ Kubernetes ]
+      operationId: kubernetesList
+      summary: List clusters
+      responses:
+        '200':
+          description: Cluster list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeKubernetesClusterList'
+    post:
+      tags: [ Kubernetes ]
+      operationId: kubernetesCreate
+      summary: Create cluster
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateKubernetesClusterRequest'
+      responses:
+        '202':
+          description: Cluster provisioning accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeKubernetesCluster'
+  /api/v1/kubernetes/{name}:
+    get:
+      tags: [ Kubernetes ]
+      operationId: kubernetesGet
+      summary: Get cluster detail
+      parameters:
+        - $ref: '#/components/parameters/NamePath'
+      responses:
+        '200':
+          description: Cluster detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeKubernetesCluster'
+    delete:
+      tags: [ Kubernetes ]
+      operationId: kubernetesDelete
+      summary: Delete cluster
+      parameters:
+        - $ref: '#/components/parameters/NamePath'
+      responses:
+        '202':
+          description: Cluster deletion accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSimpleOk'
+  /api/v1/kubernetes/{name}/scale:
+    post:
+      tags: [ Kubernetes ]
+      operationId: kubernetesScale
+      summary: Scale worker pool
+      parameters:
+        - $ref: '#/components/parameters/NamePath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScaleKubernetesClusterRequest'
+      responses:
+        '202':
+          description: Scale accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSimpleOk'
+  /api/v1/kubernetes/{name}/upgrade:
+    post:
+      tags: [ Kubernetes ]
+      operationId: kubernetesUpgrade
+      summary: Rolling upgrade
+      parameters:
+        - $ref: '#/components/parameters/NamePath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpgradeKubernetesClusterRequest'
+      responses:
+        '202':
+          description: Upgrade accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSimpleOk'
+  /api/v1/kubernetes/{name}/kubeconfig:
+    get:
+      tags: [ Kubernetes ]
+      operationId: kubernetesKubeconfig
+      summary: Download kubeconfig
+      parameters:
+        - $ref: '#/components/parameters/NamePath'
+      responses:
+        '200':
+          description: Kubeconfig
+          content:
+            application/yaml:
+              schema:
+                type: string
+
+  /api/v1/system/info:
+    get:
+      tags: [ System ]
+      operationId: systemInfo
+      summary: Host and version info
+      responses:
+        '200':
+          description: System info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSystemInfo'
+  /api/v1/system/hardware:
+    get:
+      tags: [ System ]
+      operationId: systemHardware
+      summary: Hardware detail
+      responses:
+        '200':
+          description: Hardware info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSystemHardware'
+  /api/v1/system/config:
+    get:
+      tags: [ System ]
+      operationId: systemConfigGet
+      summary: Get current config
+      responses:
+        '200':
+          description: Config snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSystemConfig'
+    put:
+      tags: [ System ]
+      operationId: systemConfigPut
+      summary: Update config
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SystemConfigUpdateRequest'
+      responses:
+        '200':
+          description: Config updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSimpleOk'
+  /api/v1/system/upgrade:
+    post:
+      tags: [ System ]
+      operationId: systemUpgrade
+      summary: Apply upgrades
+      responses:
+        '202':
+          description: Upgrade accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSimpleOk'
+  /api/v1/system/diagnostics:
+    get:
+      tags: [ System ]
+      operationId: systemDiagnostics
+      summary: Run diagnostics
+      responses:
+        '200':
+          description: Diagnostic report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeDiagnostics'
+
+  /api/v1/firewall/host:
+    get:
+      tags: [ Firewall ]
+      operationId: firewallHostList
+      summary: List host firewall rules
+      responses:
+        '200':
+          description: Firewall rule list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeFirewallRuleList'
+    post:
+      tags: [ Firewall ]
+      operationId: firewallHostCreate
+      summary: Create host firewall rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFirewallRuleRequest'
+      responses:
+        '201':
+          description: Rule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeFirewallRule'
+  /api/v1/firewall/host/{id}:
+    delete:
+      tags: [ Firewall ]
+      operationId: firewallHostDelete
+      summary: Delete host firewall rule
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Rule deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSimpleOk'
+
+  /api/v1/audit:
+    get:
+      tags: [ Audit ]
+      operationId: auditQuery
+      summary: Query audit log
+      parameters:
+        - $ref: '#/components/parameters/PageLimit'
+        - $ref: '#/components/parameters/PageCursor'
+      responses:
+        '200':
+          description: Audit records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeAuditRecordList'
+  /api/v1/audit/export:
+    get:
+      tags: [ Audit ]
+      operationId: auditExport
+      summary: Export audit data
+      parameters:
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: [ csv, json ]
+            default: csv
+      responses:
+        '200':
+          description: Export stream
+          content:
+            text/csv:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeAuditRecordList'
+
+  /api/v1/health:
+    get:
+      tags: [ System ]
+      operationId: healthGet
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeHealth'
+  /api/v1/events:
+    get:
+      tags: [ Events ]
+      operationId: eventsSse
+      summary: Helling SSE event stream
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdPath:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+    NamePath:
+      in: path
+      name: name
+      required: true
+      schema:
+        type: string
+    PageLimit:
+      in: query
+      name: limit
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 500
+        default: 50
+    PageCursor:
+      in: query
+      name: cursor
+      schema:
+        type: string
+  responses:
+    AuthError:
+      description: Authentication or authorization failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ConflictError:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    RateLimitError:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+  schemas:
+    Meta:
+      type: object
+      required: [ request_id ]
+      properties:
+        request_id:
+          type: string
+        page:
+          type: object
+          properties:
+            has_next:
+              type: boolean
+            next_cursor:
+              type: [ string, 'null' ]
+            limit:
+              type: integer
+    ErrorEnvelope:
+      type: object
+      required: [ error, code, action, doc_link, meta ]
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        action:
+          type: string
+        doc_link:
+          type: string
+          format: uri
+        meta:
+          $ref: '#/components/schemas/Meta'
+    EnvelopeSimpleOk:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data:
+          type: object
+          properties:
+            ok:
+              type: boolean
+              default: true
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    AuthSetupRequest:
+      type: object
+      required: [ username, password ]
+      properties:
+        username: { type: string }
+        password: { type: string }
+    AuthLoginRequest:
+      type: object
+      required: [ username, password ]
+      properties:
+        username: { type: string }
+        password: { type: string }
+        totp_code: { type: string }
+    MfaCompleteRequest:
+      type: object
+      required: [ mfa_token, totp_code ]
+      properties:
+        mfa_token: { type: string }
+        totp_code: { type: string }
+    TotpVerifyRequest:
+      type: object
+      required: [ code ]
+      properties:
+        code: { type: string }
+    CreateTokenRequest:
+      type: object
+      required: [ name, scope ]
+      properties:
+        name: { type: string }
+        scope:
+          type: string
+          enum: [ read, write, admin ]
+
+    User:
+      type: object
+      required: [ id, username, role, status, created_at ]
+      properties:
+        id: { type: string }
+        username: { type: string }
+        role:
+          type: string
+          enum: [ admin, user, auditor ]
+        status:
+          type: string
+          enum: [ active, disabled ]
+        created_at: { type: string, format: date-time }
+    Token:
+      type: object
+      required: [ id, name, scope, expires_at ]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        scope: { type: string }
+        expires_at: { type: string, format: date-time }
+    Schedule:
+      type: object
+      required: [ id, type, target, cron, enabled ]
+      properties:
+        id: { type: string }
+        type: { type: string }
+        target: { type: string }
+        cron: { type: string }
+        enabled: { type: boolean }
+    Webhook:
+      type: object
+      required: [ id, name, url, events, enabled ]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        url: { type: string, format: uri }
+        events:
+          type: array
+          items: { type: string }
+        enabled: { type: boolean }
+    KubernetesCluster:
+      type: object
+      required: [ name, state, k8s_version ]
+      properties:
+        name: { type: string }
+        state: { type: string }
+        k8s_version: { type: string }
+    FirewallRule:
+      type: object
+      required: [ id, action, protocol ]
+      properties:
+        id: { type: string }
+        action: { type: string }
+        protocol: { type: string }
+    AuditRecord:
+      type: object
+      required: [ id, event_type, created_at ]
+      properties:
+        id: { type: string }
+        event_type: { type: string }
+        created_at: { type: string, format: date-time }
+
+    CreateUserRequest:
+      type: object
+      required: [ username, role ]
+      properties:
+        username: { type: string }
+        role: { type: string, enum: [ admin, user, auditor ] }
+    UpdateUserRequest:
+      type: object
+      properties:
+        role: { type: string, enum: [ admin, user, auditor ] }
+        status: { type: string, enum: [ active, disabled ] }
+    CreateScheduleRequest:
+      type: object
+      required: [ type, target, cron ]
+      properties:
+        type: { type: string }
+        target: { type: string }
+        cron: { type: string }
+    UpdateScheduleRequest:
+      allOf:
+        - $ref: '#/components/schemas/CreateScheduleRequest'
+    CreateWebhookRequest:
+      type: object
+      required: [ name, url, events ]
+      properties:
+        name: { type: string }
+        url: { type: string, format: uri }
+        events:
+          type: array
+          items: { type: string }
+    UpdateWebhookRequest:
+      allOf:
+        - $ref: '#/components/schemas/CreateWebhookRequest'
+    CreateKubernetesClusterRequest:
+      type: object
+      required: [ name, k8s_version ]
+      properties:
+        name: { type: string }
+        k8s_version: { type: string }
+    ScaleKubernetesClusterRequest:
+      type: object
+      required: [ worker_count ]
+      properties:
+        worker_count: { type: integer, minimum: 1 }
+    UpgradeKubernetesClusterRequest:
+      type: object
+      required: [ k8s_version ]
+      properties:
+        k8s_version: { type: string }
+    SystemConfigUpdateRequest:
+      type: object
+      additionalProperties: true
+    CreateFirewallRuleRequest:
+      type: object
+      required: [ action, protocol ]
+      properties:
+        action: { type: string }
+        protocol: { type: string }
+
+    AuthLoginData:
+      type: object
+      required: [ access_token, token_type, expires_in ]
+      properties:
+        access_token: { type: string }
+        token_type: { type: string, enum: [ Bearer ] }
+        expires_in: { type: integer }
+    AuthRefreshData:
+      type: object
+      required: [ access_token, token_type, expires_in ]
+      properties:
+        access_token: { type: string }
+        token_type: { type: string }
+        expires_in: { type: integer }
+    MfaChallengeData:
+      type: object
+      required: [ mfa_required, mfa_token ]
+      properties:
+        mfa_required: { type: boolean }
+        mfa_token: { type: string }
+    TotpSetupData:
+      type: object
+      required: [ otpauth_uri, qr_png_base64, recovery_codes ]
+      properties:
+        otpauth_uri: { type: string }
+        qr_png_base64: { type: string }
+        recovery_codes:
+          type: array
+          items: { type: string }
+
+    EnvelopeAuthSetupResponse:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data:
+          type: object
+          properties:
+            setup_complete: { type: boolean }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeAuthLoginResponse:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data: { $ref: '#/components/schemas/AuthLoginData' }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeAuthRefreshResponse:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data: { $ref: '#/components/schemas/AuthRefreshData' }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeMfaChallengeResponse:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data: { $ref: '#/components/schemas/MfaChallengeData' }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeTotpSetupResponse:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data: { $ref: '#/components/schemas/TotpSetupData' }
+        meta: { $ref: '#/components/schemas/Meta' }
+
+    EnvelopeUser:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data: { $ref: '#/components/schemas/User' }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeUserList:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/User' }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeTokenList:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Token' }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeCreateTokenResponse:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data:
+          type: object
+          properties:
+            id: { type: string }
+            token: { type: string }
+            scope: { type: string }
+            expires_at: { type: string, format: date-time }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeSchedule:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data: { $ref: '#/components/schemas/Schedule' }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeScheduleList:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Schedule' }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeWebhook:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data: { $ref: '#/components/schemas/Webhook' }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeWebhookList:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Webhook' }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeKubernetesCluster:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data: { $ref: '#/components/schemas/KubernetesCluster' }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeKubernetesClusterList:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/KubernetesCluster' }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeSystemInfo:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeSystemHardware:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeSystemConfig:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeDiagnostics:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeFirewallRule:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data: { $ref: '#/components/schemas/FirewallRule' }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeFirewallRuleList:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/FirewallRule' }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeAuditRecordList:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/AuditRecord' }
+        meta: { $ref: '#/components/schemas/Meta' }
+    EnvelopeHealth:
+      type: object
+      required: [ data, meta ]
+      properties:
+        data:
+          type: object
+          required: [ status ]
+          properties:
+            status: { type: string, enum: [ ok ] }
+        meta: { $ref: '#/components/schemas/Meta' }
+security:
+  - bearerAuth: []

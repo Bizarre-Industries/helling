@@ -1,5 +1,7 @@
 # Coding Standards
 
+<!-- markdownlint-disable MD040 -->
+
 Rules for writing code in Helling. Not preferences. Standards. Violations are bugs.
 
 ---
@@ -193,26 +195,32 @@ if strings.Contains(path, "..") || !filepath.IsAbs(path) {
     return ErrInvalidPath
 }
 
-// RULE: Use parameterized queries for ALL database access (GORM handles this).
-// NEVER: db.Raw("SELECT * FROM users WHERE name = '" + name + "'")
-// ALWAYS: db.Where("name = ?", name).Find(&users)
+// RULE: Use parameterized queries for ALL database access.
+// NEVER: fmt.Sprintf("SELECT * FROM users WHERE name = '%s'", name)
+// ALWAYS: query with placeholders through sqlc-generated methods/database/sql
 ```
 
 ### Database
 
 ```go
-// RULE: All database access through GORM. No raw SQL except migrations.
+// RULE: All database access through sqlc-generated queries + database/sql.
 // RULE: Schema changes via numbered migration files, never ad-hoc ALTER TABLE.
 // RULE: Transactions for multi-step operations:
-err := db.Transaction(func(tx *gorm.DB) error {
-    if err := tx.Create(&instance).Error; err != nil {
-        return err
-    }
-    if err := tx.Create(&auditEntry).Error; err != nil {
-        return err
-    }
-    return nil
-})
+tx, err := db.BeginTx(ctx, nil)
+if err != nil {
+    return err
+}
+defer tx.Rollback()
+
+if err := qtx.CreateInstance(ctx, params); err != nil {
+    return err
+}
+if err := qtx.CreateAuditEntry(ctx, auditParams); err != nil {
+    return err
+}
+if err := tx.Commit(); err != nil {
+    return err
+}
 
 // RULE: Pagination on all list endpoints. Never return unbounded results.
 // RULE: Indexes on all columns used in WHERE clauses.

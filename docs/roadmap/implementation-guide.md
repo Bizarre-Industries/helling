@@ -1,5 +1,7 @@
 # Helling Implementation Guide
 
+<!-- markdownlint-disable MD029 MD010 -->
+
 **Version:** v4 (2026-04-15)
 **Purpose:** Detailed, actionable implementation steps for Helling development
 **Audience:** Developers implementing features according to the roadmap
@@ -1215,7 +1217,7 @@ bun add @xterm/xterm
 
 - Always backup before upgrade
 - Test migrations on copy first
-- Atlas generates safe SQL
+- Use reviewed forward-only SQL migrations (goose) and keep query contracts in sqlc-managed SQL files
 
 ---
 

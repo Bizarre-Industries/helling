@@ -7,7 +7,7 @@
 
 ## The Core: Proxy + Small Spec
 
-```
+```text
                     api/openapi.yaml (~40 endpoints)
                               │
            ┌──────────────────┼──────────────────┐
@@ -76,9 +76,9 @@ Lints openapi.yaml for errors, missing pagination params, envelope compliance, a
 
 ### Layer 6: Database Migrations
 
-**Tool:** `Atlas` (atlasgo.io) with GORM provider
+**Tool:** `goose` + `sqlc`
 
-Replaces GORM AutoMigrate. Atlas diffs GORM model structs against live DB and generates versioned SQL migration files. Enables safe upgrades with rollback. Future SQLite → PostgreSQL path for clustering.
+Migration files are versioned SQL managed by goose. Query files are SQL-first and generate typed data access code via sqlc. This keeps schema/query behavior explicit, reviewable, and aligned with ADR-038.
 
 **Version:** v0.1.0-beta | **Priority:** Must-have
 
@@ -315,11 +315,15 @@ port:
 
 ## Summary by Version
 
+<!-- markdownlint-disable MD060 -->
+
 | Version      | Automation added                                                                                                                 |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
 | v0.1.0-alpha | oapi-codegen (server + client), orval, Makefile pipeline, vacuum, nilaway/exhaustive, git-cliff, dev container, pre-commit hooks |
-| v0.1.0-beta  | Atlas migrations, config JSON Schema, snapshot testing, SPICE browser console, cloud-init templates                              |
+| v0.1.0-beta  | goose/sqlc migration-query workflow, config JSON Schema, snapshot testing, SPICE browser console, cloud-init templates           |
 | v0.2.0       | tygo event types, embedded API docs (Scalar/Redoc)                                                                               |
 | v0.3.0       | Prometheus metrics, Grafana dashboard generation                                                                                 |
 | v0.8.0       | Schemathesis fuzzing, goss system validation                                                                                     |
 | v1.0.0       | nfpm .deb, ISO builder, APT repo, GoReleaser, Cosign, SLSA, SBOM, license checks, man pages, completions                         |
+
+<!-- markdownlint-enable MD060 -->

@@ -1,5 +1,7 @@
 # Platform Specification
 
+<!-- markdownlint-disable MD040 MD024 -->
+
 Cross-cutting Helling-specific features. These are things that Incus and Podman don't provide.
 
 ---
@@ -28,7 +30,7 @@ backup.completed, backup.failed
 
 ### Delivery
 
-- CloudEvents v1.0 format
+- Canonical webhook payload envelope is defined in `docs/spec/events.md`
 - HMAC-SHA256 signature in `X-Helling-Signature` header
 - 3 retries with exponential backoff (1s, 10s, 60s)
 - Delivery log stored in SQLite (last 100 per webhook)
@@ -86,7 +88,7 @@ GET /api/v1/system/info → hostname, OS, kernel, CPU, RAM, uptime, Helling vers
 GET /api/v1/system/hardware → disks (SMART), NICs, GPUs
 ```
 
-Hardware info gathered via `smartctl --json`, `lspci`, and gopsutil.
+Hardware info gathered via shell-out and system files (`smartctl --json`, `lspci`, `lsblk --json`, `ip -j addr`, and `/proc/*` parsing as needed).
 
 ### System Config
 

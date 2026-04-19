@@ -43,7 +43,9 @@ Scope controls:
 
 ### VM Screenshots / Thumbnails
 
-hellingd captures VM console thumbnails and serves them through Helling-specific endpoints.
+Deferred from v0.1.
+
+Rationale: no stable low-cost capture path is currently specified for SPICE-backed consoles in the proxy-first model. Revisit in a later version when a reliable guest-agent or upstream-native capture mechanism is selected and documented.
 
 ### Console
 

@@ -53,6 +53,21 @@ This directory contains Helling's implementation roadmap and planning documents.
 
 ---
 
+### 🧭 [phase0-parity-matrix.md](./phase0-parity-matrix.md) - API/CLI/WebUI Parity Tracker
+
+**Purpose:** Track and close Phase 0 parity gaps for Helling-owned endpoints
+**Audience:** Developers, reviewers, release gate owners
+
+**Contains:**
+
+- Domain-by-domain parity map across OpenAPI, CLI, and WebUI contracts
+- Explicit mandatory gap closures before Phase 0 exit
+- Exception policy and verification checklist
+
+**Use this when:** You need to prove parity coverage before marking Phase 0 complete.
+
+---
+
 ## Quick Start for Developers
 
 ### Starting v0.1.0-alpha Implementation
@@ -137,6 +152,11 @@ Follow this sequence from [implementation-guide.md](./implementation-guide.md):
 
 - **Architecture questions:** See [docs/spec/architecture.md](../spec/architecture.md)
 - **API design:** See [docs/spec/api.md](../spec/api.md)
+- **API contract (normative):** See [api/openapi.yaml](../../api/openapi.yaml)
+- **Error codes:** See [docs/spec/errors.md](../spec/errors.md)
+- **Permissions:** See [docs/spec/permissions.md](../spec/permissions.md)
+- **Events:** See [docs/spec/events.md](../spec/events.md)
+- **Validation and pagination:** See [docs/spec/validation.md](../spec/validation.md) and [docs/spec/pagination.md](../spec/pagination.md)
 - **Automation details:** See [docs/design/full-automation-pipeline.md](../design/full-automation-pipeline.md)
 - **Contributing:** See [CONTRIBUTING.md](../../CONTRIBUTING.md)
 
