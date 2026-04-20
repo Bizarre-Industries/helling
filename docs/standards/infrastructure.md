@@ -22,6 +22,25 @@ Verify:
   - Delegated user calls are denied when trust restrictions do not allow the action.
 ```
 
+### Incus Minimum Version
+
+```text
+RULE: Helling requires Incus >= 6.14.0.
+
+Why:
+  - CVE-2025-52889 (DoS via DHCP lease exhaustion on bridge networks)
+  - CVE-2025-52890 (firewall rule bypass on bridge networks with ACLs, CVSS 8.1)
+  - CVE-2025-4115 (local privilege escalation via custom storage volumes)
+
+All three affect Incus 6.12 and 6.13 and are patched in 6.14+.
+
+Enforcement:
+  - ISO build manifest pins `incus >= 6.14.0` via the Zabbly apt repo
+  - hellingd boot-time version check disables the Incus proxy and logs a
+    HIGH-severity structured journal entry if below minimum
+  - See docs/spec/platform.md §11 for the authoritative version matrix
+```
+
 ### Build Reproducibility
 
 ```yaml

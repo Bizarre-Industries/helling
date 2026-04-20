@@ -282,7 +282,6 @@ Release gate:
 Removed from baseline (ADR-042 consolidation):
   - Semgrep
   - Bearer
-  - osv-scanner
   - Snyk Container
 ```
 
@@ -308,6 +307,25 @@ CVE process:
   - Release patched version
   - Notify via: GitHub advisory, release notes, security mailing list
 ```
+
+### Upstream Dependency CVEs
+
+Helling consumes Incus, Podman, K3s, and Caddy as platform components. CVEs against these components flow through to Helling deployments until the operator applies a package update.
+
+Version pins (see `docs/spec/platform.md` §11 for the authoritative list):
+
+```text
+Incus >= 6.14.0 — earlier versions carry:
+  CVE-2025-52889  DoS via DHCP lease exhaustion on bridge networks
+  CVE-2025-52890  firewall rule bypass on bridge networks with ACLs (CVSS 8.1)
+  CVE-2025-4115   local privilege escalation via custom storage volumes
+```
+
+Operator expectations:
+
+- Enable `unattended-upgrades` or equivalent to pick up Debian + Zabbly security updates.
+- hellingd boot-time check logs a HIGH-severity structured warning and disables the Incus proxy when the installed Incus is below the minimum version.
+- Upstream CVEs for Incus, Podman, K3s, and Caddy are tracked via Debian DSA + each project's security feed; Helling release notes summarise any forced version bump.
 
 ---
 

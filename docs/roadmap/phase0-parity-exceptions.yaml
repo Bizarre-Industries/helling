@@ -78,16 +78,6 @@ exceptions:
     reason: "Phase 0 — user management surfaces not yet implemented"
     target_version: "v0.4.0"
 
-  - operation_id: userGet
-    missing: both
-    reason: "Phase 0 — user management surfaces not yet implemented"
-    target_version: "v0.4.0"
-
-  - operation_id: userUpdate
-    missing: both
-    reason: "Phase 0 — user management surfaces not yet implemented"
-    target_version: "v0.4.0"
-
   - operation_id: userDelete
     missing: both
     reason: "Phase 0 — user management surfaces not yet implemented"
@@ -239,23 +229,12 @@ exceptions:
     target_version: "v0.5.0"
 
   # ── Audit ──────────────────────────────────────────────────────────────────
-  - operation_id: auditQuery
-    missing: both
-    reason: "Phase 0 — audit surfaces not yet implemented"
-    target_version: "v0.5.0"
-
-  - operation_id: auditExport
-    missing: both
-    reason: "Phase 0 — audit surfaces not yet implemented"
-    target_version: "v0.5.0"
+  # auditQuery and auditExport have CLI surface (`helling audit query`,
+  # `helling audit export`) and WebUI surface (/audit page). Parity gap closed.
 
   # ── Health / Events ────────────────────────────────────────────────────────
-  - operation_id: healthGet
-    missing: both
-    reason: "Phase 0 — health endpoint is internal; no CLI/WebUI surface needed"
-    target_version: "v0.3.0"
+  # healthGet has CLI surface (`helling system health`) and internal WebUI
+  # consumption via app-shell health check. Parity gap closed.
 
-  - operation_id: eventsSse
-    missing: both
-    reason: "Phase 0 — SSE consumed internally by WebUI; no standalone CLI surface"
-    target_version: "v0.4.0"
+  # eventsSse has CLI surface (`helling events tail`) and is consumed
+  # internally by the WebUI for task/log streaming. Parity gap closed.

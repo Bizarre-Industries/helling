@@ -179,3 +179,27 @@ Compose file library for one-click application deployment. See docs/spec/compute
 Resource tags stored as Incus `user.tag.*` config keys (ADR-020). See docs/spec/architecture.md. Podman resources use `helling.tag.*` labels.
 
 The dashboard reads tags from proxied responses. No separate tag API needed.
+
+---
+
+## 11. Dependency Version Pins
+
+Helling ISO bakes in specific versions of its core platform dependencies. These pins are enforced by the ISO build manifest and the Helling `.deb` postinst check.
+
+| Component | Minimum version | Why                                                                                                            |
+| --------- | --------------- | -------------------------------------------------------------------------------------------------------------- |
+| Debian    | 13 (Trixie)     | Base OS per ADR-002.                                                                                            |
+| Incus     | **6.14.0**      | CVE-2025-52889 (DoS), CVE-2025-52890 (ACL firewall-rule bypass, CVSS 8.1), CVE-2025-4115 (local privesc via custom storage volumes). All three affect 6.12/6.13 and are patched in 6.14. |
+| Podman    | Debian-shipped  | Whatever Debian 13 packages. libpod v5 socket at `/run/podman/podman.sock`.                                    |
+| K3s       | latest stable   | SQLite datastore default, etcd opt-in for HA (ADR-005).                                                         |
+| Caddy     | 2.x             | Debian-shipped package (ADR-037).                                                                               |
+
+### Enforcement
+
+- ISO build manifest pins `incus >= 6.14.0` via the Zabbly apt repo.
+- hellingd boot-time check: if `incus --version` returns < 6.14.0, log a HIGH-severity structured warning to journal (`HELLING_COMPONENT=bootstrap`, `HELLING_CODE=INCUS_VERSION_BELOW_MIN`) and disable the Incus proxy until the operator upgrades.
+- The upgrade runbook (docs/runbooks/helling-upgrade.md) includes an Incus minimum-version gate check before applying the new Helling release.
+
+### CVE Inheritance
+
+Helling consumes Incus as a platform component. CVEs against Incus flow through to Helling deployments until the operator's next `apt upgrade`. The security advisory feed published at `security.md` lists only Helling-originated vulnerabilities; Incus CVEs are tracked via Debian DSA + Zabbly's repo metadata. Operators are expected to run `unattended-upgrades` or equivalent.

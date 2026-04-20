@@ -249,7 +249,7 @@ Create wizard: `<StepsForm>` with 6 steps (Flavor cards, Control Plane sliders, 
 
 8 tabs:
 
-**Overview:** `<Descriptions>` (version, endpoint, status, etcd health, nodes, pods). Resource `<Progress>` bars. Kubeconfig `<Button>` download.
+**Overview:** `<Descriptions>` (version, endpoint, status, datastore health, nodes, pods). Resource `<Progress>` bars. Kubeconfig `<Button>` download.
 
 **Nodes:** `<ProTable>` (name, role, status, version, CPU/RAM, pods, conditions). Actions: Cordon, Drain, Uncordon, Delete, Maintenance Mode.
 
@@ -265,17 +265,11 @@ Create wizard: `<StepsForm>` with 6 steps (Flavor cards, Control Plane sliders, 
 
 **kubectl:** Embedded `@xterm/xterm` with pre-loaded kubeconfig. Autocomplete.
 
-Lifecycle actions in toolbar: Upgrade `<ModalForm>` (version picker, rolling progress), Scale `<ModalForm>`, etcd Snapshot/Restore.
+Lifecycle actions in toolbar: Upgrade `<ModalForm>` (version picker, rolling progress), Scale `<ModalForm>`, Datastore Snapshot/Restore (SQLite or etcd depending on cluster mode).
 
 Helm tab (or separate /kubernetes/:id/helm): Repo management, chart search `<ProTable>`, install `<StepsForm>` with values editor, release management (upgrade, rollback, uninstall).
 
-### /workspaces
-
-`<ProList grid>` of template cards with "Launch" `<Button>`. Active sessions `<ProTable>` (name, template, uptime, user, Destroy button). Launch → ephemeral instance + auto-open console. Idle timeout `<Statistic.Countdown>`.
-
----
-
-## v0.5+ Pages (API design pending)
+### /storage
 
 Pool cards (`<Card>` with `<Progress>` usage bars, segments colored per instance). Type `<Tag>`. Create Pool `<StepsForm>`. Click pool → `<ProTable>` of volumes with resize, clone, snapshot, delete.
 
@@ -330,3 +324,11 @@ Source `<Segmented>`. Severity `<Select>`. Search `<Input.Search>`. Time range `
 ### /setup + /login
 
 Setup: create first admin. Login: username + password + optional TOTP. First-login onboarding `<Tour>` (antd Tour component — dismissable).
+
+---
+
+## v0.5+ Pages (API design pending)
+
+### /workspaces
+
+`<ProList grid>` of template cards with "Launch" `<Button>`. Active sessions `<ProTable>` (name, template, uptime, user, Destroy button). Launch → ephemeral instance + auto-open console. Idle timeout `<Statistic.Countdown>`.

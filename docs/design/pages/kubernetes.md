@@ -21,7 +21,7 @@ Sidebar: K8s section in resource tree. List view: ProTable of clusters. Detail v
 - `POST /api/v1/kubernetes/clusters/:id/upgrade` -- upgrade K8s version
 - `POST /api/v1/kubernetes/clusters/:id/scale` -- scale workers
 - `GET /api/v1/kubernetes/clusters/:id/kubeconfig` -- download kubeconfig
-- `POST /api/v1/kubernetes/clusters/:id/etcd/snapshot` -- etcd snapshot
+- `POST /api/v1/kubernetes/clusters/:id/datastore/snapshot` -- datastore snapshot (K3s SQLite default; embedded etcd when cluster is HA per ADR-005)
 - `SSE /api/v1/kubernetes/clusters/:id/events` -- K8s events
 
 ## Components
@@ -33,7 +33,7 @@ Sidebar: K8s section in resource tree. List view: ProTable of clusters. Detail v
 
 ### Detail (`/kubernetes/:id`) -- 8 Tabs
 
-**Overview:** `Descriptions` (version, endpoint copyable, status, etcd health, node count, pod count). Resource `Progress` bars. Kubeconfig download `Button`.
+**Overview:** `Descriptions` (version, endpoint copyable, status, datastore health, node count, pod count). Resource `Progress` bars. Kubeconfig download `Button`.
 
 **Nodes:** `ProTable` (name, role Tag, status Badge, version, CPU/RAM Progress, pods, conditions). Actions: Cordon, Drain, Uncordon, Delete, Maintenance Mode.
 
@@ -49,7 +49,7 @@ Sidebar: K8s section in resource tree. List view: ProTable of clusters. Detail v
 
 **kubectl:** Embedded xterm.js terminal with pre-loaded kubeconfig and autocomplete.
 
-**Lifecycle toolbar:** Upgrade `ModalForm` (version picker, rolling progress), Scale `ModalForm`, etcd Snapshot/Restore.
+**Lifecycle toolbar:** Upgrade `ModalForm` (version picker, rolling progress), Scale `ModalForm`, Datastore Snapshot/Restore (backs SQLite or etcd depending on cluster mode).
 
 ## Data Model
 
@@ -74,7 +74,7 @@ Cluster unhealthy: status Badge shows degraded. Events tab highlights errors. AP
 ## User Actions
 
 - Create cluster via 6-step StepsForm wizard
-- Scale worker nodes, upgrade K8s version, etcd snapshot/restore
+- Scale worker nodes, upgrade K8s version, datastore snapshot/restore
 - Download kubeconfig, exec kubectl in embedded terminal
 - Cordon/drain/uncordon individual nodes
 - Browse workloads, services, storage, config, events

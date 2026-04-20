@@ -39,7 +39,7 @@ Sidebar: "BMC" selected. List view: server cards (<=8 servers) or ProTable. Deta
 
 **Event Log tab:** `ProTable` of SEL entries (timestamp, severity Badge, sensor, event, description). Sortable, filterable. "Clear SEL" Button (danger).
 
-**Console tab:** KVM console proxy via WebSocket. Similar to VNC console pattern. Fullscreen Button.
+**Console tab:** KVM console proxy via WebSocket. Protocol is vendor-specific (Redfish KVM for modern BMCs; IPMI Serial-over-LAN or vendor API for legacy) — bmclib handles the underlying transport and surfaces a uniform stream that Helling tunnels to the browser. Rendered in the same WebSocket console pattern as `docs/design/patterns/console.md`. Fullscreen Button.
 
 **Virtual Media tab:** `ModalForm` to mount ISO from URL. Current mounts `Descriptions`. Unmount Button.
 

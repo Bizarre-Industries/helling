@@ -10,38 +10,35 @@ Normative inputs:
 - CLI contract: `docs/spec/cli.md`
 - WebUI contract: `docs/spec/webui-spec.md`
 
-Last reviewed against OpenAPI baseline: commit `201a2c7` (2026-04-20).
+Last reviewed against OpenAPI baseline: commit `201a2c7` (2026-04-20). Matrix refreshed 2026-04-20 after CLI-parity restoration (commit `36b1bff`) added `helling user get/update`, `helling audit query/export`, `helling events tail`, `helling system health`, and `helling system upgrade --rollback`.
 
 ## Domain Matrix
 
-| Domain     | API Operations (OpenAPI)                              | CLI Coverage (spec)                                                             | WebUI Coverage (spec)                              | Parity Status                  |
-| ---------- | ----------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------ |
-| Auth       | setup, login, refresh, logout, mfa/totp, tokens       | `helling auth ...` listed                                                       | login/session flows + token-aware clients expected | In progress                    |
-| Users      | list, create, get, update, delete                     | `helling user ...` listed (note: update/get parity needs exact command mapping) | Users page listed in nav                           | In progress                    |
-| Schedules  | list, create, get, update, delete, run                | `helling schedule ...` listed                                                   | Schedules page implied in Helling features set     | In progress                    |
-| Webhooks   | list, create, get, update, delete, test               | `helling webhook ...` listed                                                    | Webhooks page included in Helling features set     | In progress                    |
-| Kubernetes | list, create, get, delete, scale, upgrade, kubeconfig | `helling k8s ...` listed                                                        | `/kubernetes` and `/kubernetes/:id` specified      | In progress                    |
-| System     | info, hardware, config get/put, upgrade, diagnostics  | `helling system ...` listed                                                     | Settings and dashboard system surfaces specified   | In progress                    |
-| Firewall   | host list/create/delete                               | `helling firewall ...` listed                                                   | `/firewall` page specified                         | In progress                    |
-| Audit      | query, export                                         | no explicit `helling audit ...` commands yet in CLI spec                        | Audit page is part of Helling feature scope        | Gap: CLI                       |
-| Events     | SSE stream                                            | no explicit events stream command in CLI spec                                   | task log/SSE updates in layout                     | Gap: CLI                       |
-| Health     | health check                                          | no explicit health command in CLI spec                                          | operationally consumed by app shell (implicit)     | Gap: CLI + explicit UI surface |
+| Domain     | API Operations (OpenAPI)                              | CLI Coverage (spec)                                               | WebUI Coverage (spec)                                | Parity Status  |
+| ---------- | ----------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------- | -------------- |
+| Auth       | setup, login, refresh, logout, mfa/totp, tokens       | `helling auth ...` listed                                         | login/session flows + token-aware clients expected   | ✅ Covered     |
+| Users      | list, create, get, update, delete                     | `helling user list/create/get/update/delete`                      | `/users` page with ProTable + fixed-role read-only   | ✅ Covered     |
+| Schedules  | list, create, get, update, delete, run                | `helling schedule ...` listed                                     | `/schedules` page specified                          | ✅ Covered     |
+| Webhooks   | list, create, get, update, delete, test               | `helling webhook ...` listed                                      | Webhooks page in Helling feature set                 | ✅ Covered     |
+| Kubernetes | list, create, get, delete, scale, upgrade, kubeconfig | `helling k8s ...` listed                                          | `/kubernetes` and `/kubernetes/:id` specified        | ✅ Covered     |
+| System     | info, hardware, config get/put, upgrade, diagnostics  | `helling system ...` including `health` and `upgrade --rollback`  | Settings + dashboard system surfaces specified       | ✅ Covered     |
+| Firewall   | host list/create/delete                               | `helling firewall ...` listed                                     | `/firewall` page specified                           | ✅ Covered     |
+| Audit      | query, export                                         | `helling audit query`, `helling audit export`                     | `/audit` page with filters + CSV export              | ✅ Covered     |
+| Events     | SSE stream                                            | `helling events tail` (SSE follow)                                | task log / SSE consumed by app shell layout          | ✅ Covered     |
+| Health     | health check                                          | `helling system health`                                           | consumed internally by app shell for status banner   | ✅ Covered     |
+| Logs       | query (journal-backed)                                | `helling logs ...` listed                                         | `/logs` page specified                               | ✅ Covered     |
 
-## Mandatory Gap Closures for Phase 0 Exit
+## Status Notes
 
-- Add explicit CLI command group for audit query/export parity.
-- Add explicit CLI command for event stream (tail/follow) or document approved exception.
-- Add explicit CLI command for health check or document approved exception.
-- Ensure `users` CLI includes update/get behavior equivalent to API operations (or docs-approved exception).
-- Add endpoint-to-command and endpoint-to-page mapping section once implementation paths are finalized.
+All domains have spec-level parity as of 2026-04-20. The matrix currently shows **zero** Phase 0 parity gaps at the spec level. BMC and Notifications domains are tracked separately in `phase0-parity-exceptions.yaml` with target versions v0.4.0 and v0.3.0 respectively — those are explicit scope deferrals, not gaps.
 
 ## Exception Policy
 
 Allowed only when all are true:
 
-- Exception is documented in roadmap and spec.
-- Exception includes rationale and target milestone.
-- Exception has owner and closure criteria.
+- Exception is documented in `phase0-parity-exceptions.yaml` with operation_id, `missing` surface, rationale, and target version.
+- Exception has an owner and closure criteria.
+- Exception target version is a real planned release (v0.3.0, v0.4.0, v0.5.0, v0.6.0).
 
 ## Verification Checklist
 
