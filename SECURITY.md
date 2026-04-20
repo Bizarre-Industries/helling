@@ -2,7 +2,8 @@
 
 ## Reporting a Vulnerability
 
-Please report vulnerabilities privately by email to the maintainers listed in the repository ownership records.
+Use GitHub's [private vulnerability reporting](https://github.com/Bizarre-Industries/Helling/security/advisories/new)
+or email [skalghazali@gmail.com](mailto:skalghazali@gmail.com).
 
 Include:
 
