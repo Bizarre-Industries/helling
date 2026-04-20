@@ -36,6 +36,11 @@ helling user get USERNAME              # Get user details (status, 2FA, last log
 helling user update USERNAME           # Update user (2FA status, role)
 helling user delete USERNAME           # Delete user (PAM)
 helling user set-scope USER SCOPE      # Assign user trust scope
+```
+
+`helling user 2fa` subcommands are deferred to v0.3 (no `/api/v1/users/{id}/2fa/*` paths in the current OpenAPI contract; see `docs/spec/api.md`). The subcommand shape is specified here for continuity with the v0.3 target:
+
+```bash
 helling user 2fa enable USERNAME       # Enroll user in TOTP 2FA (returns provisioning URI)
 helling user 2fa disable USERNAME      # Disable 2FA for user
 helling user 2fa recovery USERNAME     # Regenerate recovery codes
@@ -76,7 +81,7 @@ helling events list [COUNT]            # List recent events
 
 ### BMC (v0.4+)
 
-BMC commands are deferred to v0.4 per `docs/spec/platform.md` and the api.md deferred domains list. The subcommand shape is specified here for continuity with the v0.4 target:
+BMC commands are deferred to v0.4 per `docs/spec/platform.md` and the `docs/spec/api.md` deferred domains list. The subcommand shape is specified here for continuity with the v0.4 target:
 
 ```bash
 helling bmc list                       # List managed BMC endpoints
