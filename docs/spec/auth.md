@@ -56,6 +56,7 @@ JWT requirements are defined by ADR-031 and `docs/standards/security.md`.
 - Refresh token TTL: 7 days (server-side revocable)
 - Access token storage: memory only
 - Refresh token storage: `httpOnly`, `Secure`, `SameSite=Strict` cookie
+- Inactivity timeout: 30 minutes (configurable via `auth.session_inactivity_timeout`). A session is considered active if the access token or refresh token is used within the window. Expired inactive sessions require re-authentication; refresh tokens are not honored past the inactivity window even if their 7-day TTL has not elapsed.
 
 Required claims:
 
