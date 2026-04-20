@@ -9,8 +9,9 @@ Features that make people stop and say "no other hypervisor does this." Not more
 Each feature below carries a **Status** line indicating its target milestone. This document is a design-direction catalogue; the binding scope gate is the normative spec per feature (compute.md, backup-format.md, cli.md, etc.).
 
 - **v0.1** — In scope for the first release. Backed by a normative spec.
-- **v0.5+** — Not in v0.1. Design-direction only; no normative spec yet.
+- **v0.x+** (e.g. **v0.2+**, **v0.3+**, **v0.4+**, **v0.5+**) — Available no earlier than that milestone. Design-direction only until a normative spec exists for that release.
 - **post-v1** — Aspirational. Listed here for thought-leadership, not a commitment.
+- **deferred from v0.1** — Originally planned for v0.1; moved out pending further design or dependency.
 
 ---
 
@@ -23,22 +24,25 @@ v0.1 scope matches `docs/spec/compute.md`: snapshot runs before instance delete,
 Like Time Machine. Before any risky change, Helling auto-snapshots with no user action.
 
 ```text
-User clicks "Resize disk from 30GB → 50GB"
-  → hellingd auto-creates snapshot "pre-resize-2026-04-13-14:22"
-  → Performs resize
-  → If fails → auto-rollback to snapshot
-  → If succeeds → snapshot retained for 24h, then auto-pruned
+v0.1 example — "Delete instance":
+  → hellingd auto-creates snapshot "pre-delete-vm-web-2026-04-13-14:22"
+  → Performs delete
+  → Snapshot retained for 24h, then auto-pruned
 
-Applies to:
+Applies to (v0.1 — allowlist matches compute.md):
+  - Instance delete
+  - Instance rebuild
+  - Forced stop (action=stop, force=true)
+
+Applies to (post-v1 — broader trigger catalogue):
   - Config changes (CPU, RAM, NIC, boot order)
   - Disk resize
   - Migration
   - K8s upgrades
   - Profile changes
-  - Rebuild
   - ANY operation tagged as "destructive" in the API spec
 
-Dashboard shows:
+Dashboard shows (post-v1 — requires auto-rollback):
   ⟲ "Auto-snapshot created. Undo this change?" [Rollback] [Dismiss]
   Toast with one-click rollback for 60 seconds after every destructive op.
 ```
@@ -294,6 +298,8 @@ Implementation: WoL via `bmclib` or raw magic packet. Sleep via IPMI shutdown. R
 ---
 
 ## 8. Infrastructure Changelog
+
+Status: **v0.1** (read-only changelog, journal-native per ADR-019). "Revert to this point" deferred to **v0.5+**.
 
 Git-like history of every config change to every resource. Diff between any two points in time.
 

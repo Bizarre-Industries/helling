@@ -19,9 +19,9 @@ Sidebar: "Settings" selected (admin-only). Main panel: 5 Tabs. Each tab uses Pro
 - `GET /api/v1/certificates` -- TLS certificates
 - `POST /api/v1/certificates/acme` -- request ACME cert
 - `POST /api/v1/certificates/upload` -- upload cert
-- `GET /api/v1/notifications/channels` -- notification channels
-- `POST /api/v1/notifications/channels` -- add channel
-- `POST /api/v1/notifications/test` -- test notification
+- `GET /api/v1/notifications/channels` -- notification channels _(v0.3+)_
+- `POST /api/v1/notifications/channels` -- add channel _(v0.3+)_
+- `POST /api/v1/notifications/test` -- test notification _(v0.3+)_
 - `GET /api/v1/system/updates` -- update check
 - `POST /api/v1/system/updates/apply` -- apply update
 - `GET /api/v1/registries` -- container registries
@@ -54,7 +54,7 @@ Sidebar: "Settings" selected (admin-only). Main panel: 5 Tabs. Each tab uses Pro
 
 ## Data Model
 
-- Settings: `hostname`, `domain`, `timezone`, `backup_defaults{}`, `appearance{}`
+- Settings: `hostname`, `domain`, `timezone`, `backup_defaults{}`, `appearance{}` _(v0.5+)_
 - Certificate: `subject`, `issuer`, `expiry`, `fingerprint`, `type` (self-signed/acme/uploaded)
 - NotificationChannel: `id`, `name`, `type`, `config{}`, `enabled`
 - UpdateInfo: `current_version`, `latest_version`, `release_notes`, `security_patch`
@@ -76,7 +76,7 @@ ACME failure: inline Alert with error. Notification test failure: toast with rea
 
 ## User Actions
 
-- Edit general settings (hostname, DNS, timezone, appearance)
+- Edit general settings (hostname, DNS, timezone); appearance controls deferred to v0.5+
 - Upload or generate TLS certificates
 - Add/edit/delete/test notification channels
 - Configure event-to-channel routing and quiet hours
