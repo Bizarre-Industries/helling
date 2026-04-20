@@ -1,7 +1,7 @@
 name: CodeQL
 
 # SAST for Go + TypeScript per ADR-042.
-# Action pins resolved 2026-04-20 per ADR-026.
+# Action pins resolved 2026-04-20; codeql-action upgraded to v4 on 2026-04-20 per ADR-026.
 
 on:
   push:
@@ -35,13 +35,13 @@ jobs:
         with:
           go-version: "1.26"
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3
+        uses: github/codeql-action/init@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2
         with:
           languages: ${{ matrix.language }}
           queries: security-extended,security-and-quality
       - name: Autobuild
-        uses: github/codeql-action/autobuild@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3
+        uses: github/codeql-action/autobuild@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2
       - name: Analyze
-        uses: github/codeql-action/analyze@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3
+        uses: github/codeql-action/analyze@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2
         with:
           category: "/language:${{ matrix.language }}"
