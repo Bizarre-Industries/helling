@@ -25,8 +25,8 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Install vacuum
         env:
-          VACUUM_VERSION: "0.16.5"
-          VACUUM_SHA256: "68ed0b45ecbf4af245d36997b9b1df36a99d6bc093868be4c0d29583bbd747f6"
+          VACUUM_VERSION: "0.26.1"
+          VACUUM_SHA256: "e5981c4df9adfe21ab63cd8d00b073b2f11d09dc7382763da6a4ee00810bdcc2"
         run: |
           set -euo pipefail
           curl -fsSL -o /tmp/vacuum.tar.gz \
