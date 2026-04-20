@@ -5,9 +5,9 @@ name: Quality
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -76,7 +76,7 @@ jobs:
       - name: Prettier check
         run: |
           npm i -g prettier@3.3.3
-          prettier --check '**/*.md' --ignore-path .gitignore
+          prettier --write --check '**/*.md' --ignore-path .gitignore
 
   yaml:
     name: YAML lint (strict)
