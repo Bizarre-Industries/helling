@@ -42,3 +42,15 @@ Helling does not use query-parameter project injection as an authorization mecha
 - hellingd must implement certificate issuance, storage encryption, rotation, and revocation
 - User disable/delete must also revoke corresponding Incus trust entries
 - Future fine-grained policy systems can be layered later without changing the v0.1 boundary
+
+## CA and Certificate Lifecycle
+
+Full details on CA key management, user certificate lifecycle, rotation strategy, and encryption are in [docs/spec/internal-ca.md](../spec/internal-ca.md).
+
+Key points:
+
+- CA Key: Ed25519 (RFC 8037 per ADR-031), encrypted with age per ADR-039
+- CA Cert: 5-year validity, self-signed
+- User Certs: 90-day validity, auto-renewed at 60 days
+- Storage: User keypair + certificate stored encrypted in SQLite
+- Rotation: Manual CA rotation with 60-day dual-sign period

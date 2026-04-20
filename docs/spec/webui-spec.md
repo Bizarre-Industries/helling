@@ -48,8 +48,8 @@ antd 6                          → Core components
 @ant-design/pro-components      → ProTable, ProForm, StepsForm, ProLayout, Descriptions
 @ant-design/charts              → Charts (G2-based, antd theme integrated)
 @tanstack/react-query           → Data fetching (via hey-api/openapi-ts generated hooks/options for Helling API)
-react-router-dom v7             → Routing
-xterm.js                        → Terminal (serial console, exec, logs)
+react-router v7                 → Routing (canonical package is now `react-router`, not react-router-dom)
+@xterm/xterm                    → Terminal (serial console, exec, logs; renamed from xterm.js in 2024)
 spice-html5                     → VM VGA console (SPICE protocol path, ADR-010)
 @uiw/react-codemirror           → YAML editor (cloud-init, compose, hookscripts, dynamic import)
 lucide-react                    → Icons

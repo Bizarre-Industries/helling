@@ -8,7 +8,7 @@ Security guidance in the repo currently allows multiple hashing options and stil
 
 ## Decision
 
-Use argon2id (RFC 9106) as the only supported password hashing algorithm for Helling-managed secrets.
+Use argon2id (RFC 9106, OWASP recommendation for password hashing) as the only supported password hashing algorithm for Helling-managed secrets.
 
 Applies to:
 
@@ -16,11 +16,11 @@ Applies to:
 - TOTP recovery code hashes
 - Any future local secret-verification values in auth scope
 
-Implementation baseline (subject to environment tuning):
+Implementation baseline per OWASP password hashing selection:
 
-- Memory cost: 64 MiB
-- Iterations: 3
-- Parallelism: 1
+- Memory cost (m): 64 MiB (per RFC 9106 Medium category)
+- Time cost (t): 3 iterations
+- Parallelism (p): 1 thread
 - Salt: 16 bytes minimum, cryptographically random
 - Output length: 32 bytes minimum
 
@@ -30,5 +30,6 @@ bcrypt is not used for new hashes in v0.1.
 
 - Removes ambiguity from docs and implementation
 - Eliminates bcrypt-specific limits from normative guidance
-- Requires explicit parameter versioning to support future tuning
+- Aligns with OWASP password hashing recommendations (RFC 9106)
+- Requires explicit parameter versioning to support future tuning per RFC 9106 PHC string format
 - Existing bcrypt records (if encountered in migration contexts) must be rehashed to argon2id after successful verification
