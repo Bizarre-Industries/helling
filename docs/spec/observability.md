@@ -63,9 +63,11 @@ Node/resource metrics may include:
 
 ## Audit and Journal Interop
 
-- Mutation operations MUST emit audit records.
-- Audit logs are queryable via audit API and system journal tooling.
-- Observability and audit streams must correlate via `request_id` where available.
+- Mutation operations MUST emit audit records — see `docs/spec/audit.md` for the normative contract.
+- Audit records are journald entries with `HELLING_*` indexed fields per ADR-019, emitted via `coreos/go-systemd/v22/journal`.
+- Audit logs are queryable via the `/api/v1/audit/*` surface and standard system journal tooling (`journalctl -t hellingd`, `journalctl HELLING_ACTION=auth.login`).
+- Observability application logs (this spec) use snake*case lowercase field names; audit records (ADR-019) use `HELLING*\*`UPPERCASE indexed journal fields. The two streams are distinct but correlate via`request_id`↔`HELLING_REQUEST_ID`.
+- The hellingd audit query wrapper shells out to `journalctl --output=json` with filter flags translated from Helling DTOs. See `docs/spec/audit.md` §3.
 
 ## SLO Reference Baseline
 
