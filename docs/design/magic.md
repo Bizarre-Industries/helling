@@ -4,9 +4,21 @@
 
 Features that make people stop and say "no other hypervisor does this." Not more endpoints. Not more pages. Things that change how people think about managing infrastructure.
 
+## Scope Legend
+
+Each feature below carries a **Status** line indicating its target milestone. This document is a design-direction catalogue; the binding scope gate is the normative spec per feature (compute.md, backup-format.md, cli.md, etc.).
+
+- **v0.1** — In scope for the first release. Backed by a normative spec.
+- **v0.5+** — Not in v0.1. Design-direction only; no normative spec yet.
+- **post-v1** — Aspirational. Listed here for thought-leadership, not a commitment.
+
 ---
 
 ## 1. Automatic Snapshot Before Every Destructive Operation
+
+Status: **v0.1** (core), **post-v1** (auto-rollback + broad trigger list).
+
+v0.1 scope matches `docs/spec/compute.md`: snapshot runs before instance delete, instance rebuild, and forced stop (`action=stop` with `force=true`). Fail-closed per `auto_snapshot.strict_mode=true` default. No auto-rollback in v0.1. The broader trigger catalogue (config changes, resize, migration, K8s upgrades, profile changes) and the auto-rollback flow are post-v1 aspirations.
 
 Like Time Machine. Before any risky change, Helling auto-snapshots with no user action.
 
@@ -66,6 +78,8 @@ No other hypervisor does this. vSphere has console previews but they require the
 
 ## 3. Config Change Preview (terraform plan for everything)
 
+Status: **v0.5+**. No endpoint, no response shape, no page doc exists for a preview/diff surface in v0.1. Prototype scope to be decided when the config-editor flows land.
+
 Before any config change is applied, show exactly what will change and what the consequences are.
 
 ```text
@@ -105,6 +119,8 @@ Every change shows: what changes, what stays the same, side effects, warnings, w
 
 ## 4. Backup Verification (Prove Your Backups Work)
 
+Status: **v0.3+**. Requires the Notifications surface (target v0.3) for delivery and a verification schedule type not yet spec'd. Track alongside the notifications domain.
+
 Don't just back up. Periodically prove the backup is restorable.
 
 ```text
@@ -135,6 +151,8 @@ No other hypervisor does automatic backup verification. Proxmox can back up. Vee
 ---
 
 ## 5. Infrastructure Health Score
+
+Status: **v0.5+**. Score computation, weight configuration, persistence, and SSE refresh cadence are all unspec'd. Promote with an ADR that defines the score contract.
 
 Every resource gets a 0-100 health score. Dashboard shows aggregate score.
 
@@ -178,6 +196,8 @@ Criteria (configurable weights):
 ---
 
 ## 6. Infrastructure Blueprints
+
+Status: **v0.5+**. Blueprint YAML schema, validation, persistence, rollback on partial deploy, and the CLI/dashboard surface are unspec'd. This is real engineering (multi-resource transaction semantics); promote with a dedicated spec.
 
 Define a multi-resource environment as YAML. Deploy everything at once. Tear down with one command. Like Docker Compose but for VMs + CTs + networks + firewall + storage.
 
@@ -243,6 +263,10 @@ Dashboard: /blueprints page with deploy/status/destroy/clone. "Save current sele
 
 ## 7. Wake-on-LAN Integration
 
+Status: **v0.2+** (raw magic packet), **v0.4+** (IPMI shutdown / BMC-assisted wake).
+
+v0.2+ scope: WoL via raw magic packet (UDP port 9) — simple and self-contained, no BMC dependency. The IPMI-based sleep and auto-sleep policy depend on the BMC domain (target v0.4 per `docs/spec/platform.md`); they follow when BMC lands.
+
 For physical servers in a cluster. Server is powered off (saves electricity) → user needs a VM → Helling wakes the server → server boots → VM starts.
 
 ```text
@@ -301,6 +325,8 @@ Implementation: every config change emitted to the systemd journal (ADR-019) wit
 
 ## 9. Migration Assistant
 
+Status: **v0.5+**. Proxmox API adapters, VMware OVA/OVF parsing, and disk-format conversion pipelines are substantial engineering and no spec exists for any of them yet. Promote per source platform.
+
 Import from other platforms. Not just disk images — configs, networks, firewall rules.
 
 ```bash
@@ -332,6 +358,10 @@ Sources: Proxmox (API), VMware (OVA/OVF), Docker (compose stacks), raw disk imag
 ---
 
 ## 10. Smart Command Palette
+
+Status: **v0.1** (structured commands per ADR-049), **v0.5+** (natural-language mode).
+
+v0.1 scope: the structured palette shell from ADR-049 — `Cmd+K` opens, type an action ID or navigate to a known route. Natural-language parsing (e.g. "show vms using more than 4gb ram") requires a grammar or pattern catalogue; defer until we have one written down.
 
 Cmd+K opens a command palette that understands natural language AND structured commands.
 
@@ -367,6 +397,8 @@ Implementation: antd Command palette (cmdk-style). Natural language parsed local
 
 ## 11. Power Consumption Tracking
 
+Status: **v0.4+**. BMC-dependent (IPMI/Redfish sensor reads); waits on the BMC domain landing in v0.4. TDP-based estimates for BMC-less nodes can follow in the same release.
+
 Estimate per-VM power consumption based on CPU/RAM usage. Track total infrastructure power.
 
 ```text
@@ -398,6 +430,8 @@ Implementation: BMC reports actual power draw (via IPMI/Redfish sensor data). Fo
 ---
 
 ## 12. One-Click Environment Cloning
+
+Status: **v0.5+**. Depends on Feature 6 (blueprints) for multi-resource transactional semantics. No spec exists for the network isolation / DNS rewrite flow.
 
 Clone not just one VM but an entire environment: VMs, containers, networks, firewall rules, volumes.
 

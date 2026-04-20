@@ -31,11 +31,11 @@ Sidebar: "Settings" selected (admin-only). Main panel: 5 Tabs. Each tab uses Pro
 
 - `Tabs` -- General | Certificates | Notifications | Updates | Registries | Keyboard
 
-**General tab:** `ProForm` -- hostname, DNS domain, timezone Select, backup defaults, appearance (logo Upload, accent color ColorPicker, login message TextArea, favicon Upload). Preset theme Segmented (Default, Homelab Green, Enterprise Gray).
+**General tab:** `ProForm` -- hostname, DNS domain, timezone Select, backup defaults. Appearance controls (logo Upload, accent color ColorPicker, login message TextArea, favicon Upload) and preset theme Segmented (Default, Homelab Green, Enterprise Gray) are **deferred to v0.5+**: file storage paths, size limits, and persistence-across-upgrade behaviour are unspec'd in v0.1, and preset themes depend on ADR-047 (dark mode scope) which is still Proposed.
 
 **Certificates tab:** `Descriptions` (current cert: expiry, issuer, fingerprint copyable). `Button`: "Upload Certificate" or "Generate from ACME". ACME `ProForm` (domain, email, provider Select: Let's Encrypt / ZeroSSL). Cert viewer.
 
-**Notifications tab:** `ProTable` of channels (name, type Tag: Discord/Slack/Telegram/Ntfy/Email/Gotify/Webhook, status Badge). `ModalForm` to add channel. Test notification `Button` per channel. Event routing config: `ProForm` with severity-to-channel mapping. Quiet hours `TimePicker.RangePicker`.
+**Notifications tab:** **Deferred to v0.3+** per the api.md domain list (`Notifications` target v0.3) and `docs/spec/platform.md`. When lifted: `ProTable` of channels (name, type Tag: Discord/Slack/Telegram/Ntfy/Email/Gotify/Webhook, status Badge). `ModalForm` to add channel. Test notification `Button` per channel. Event routing config: `ProForm` with severity-to-channel mapping. Quiet hours `TimePicker.RangePicker`.
 
 **Updates tab:** `Descriptions` (current version, latest version, release date). [View Changes] [Upgrade Now] Buttons. Security patch banner when applicable.
 
