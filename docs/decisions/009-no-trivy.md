@@ -4,7 +4,12 @@
 
 ## Context
 
-March 2026: Trivy/Aqua Security supply chain attack. 76 of 77 Docker tags poisoned with credential stealer and self-propagating worm. StepSecurity Harden-Runner detected the attack across 12,000 repos by monitoring outbound C2 connections.
+March 19-23, 2026: Aqua Security supply chain attack across two distinct surfaces:
+
+- 76 of 77 version tags in the `aquasecurity/trivy-action` GitHub Action were force-pushed to a credential stealer.
+- Docker Hub images `aquasec/trivy:0.69.4`, `:0.69.5`, `:0.69.6`, and `:latest` were separately poisoned.
+
+StepSecurity Harden-Runner detected the attack across 12,000+ repositories by monitoring outbound C2 connections. Sources: Docker blog "Trivy supply chain compromise — what Docker Hub users should know" (2026-03), Aqua advisory GHSA-69fq-xp46-6x23, StepSecurity summary.
 
 ## Decision
 
