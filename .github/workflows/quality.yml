@@ -30,7 +30,7 @@ jobs:
             -o /tmp/vacuum.tar.gz
           tar -xzf /tmp/vacuum.tar.gz -C /usr/local/bin vacuum
       - name: Lint
-        run: vacuum lint --ruleset api/.vacuum.yaml --fail-severity info api/openapi.yaml
+        run: vacuum lint --ruleset api/.vacuum.yaml --fail-severity info api/openapi.yaml -d
       - name: Gate score at 100 (against our ruleset)
         run: |
           score=$(vacuum report --stdout -r api/.vacuum.yaml api/openapi.yaml | jq -r '.statistics.overallScore // .overallScore // 0')
