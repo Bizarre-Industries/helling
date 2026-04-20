@@ -28,7 +28,7 @@ apt update && apt install --only-upgrade helling caddy hellingd
    - repository reachability
    - package signature verification
    - disk space and service health
-2. Create SQLite backup snapshot before package replacement.
+2. Create pre-upgrade control-plane backup (`helling.db` + `etc/helling/*`) before package replacement.
 3. Stop management plane services (Caddy edge service, `hellingd`).
 4. Install upgraded packages.
 5. Start `hellingd` and run startup migrations.
@@ -47,7 +47,7 @@ apt update && apt install --only-upgrade helling caddy hellingd
 Rollback is package and database coordinated:
 
 1. Reinstall previous package versions.
-2. Restore pre-upgrade SQLite backup.
+2. Restore pre-upgrade control-plane backup (`helling.db` + `etc/helling/*`).
 3. Restart management services.
 4. Re-run health checks.
 

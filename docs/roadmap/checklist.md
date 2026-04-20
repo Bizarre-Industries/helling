@@ -9,7 +9,7 @@
 ### Proxy
 
 - [ ] `curl -H "Authorization: Bearer $TOKEN" http://unix:/var/lib/helling/hellingd.sock:/api/incus/1.0/instances | jq '.metadata'` returns Incus instances
-- [ ] `curl -H "Authorization: Bearer $TOKEN" http://unix:/var/lib/helling/hellingd.sock:/api/podman/v5.0/libpod/containers/json | jq '.[0].Names'` returns Podman containers
+- [ ] `curl -H "Authorization: Bearer $TOKEN" http://unix:/var/lib/helling/hellingd.sock:/api/podman/libpod/containers/json | jq '.[0].Names'` returns Podman containers
 - [ ] Unauthenticated request to proxy returns 401
 - [ ] Non-admin user sees only their Incus project resources
 
@@ -94,7 +94,6 @@
 ### Proxy Features
 
 - [ ] Auto-snapshot created before DELETE instance
-- [ ] VM thumbnail screenshot displayed in instance list
 
 ### Database
 

@@ -6,14 +6,14 @@ Backup and restore format contract for Helling v0.1.
 
 ## Scope
 
-- Helling control-plane state backups (SQLite + metadata)
+- Helling control-plane state backups (SQLite + metadata + key/config material)
 - Workload backups delegated to Incus export/snapshot mechanisms
 
 ## Backup Types
 
 1. Control-plane backup
 
-- Includes SQLite state and required metadata to restore Helling control plane.
+- Includes SQLite state, key/config material, and required metadata to restore Helling control plane.
 
 2. Workload backup
 
@@ -26,11 +26,16 @@ Recommended archive layout:
 
 - `metadata.json` (required)
 - `helling.db` (required)
+- `etc/helling/helling.yaml` (required)
+- `etc/helling/ca/ca.key.age` (required)
+- `etc/helling/ca/ca.crt.pem` (required)
+- `etc/helling/jwt/ed25519.key` (required)
 - `checksums.txt` (required)
 
 `metadata.json` minimum fields:
 
 - `format_version`
+- `backup_type` (`control-plane`|`workload`)
 - `created_at`
 - `helling_version`
 - `schema_version`
@@ -40,6 +45,7 @@ Recommended archive layout:
 ## Encryption
 
 - Optional encryption uses age.
+- Control-plane backups containing key material should be encrypted by default.
 - If encrypted, metadata must indicate age mode and recipient metadata.
 - Private identity material is never embedded unencrypted in archives.
 
@@ -55,8 +61,9 @@ Recommended archive layout:
   1. stop management services
   2. verify backup integrity
   3. restore DB
-  4. start services
-  5. run health checks
+  4. restore `etc/helling` key/config material
+  5. start services
+  6. run health checks
 
 ## Compatibility Contract
 

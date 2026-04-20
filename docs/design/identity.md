@@ -65,7 +65,7 @@ One screen. A few fields. No email, no organization name, no "agree to terms." R
 
 ### Minute 2: Setup Complete
 
-Installation finishes, system reboots. User opens https://<hostname>:8006 and logs in.
+Installation finishes, system reboots. User opens https://[hostname]:8006 and logs in.
 
 ### Minute 3: Dashboard (first load)
 
@@ -261,7 +261,7 @@ Services:
   ✓ incusd: running (v6.23.0)
   ✓ podman: available (v5.3.0, socket activated)
   ✓ hellingd: running (v0.1.0)
-  ✓ helling-proxy: running (TLS on :8006)
+  ✓ caddy: running (TLS on :8006)
   ✓ smartd: running
   ✓ chronyd: running (synced)
 

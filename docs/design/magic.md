@@ -292,10 +292,10 @@ helling changelog vm-web-1 --diff 2026-04-08..2026-04-13
 Dashboard:
   Instance Options tab → "History" sub-tab
   Timeline of all changes with diffs
-  "Revert to this point" button per entry
+  "Revert to this point" button per entry (v0.5+)
 ```
 
-Implementation: every config change stored in SQLite audit table with before/after JSON. Diff computed on read.
+Implementation: every config change emitted to the systemd journal (ADR-019) with structured fields for before/after JSON. Diff computed on read from journal history. v0.1 is read-only changelog; destructive revert is deferred.
 
 ---
 

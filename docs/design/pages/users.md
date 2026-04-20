@@ -36,9 +36,9 @@ Sidebar: "Users" selected (admin-only section). Main panel: 4 Tabs.
 
 **Users tab:** `ProTable` (username, role Tag, 2FA status Badge, last login, created_at). Actions: Edit, Delete, Enable 2FA. `ModalForm` for Create User (username, password, group/role Select).
 
-**Roles tab:** `ProTable` of PAM group roles (name, description, user count, permissions summary).
+**Roles tab:** Read-only `ProTable` of the three fixed v0.1 roles (`admin`, `user`, `auditor`) with description, user count, and permissions summary. No create/edit/delete actions.
 
-**Permissions tab:** ACL editor -- `ProTable` with user rows, resource columns, permission Select per cell (none/read/admin). Or simpler: per-user permission Descriptions.
+**Permissions tab:** Read-only permission matrix by role (no per-cell editor in v0.1). Shows which actions each fixed role can perform.
 
 **API Tokens tab:** `ProTable` (name, scope Tags, created, expires, last used). Create via `ModalForm` (name, scope checkboxes, expiry DatePicker). `Typography.Text copyable` for token value (shown once).
 
@@ -49,7 +49,7 @@ Sidebar: "Users" selected (admin-only section). Main panel: 4 Tabs.
 - User: `id`, `username`, `role`, `groups[]`, `twofa_enabled`, `twofa_type`, `last_login`, `created_at`
 - Token: `id`, `name`, `scope[]`, `created_at`, `expires_at`, `last_used`
 - Session: `id`, `device`, `ip`, `location`, `last_active`, `is_current`
-- Role: `name`, `description`, `permissions[]`
+- Role: fixed enum `admin | user | auditor` with static `permissions[]` mapping
 
 ## States
 
@@ -71,7 +71,7 @@ PAM unavailable: banner with link to system logs. Users shown as cached.
 - Enable/disable 2FA (TOTP QR code, recovery codes)
 - Create/revoke API tokens with scope and expiry
 - View and revoke active sessions
-- Manage role definitions and permission assignments
+- View role definitions and permission matrix (read-only in v0.1)
 
 ## Cross-References
 

@@ -194,7 +194,7 @@ Current: 340KB main chunk (86KB gzipped). This is the ceiling, not the floor.
 Every new dependency must justify its bundle size:
   - TanStack Table: YES (complex data tables are hard)
   - TanStack Query: YES (caching + deduplication)
-  - xterm.js: YES (terminal emulation is hard)
+  - @xterm/xterm: YES (terminal emulation is hard)
   - spice-html5: YES (VM VGA browser console, ADR-010)
   - @uiw/react-codemirror: MAYBE (load only on pages that need raw YAML/config editing)
   - D3: MAYBE (only for network topology visualization)
@@ -205,18 +205,18 @@ Every new dependency must justify its bundle size:
 Dynamic imports for heavy components:
   import('@uiw/react-codemirror') // Only on cloud-init/config editor
   import('spice-html5')       // Only on VM VGA console tab (ADR-010)
-  import('xterm')          // Only on terminal tab
+  import('@xterm/xterm')   // Only on terminal tab
 ```
 
 ### Rule 10: Consistent Visual Language
 
 ```text
-Status colors (same everywhere):
-  Green  (#22c55e) = Running, Healthy, Success, Connected
-  Red    (#ef4444) = Stopped, Error, Failed, Disconnected
-  Yellow (#eab308) = Warning, Degraded, Paused
-  Blue   (#3b82f6) = Info, Creating, Migrating
-  Gray   (#6b7280) = Unknown, N/A, Disabled
+Status colors (must match docs/design/tokens.md):
+  color.status.success = Running, Healthy, Success, Connected
+  color.status.error   = Stopped, Error, Failed, Disconnected
+  color.status.warning = Warning, Degraded, Paused
+  color.status.info    = Info, Creating, Migrating
+  color.status.neutral = Unknown, N/A, Disabled
 
 Status always = icon + color + text:
   🟢 Running    (never just a green dot without the word)

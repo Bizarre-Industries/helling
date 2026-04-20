@@ -20,7 +20,7 @@ This spec is the skeleton. The details live in sibling docs — each page in thi
 - [data-tables.md](../design/patterns/data-tables.md) — ProTable, inline actions, bulk selection
 - [forms-wizards.md](../design/patterns/forms-wizards.md) — ModalForm, StepsForm, ProForm
 - [detail-views.md](../design/patterns/detail-views.md) — Tabs + Descriptions layout
-- [console.md](../design/patterns/console.md) — SPICE and xterm.js integration
+- [console.md](../design/patterns/console.md) — SPICE and @xterm/xterm integration
 - [empty-states.md](../design/patterns/empty-states.md) — zero-data guidance
 - [loading-error.md](../design/patterns/loading-error.md) — skeletons, errors, retry
 - [notifications.md](../design/patterns/notifications.md) — toasts, banners, progress
@@ -178,7 +178,7 @@ Inline row actions: Start/Stop/Console (no drill-down needed). Bulk actions bar 
 
 **Summary:** `<Descriptions>` (status, uptime, CPU, RAM, disk, IPs, MACs, config, tags, notes). `<Progress>` gauges. Quick action `<Button.Group>`. ALL on one screen, no scrolling on 1080p.
 
-**Console:** `<SpiceConsole>` (`spice-html5`, dynamic import, ADR-010) for VMs: Ctrl+Alt+Del `<Button>`, clipboard, screenshot, fullscreen. `<SerialConsole>` (xterm.js) for CTs.
+**Console:** `<SpiceConsole>` (`spice-html5`, dynamic import, ADR-010) for VMs: Ctrl+Alt+Del `<Button>`, clipboard, screenshot, fullscreen. `<SerialConsole>` (`@xterm/xterm`) for CTs.
 
 **Hardware:** `<ProTable>` of devices (CPU, RAM, disks, NICs, USB, PCI, GPU). Add/Edit/Detach actions. Disk resize `<Slider>`. GPU passthrough with IOMMU group display.
 
@@ -210,9 +210,9 @@ Image update detection: `<Badge dot>` on container row when newer digest availab
 
 **Summary:** `<Descriptions>` (status, image, ports as links, env vars, volumes, limits, health). Quick actions.
 
-**Logs:** xterm.js with search, timestamps toggle, follow toggle. Severity filter `<Select>`.
+**Logs:** `@xterm/xterm` with search, timestamps toggle, follow toggle. Severity filter `<Select>`.
 
-**Exec:** xterm.js terminal. Shell selector `<Select>` (bash, sh, zsh).
+**Exec:** `@xterm/xterm` terminal. Shell selector `<Select>` (bash, sh, zsh).
 
 **Stats:** `<Area>` charts (CPU, RAM, net I/O, disk I/O) from `@ant-design/charts`. Timeframe `<Segmented>`.
 
@@ -263,7 +263,7 @@ Create wizard: `<StepsForm>` with 6 steps (Flavor cards, Control Plane sliders, 
 
 **Events:** Real-time K8s events `<Table>` via SSE. Filter by namespace, type `<Select>`.
 
-**kubectl:** Embedded xterm.js with pre-loaded kubeconfig. Autocomplete.
+**kubectl:** Embedded `@xterm/xterm` with pre-loaded kubeconfig. Autocomplete.
 
 Lifecycle actions in toolbar: Upgrade `<ModalForm>` (version picker, rolling progress), Scale `<ModalForm>`, etcd Snapshot/Restore.
 
@@ -309,7 +309,7 @@ Node cards with `<Progress>` CPU/RAM. Quorum `<Badge>`. Join `<ModalForm>`. Evac
 
 ### /users
 
-4 `<Tabs>`: Users `<ProTable>` (role, 2FA, last login), Roles, Permissions (ACL editor), API Tokens. 2FA setup: TOTP QR (`<QRCode>`), recovery codes.
+4 `<Tabs>`: Users `<ProTable>` (role, 2FA, last login), Roles (read-only fixed-role view), Permissions (read-only role matrix), API Tokens. 2FA setup: TOTP QR (`<QRCode>`), recovery codes.
 
 ### /audit
 

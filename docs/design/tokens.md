@@ -9,7 +9,7 @@
 1. **Semantic over literal.** `color.text.secondary` — not `#7a7a7a`. Refactoring a palette is a token change, not a find/replace.
 2. **antd first.** Helling rides antd's theme token system (`antd/theme`). We override specific tokens; we don't build a parallel system.
 3. **Compact by default.** All sizing tokens reflect ADR-008 ("function over beauty"). antd's default sizes are too airy for admin-density.
-4. **Dark mode is deferred but structured.** Per ADR-047, v0.1 is light-only. Tokens are structured so a dark palette is a token-swap, not a rewrite.
+4. **Dark mode is deferred but structured.** v0.1 is light-only. ADR-047 is still proposed; tokens are structured so a future dark palette is a token-swap, not a rewrite.
 5. **No one-off tokens.** If a value is used in one place, inline it. Promote to a token once it's used ≥2 places OR carries semantic meaning.
 
 ## antd ConfigProvider mapping
@@ -27,7 +27,7 @@ These tokens plug directly into `<ConfigProvider theme={{ token, components }}>`
 | `fontSizeHeading3` | `14`                                                                  | Subsection header                                                           |
 | `controlHeight`    | `32`                                                                  | All interactive controls (buttons, inputs, selects)                         |
 | `controlHeightSM`  | `28`                                                                  | Compact variant (used inside tables)                                        |
-| `motion`           | `false`                                                               | No transitions. See philosophy.md rule 6                                    |
+| `motion`           | `false`                                                               | No transitions. See philosophy.md rule 3                                    |
 | `fontFamily`       | `system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`            | Default body                                                                |
 | `fontFamilyCode`   | `"SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", monospace` | IPs, MACs, UUIDs, paths, log lines                                          |
 | `wireframe`        | `false`                                                               | Filled backgrounds (flat but not outline-only)                              |
@@ -195,7 +195,7 @@ export function Kbd({ keystroke }: { keystroke: string }) {
 }
 ```
 
-Token values live in `web/src/theme/tokens.ts` exported as a strongly-typed object. `web/src/theme/index.tsx` consumes this object and passes it to `ConfigProvider`. CSS variables (for consumption in `@uiw/react-codemirror` themes, `xterm.js` themes, custom SVGs) are emitted by a small generator in the same module.
+Token values live in `web/src/theme/tokens.ts` exported as a strongly-typed object. `web/src/theme/index.tsx` consumes this object and passes it to `ConfigProvider`. CSS variables (for consumption in `@uiw/react-codemirror` themes, `@xterm/xterm` themes, custom SVGs) are emitted by a small generator in the same module.
 
 ```tsx
 // web/src/theme/tokens.ts
@@ -216,7 +216,7 @@ export const HellingThemeProvider = ({ children }) => (
 
 ## Cross-references
 
-- docs/design/philosophy.md (why these values — rule 1 information density, rule 6 no motion)
+- docs/design/philosophy.md (why these values — rule 1 information density, rule 3 no motion)
 - docs/design/keyboard.md (Kbd chips are the visible surface of that doc's bindings)
 - docs/spec/webui-spec.md (Theme section inlines the antd ConfigProvider snippet)
 - docs/spec/accessibility.md (color contrast minimums for `color.text.*` over `color.surface.*`)

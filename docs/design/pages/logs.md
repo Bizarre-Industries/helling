@@ -12,11 +12,11 @@ Route: `/logs`
 
 ## Layout
 
-Sidebar: "Logs" selected. Main panel: toolbar row + streaming log viewport (`xterm.js` or virtualized list, follow-mode by default). Filter controls collapse into a compact toolbar; no separate filter panel.
+Sidebar: "Logs" selected. Main panel: toolbar row + streaming log viewport (`@xterm/xterm` or virtualized list, follow-mode by default). Filter controls collapse into a compact toolbar; no separate filter panel.
 
 ## API Endpoints
 
-System logs are read from journald; WebUI hits `hellingd` which tails the journal. Expected surface (not yet in `api/v1/*`):
+System logs are read from journald; WebUI hits `hellingd` which tails the journal. v0.1 surface contract (defined in docs and pending generated OpenAPI registration):
 
 - `GET /api/v1/logs` -- paginated historical query with filters (source, severity, time range, search, instance, container)
 - `GET /api/v1/logs/stream` -- SSE live tail with same filter params
@@ -28,7 +28,7 @@ System logs are read from journald; WebUI hits `hellingd` which tails the journa
 
 ### Toolbar
 
-- `Segmented` — source: System | hellingd | hellingprox | helling-agent | Incus | Podman | All
+- `Segmented` — source: System | hellingd | caddy | helling-agent | Incus | Podman | All
 - `Select` — severity: Emerg..Debug (multi-select)
 - `Input.Search` — message substring (server-side grep)
 - `DatePicker.RangePicker` — time window; default "last 15 min"
@@ -39,7 +39,7 @@ System logs are read from journald; WebUI hits `hellingd` which tails the journa
 
 ### Viewport
 
-Virtualized list using `@ant-design/pro-components` (custom render) OR `xterm.js` in readonly mode for the ANSI-colored journald format. Each entry:
+Virtualized list using `@ant-design/pro-components` (custom render) OR `@xterm/xterm` in readonly mode for the ANSI-colored journald format. Each entry:
 
 - Timestamp (monospace, dim)
 - Severity badge (color-coded, one char: E/W/I/D)

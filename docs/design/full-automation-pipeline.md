@@ -12,8 +12,8 @@
                               │
            ┌──────────────────┼──────────────────┐
            │                  │                  │
-      oapi-codegen       oapi-codegen          orval
-     (strict-server)      (client)         (react-query)
+                oapi-codegen       oapi-codegen     hey-api/openapi-ts
+                   (strict-server)      (client)         (react-query)
            │                  │                  │
       ~25 Go handlers    ~15 CLI commands    TS hooks
            │                  │                  │
@@ -52,7 +52,7 @@ Generates typed HTTP client methods for every Helling endpoint. Each Cobra comma
 
 ### Layer 3: OpenAPI Spec → Frontend Hooks
 
-**Tool:** `orval` with react-query client
+**Tool:** `hey-api/openapi-ts` with react-query client
 
 Generates TypeScript types + React Query hooks from the Helling spec. Custom fetcher wraps the shared fetch client with JWT injection and request ID propagation.
 
@@ -293,7 +293,7 @@ service:
   hellingd:
     enabled: true
     running: true
-  helling-proxy:
+  caddy:
     enabled: true
     running: true
   incusd:
@@ -317,13 +317,13 @@ port:
 
 <!-- markdownlint-disable MD060 -->
 
-| Version      | Automation added                                                                                                                 |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| v0.1.0-alpha | oapi-codegen (server + client), orval, Makefile pipeline, vacuum, nilaway/exhaustive, git-cliff, dev container, pre-commit hooks |
-| v0.1.0-beta  | goose/sqlc migration-query workflow, config JSON Schema, snapshot testing, SPICE browser console, cloud-init templates           |
-| v0.2.0       | tygo event types, embedded API docs (Scalar/Redoc)                                                                               |
-| v0.3.0       | Prometheus metrics, Grafana dashboard generation                                                                                 |
-| v0.8.0       | Schemathesis fuzzing, goss system validation                                                                                     |
-| v1.0.0       | nfpm .deb, ISO builder, APT repo, GoReleaser, Cosign, SLSA, SBOM, license checks, man pages, completions                         |
+| Version      | Automation added                                                                                                                              |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| v0.1.0-alpha | oapi-codegen (server + client), hey-api/openapi-ts, Makefile pipeline, vacuum, nilaway/exhaustive, git-cliff, dev container, pre-commit hooks |
+| v0.1.0-beta  | goose/sqlc migration-query workflow, config JSON Schema, snapshot testing, SPICE browser console, cloud-init templates                        |
+| v0.2.0       | tygo event types, embedded API docs (Scalar/Redoc)                                                                                            |
+| v0.3.0       | Prometheus metrics, Grafana dashboard generation                                                                                              |
+| v0.8.0       | Schemathesis fuzzing, goss system validation                                                                                                  |
+| v1.0.0       | nfpm .deb, ISO builder, APT repo, GoReleaser, Cosign, SLSA, SBOM, license checks, man pages, completions                                      |
 
 <!-- markdownlint-enable MD060 -->
