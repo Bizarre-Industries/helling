@@ -37,6 +37,8 @@ Deferred domains in v0.1 remain out-of-contract in this OpenAPI file until promo
 
 - BMC (target v0.4)
 - Notifications (target v0.3)
+- Stacks (target v0.3; Podman Compose stacks; see `docs/spec/containers.md`)
+- Workspaces (target v0.5; see `docs/design/pages/workspaces.md`)
 
 ## Envelope Model
 
