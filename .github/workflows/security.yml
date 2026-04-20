@@ -28,24 +28,32 @@ jobs:
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: "1.26"
-      - name: Build artifacts
+      - name: Check prerequisites
+        id: prereq
         run: |
-          if [ -f go.mod ]; then
-            mkdir -p dist
-            for cmd in apps/hellingd apps/helling-cli apps/helling-proxy apps/helling-agent; do
-              if [ -d "$cmd" ]; then
-                name=$(basename "$cmd")
-                go build -trimpath -ldflags='-s -w' -o "dist/$name" "./$cmd"
-              fi
-            done
+          if [ ! -f go.mod ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "No go.mod yet — skipping artifact build and vulnerability scan."
           fi
+      - name: Build artifacts
+        if: steps.prereq.outputs.skip != 'true'
+        run: |
+          mkdir -p dist
+          for cmd in apps/hellingd apps/helling-cli apps/helling-proxy apps/helling-agent; do
+            if [ -d "$cmd" ]; then
+              name=$(basename "$cmd")
+              go build -trimpath -ldflags='-s -w' -o "dist/$name" "./$cmd"
+            fi
+          done
       - name: Generate SBOM (Syft)
+        if: steps.prereq.outputs.skip != 'true'
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with:
           path: ./dist
           format: cyclonedx-json
           output-file: dist/sbom.cdx.json
       - name: Scan SBOM with Grype
+        if: steps.prereq.outputs.skip != 'true'
         uses: anchore/scan-action@64a33b277ea7a1215a3c142735a1091341939ff5 # v4.1.2
         id: grype
         with:
@@ -53,14 +61,16 @@ jobs:
           fail-build: true
           severity-cutoff: high
       - name: Upload SARIF
-        if: always()
-        uses: github/codeql-action/upload-sarif@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3
+        if: steps.prereq.outputs.skip != 'true' && (success() || failure())
+        uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2
         with:
           sarif_file: ${{ steps.grype.outputs.sarif }}
 
   scorecard:
     name: OpenSSF Scorecard
     runs-on: ubuntu-24.04
+    # publish_results requires push to default branch; skip on schedule-only runs from forks
+    if: github.event_name == 'push' || github.event_name == 'schedule'
     permissions:
       security-events: write
       id-token: write
@@ -76,7 +86,7 @@ jobs:
           results_file: results.sarif
           results_format: sarif
           publish_results: true
-      - uses: github/codeql-action/upload-sarif@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3
+      - uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2
         with:
           sarif_file: results.sarif
       - name: Gate on score
