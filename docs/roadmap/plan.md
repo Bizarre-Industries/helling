@@ -99,10 +99,10 @@ Exit criteria:
 | 042 | Security scanning stack consolidation                         | Accepted              |
 | 043 | Huma with humago for Helling-owned HTTP layer                 | Accepted              |
 | 044 | hey-api/openapi-ts for WebUI code generation                  | Accepted              |
-| 045 | APT repository tooling decision                               | Proposed              |
-| 046 | ISO build tooling decision                                    | Proposed              |
-| 047 | Dark mode scope for v0.1                                      | Proposed              |
-| 048 | Mobile scope for v0.1                                         | Proposed              |
+| 045 | reprepro for APT repository tooling                           | Accepted              |
+| 046 | live-build for ISO build tooling                              | Accepted              |
+| 047 | v0.1 light-only, dark mode in v0.5+                           | Accepted              |
+| 048 | v0.1 responsive per philosophy.md Rule 8                      | Accepted              |
 
 ---
 
@@ -134,7 +134,7 @@ All automation surfaces, with version assignments. See docs/design/full-automati
 | 20  | goss + packer                       | VM-level system validation                         | v0.8.0       |
 | 21  | Cobra doc generation                | Man pages + markdown CLI reference                 | v1.0.0       |
 | 22  | nfpm                                | .deb packaging                                     | v1.0.0       |
-| 23  | live-build / mkosi                  | Bootable ISO image                                 | v1.0.0       |
+| 23  | live-build                          | Bootable ISO image (ADR-046)                       | v1.0.0       |
 | 24  | nfpm + signed APT repo              | .deb publish + indexed/signed repository updates   | v1.0.0       |
 | 25  | GoReleaser                          | Release pipeline                                   | v1.0.0       |
 | 26  | Cosign + SLSA                       | Artifact signing + provenance                      | v1.0.0       |
@@ -299,7 +299,7 @@ All automation surfaces, with version assignments. See docs/design/full-automati
 - [ ] nfpm: .deb packages (binaries, systemd units, config, AppArmor profile)
 - [ ] Man pages (Cobra doc.GenManTree) installed via .deb
 - [ ] Shell completions installed via .deb postinst
-- [ ] live-build/mkosi: bootable ISO (`make iso`)
+- [ ] live-build: bootable ISO (`make iso`, ADR-046)
 - [ ] Signed APT repository (ADR-025): ISO configures apt source and keyring at install time
 
 #### Release

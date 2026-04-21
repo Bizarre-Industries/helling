@@ -225,7 +225,7 @@ Generates .deb packages from a YAML config. Contents: binaries, systemd units, c
 
 ### Layer 23: ISO Building
 
-**Tool:** `live-build` (Debian) or `mkosi` (systemd)
+**Tool:** `live-build` (ADR-046)
 
 Builds a bootable ISO from: Debian 13 base + Incus packages (Zabbly repo) + Podman + Helling .deb packages + preseed answers. `make iso` produces `helling-VERSION-amd64.iso`.
 

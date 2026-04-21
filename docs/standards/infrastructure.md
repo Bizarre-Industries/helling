@@ -50,7 +50,7 @@ Requirements:
   - Go: CGO_ENABLED=1, pinned Go version in go.mod, go.sum verified
   - React: bun.lockb committed, deterministic build output
   - .deb: nfpm config pinned, reproducible package builds
-  - ISO: live-build/mkosi config versioned, reproducible image builds
+  - ISO: live-build config versioned, reproducible image builds (ADR-046)
   - CI: pinned action SHAs, pinned tool versions
   - SBOM: artifact composition recorded for every build
 
@@ -78,7 +78,7 @@ Tooling:
   - goose + sqlc: SQL-first migrations and typed query generation
   - nfpm: .deb package generation (hellingd, helling-cli, edge service config)
   - reprepro: APT repository management (hosts .deb packages for apt-get upgrade, see ADR-045)
-  - live-build / mkosi: ISO image building (bootable installer)
+  - live-build: ISO image building (bootable installer, see ADR-046)
   - GoReleaser: orchestrates build + package + sign + publish
 ```
 

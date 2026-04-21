@@ -9,7 +9,7 @@
 1. **Semantic over literal.** `color.text.secondary` — not `#7a7a7a`. Refactoring a palette is a token change, not a find/replace.
 2. **antd first.** Helling rides antd's theme token system (`antd/theme`). We override specific tokens; we don't build a parallel system.
 3. **Compact by default.** All sizing tokens reflect ADR-008 ("function over beauty"). antd's default sizes are too airy for admin-density.
-4. **Dark mode is deferred but structured.** v0.1 is light-only. ADR-047 is still proposed; tokens are structured so a future dark palette is a token-swap, not a rewrite.
+4. **Dark mode is deferred but structured.** v0.1 is light-only per ADR-047 (Accepted 2026-04-21); tokens are structured so a future dark palette is a token-swap, not a rewrite.
 5. **No one-off tokens.** If a value is used in one place, inline it. Promote to a token once it's used ≥2 places OR carries semantic meaning.
 
 ## antd ConfigProvider mapping
