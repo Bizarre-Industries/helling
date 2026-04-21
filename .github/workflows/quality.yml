@@ -417,11 +417,6 @@ jobs:
   spelling:
     name: Spelling (typos)
     needs: changes
-    if: >-
-      needs.changes.outputs.docs == 'true' || needs.changes.outputs.go == 'true' ||
-      needs.changes.outputs.frontend == 'true' || needs.changes.outputs.sql == 'true' ||
-      needs.changes.outputs.openapi == 'true' || needs.changes.outputs.shell == 'true' ||
-      needs.changes.outputs.yaml == 'true' || needs.changes.outputs.workflow == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
