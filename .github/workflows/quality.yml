@@ -1,7 +1,7 @@
 name: Quality
 
 # The merge gate. Mirrors `task check` exactly.
-# Action pins resolved 2026-04-20 per ADR-026.
+# Action pins resolved 2026-04-21 per ADR-026.
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
     name: OpenAPI lint (score ≥100)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install vacuum
         env:
           VACUUM_VERSION: "0.16.5"
@@ -49,8 +49,8 @@ jobs:
     name: OpenAPI drift check
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
           go-version: "1.26"
           cache: true
@@ -70,8 +70,11 @@ jobs:
     name: Markdown lint + prettier
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - uses: DavidAnson/markdownlint-cli2-action@b4c9feab76d8025d1e83c653fa3990936df0e6c8 # v16.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      # Bumped 2026-04-21: v16.0.0 → v22.0.0 (6 major versions behind).
+      # Major jumps: markdownlint-cli2 v0.13 → v0.20, markdownlint v0.34 → v0.40.
+      # No config changes required — same `globs` input schema.
+      - uses: DavidAnson/markdownlint-cli2-action@07035fd053f7be764496c0f8d8f9f41f98305101 # v22.0.0
         with:
           globs: |
             **/*.md
@@ -87,7 +90,7 @@ jobs:
     name: YAML lint (strict)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install yamllint
         run: pip install yamllint==1.35.1
       - name: Lint
@@ -106,8 +109,8 @@ jobs:
     name: Shell lint + format
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
           go-version: "1.26"
       - name: Install shellcheck + shfmt
@@ -129,8 +132,8 @@ jobs:
     name: Go build / vet / lint / vuln / test / coverage
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
           go-version: "1.26"
           cache: true
@@ -154,11 +157,13 @@ jobs:
             echo "::error::go.mod or go.sum not tidy. Run: go mod tidy"
             exit 1
           }
+      # Bumped 2026-04-21: v6.5.2 → v9.2.0 (2 majors ahead; v7+ requires golangci-lint v2).
+      # `version: latest` replaced with explicit pin per ADR-026.
       - name: golangci-lint
         if: steps.skip.outputs.skip != 'true'
-        uses: golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84 # v6.5.2
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
         with:
-          version: latest
+          version: v2.11.4
           args: --timeout 5m
       - name: Test with race + coverage
         if: steps.skip.outputs.skip != 'true'
@@ -179,7 +184,7 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Skip if no web/package.json
         id: skip
         working-directory: .
@@ -214,8 +219,8 @@ jobs:
     name: SQL lint / sqlc drift / goose round-trip
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
           go-version: "1.26"
       - name: Skip if no db/
@@ -229,12 +234,21 @@ jobs:
         run: |
           pipx install sqlfluff==3.0.7
           sqlfluff lint db/
-      - name: Install sqlc (binary — avoids go.mod replace directive issue)
+      # Fixed 2026-04-21: was fetching api.github.com/.../releases/latest and
+      # parsing with jq — that's a floating pin per ADR-026. Explicit version +
+      # SHA256 checksum, same pattern as vacuum above.
+      - name: Install sqlc
         if: steps.skip.outputs.skip != 'true'
+        env:
+          SQLC_VERSION: "1.31.0"
+          SQLC_SHA256: "e35394ba3df5e62669e76627f45172d18c6cbb1479e4762c51b29b0eafc16dc0"
         run: |
-          ver=$(curl -sSL https://api.github.com/repos/sqlc-dev/sqlc/releases/latest | jq -r '.tag_name' | sed 's/^v//')
-          curl -fsSL "https://github.com/sqlc-dev/sqlc/releases/download/v${ver}/sqlc_${ver}_linux_amd64.tar.gz" \
-            | tar -xzC /usr/local/bin sqlc
+          set -euo pipefail
+          curl -fsSL -o /tmp/sqlc.tar.gz \
+            "https://github.com/sqlc-dev/sqlc/releases/download/v${SQLC_VERSION}/sqlc_${SQLC_VERSION}_linux_amd64.tar.gz"
+          echo "${SQLC_SHA256}  /tmp/sqlc.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/sqlc.tar.gz -C /usr/local/bin sqlc
+          sqlc version
       - name: sqlc drift
         if: steps.skip.outputs.skip != 'true'
         run: |
@@ -261,10 +275,12 @@ jobs:
     name: Secret scan (gitleaks)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+      # Comment fixed 2026-04-21: SHA unchanged, but `# v2` implied a floating
+      # major tag per ADR-026. SHA ff98106e… corresponds to v2.3.9 exactly.
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
           GITLEAKS_CONFIG: .gitleaks.toml
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
@@ -274,14 +290,16 @@ jobs:
     name: Spelling (typos)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - uses: crate-ci/typos@93c857b593a98e94ba33871b7130363df8b5d51f # master @ 2026-04-20
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      # Fixed 2026-04-21: was pinned to `master @ 2026-04-20` — floating tag
+      # per ADR-026. v1.43.4 is a stable tag; dependabot will bump forward.
+      - uses: crate-ci/typos@78bc6fb2c0d734235d57a2d6b9de923cc325ebdd # v1.43.4
 
   links:
     name: Link check (lychee, offline)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2.8.0
         with:
           args: --offline --no-progress docs/ README.md CONTRIBUTING.md CODE_OF_CONDUCT.md SECURITY.md
@@ -290,7 +308,7 @@ jobs:
     name: API ↔ CLI ↔ WebUI parity
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Run parity check
         run: |
           pip install pyyaml==6.0.2

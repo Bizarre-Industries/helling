@@ -1,13 +1,13 @@
 name: CodeQL
 
 # SAST for Go + TypeScript per ADR-042.
-# Action pins resolved 2026-04-20; codeql-action upgraded to v4 on 2026-04-20 per ADR-026.
+# Action pins resolved 2026-04-21 per ADR-026.
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
   schedule:
     - cron: "0 3 * * 1" # Monday 03:00 UTC — weekly full-depth run
 
@@ -30,10 +30,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [go, javascript-typescript]
+        language: [ go, javascript-typescript ]
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         if: matrix.language == 'go'
         with:
           go-version: "1.26"

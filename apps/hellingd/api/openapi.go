@@ -1,11 +1,22 @@
 package api
 
-import "github.com/danielgtaylor/huma/v2"
+import (
+	"strings"
+
+	"github.com/danielgtaylor/huma/v2"
+)
 
 const (
-	apiTitle   = "Helling API"
-	apiVersion = "0.1.0"
+	apiTitle         = "Helling API"
+	apiVersion       = "0.1.0"
+	schemaTypeString = "string"
 )
+
+var defaultTags = []huma.Tag{
+	{Name: "Auth", Description: "Authentication and token lifecycle endpoints."},
+	{Name: "Users", Description: "User account and access management endpoints."},
+	{Name: "System", Description: "System and service health endpoints."},
+}
 
 // NewConfig returns the default Huma configuration for Helling-owned APIs.
 func NewConfig() huma.Config {
@@ -17,11 +28,9 @@ func NewConfig() huma.Config {
 			Description: "Local Helling API endpoint.",
 		},
 	}
-	config.Tags = []*huma.Tag{
-		{
-			Name:        "System",
-			Description: "System and service health endpoints.",
-		},
+	config.Tags = make([]*huma.Tag, 0, len(defaultTags))
+	for _, tag := range defaultTags {
+		config.Tags = append(config.Tags, &huma.Tag{Name: tag.Name, Description: tag.Description})
 	}
 
 	return config
@@ -41,13 +50,24 @@ func EnrichOpenAPI(doc *huma.OpenAPI) {
 		doc.Servers = []*huma.Server{{URL: "https://localhost:8006", Description: "Local Helling API endpoint."}}
 	}
 
-	if len(doc.Tags) == 0 {
-		doc.Tags = []*huma.Tag{{Name: "System", Description: "System and service health endpoints."}}
-	}
+	ensureDefaultTags(doc)
 
 	schemas := doc.Components.Schemas.Map()
 	setSchemaMetadata(schemas)
 	setResponseExamples(doc)
+	ensureSchemaFallbackMetadata(schemas)
+	ensureMediaExamples(doc, schemas)
+}
+
+func ensureDefaultTags(doc *huma.OpenAPI) {
+	if len(doc.Tags) > 0 {
+		return
+	}
+
+	doc.Tags = make([]*huma.Tag, 0, len(defaultTags))
+	for _, tag := range defaultTags {
+		doc.Tags = append(doc.Tags, &huma.Tag{Name: tag.Name, Description: tag.Description})
+	}
 }
 
 func setSchemaMetadata(schemas map[string]*huma.Schema) {
@@ -78,7 +98,7 @@ func enrichErrorDetailSchema(schema *huma.Schema) {
 	}
 	if value := schema.Properties["value"]; value != nil {
 		if value.Type == "" {
-			value.Type = "string"
+			value.Type = schemaTypeString
 		}
 		if len(value.Examples) == 0 {
 			value.Examples = []any{""}
@@ -142,6 +162,157 @@ func enrichHealthMetaSchema(schema *huma.Schema) {
 
 	schema.Description = "Metadata included in health responses."
 	schema.Examples = []any{map[string]any{"request_id": "req_huma_spike"}}
+}
+
+func ensureSchemaFallbackMetadata(schemas map[string]*huma.Schema) {
+	for name, schema := range schemas {
+		ensureSchemaDescription(name, schema)
+		ensureSchemaExample(name, schema, schemas)
+		ensurePropertyMetadata(schema, schemas)
+	}
+}
+
+func ensureSchemaDescription(name string, schema *huma.Schema) {
+	if schema == nil || schema.Description != "" {
+		return
+	}
+
+	schema.Description = "Schema for " + strings.ToLower(name) + "."
+}
+
+func ensureSchemaExample(name string, schema *huma.Schema, schemas map[string]*huma.Schema) {
+	if schema == nil || len(schema.Examples) > 0 {
+		return
+	}
+
+	schema.Examples = []any{exampleForSchema(name, schema, schemas)}
+}
+
+func ensurePropertyMetadata(schema *huma.Schema, schemas map[string]*huma.Schema) {
+	if schema == nil || len(schema.Properties) == 0 {
+		return
+	}
+
+	for propName, propSchema := range schema.Properties {
+		if propSchema == nil {
+			continue
+		}
+		if propSchema.Description == "" {
+			propSchema.Description = "Property " + propName + "."
+		}
+		if len(propSchema.Examples) == 0 {
+			propSchema.Examples = []any{exampleForSchema(propName, propSchema, schemas)}
+		}
+		if propSchema.Type == "" && propSchema.Ref == "" {
+			propSchema.Type = schemaTypeString
+		}
+	}
+}
+
+func ensureMediaExamples(doc *huma.OpenAPI, schemas map[string]*huma.Schema) {
+	for _, pathItem := range doc.Paths {
+		for _, operation := range operationsFromPath(pathItem) {
+			if operation == nil {
+				continue
+			}
+			if operation.RequestBody != nil {
+				ensureContentExamples(operation.RequestBody.Content, schemas)
+			}
+			for _, response := range operation.Responses {
+				if response == nil {
+					continue
+				}
+				ensureContentExamples(response.Content, schemas)
+			}
+		}
+	}
+}
+
+func operationsFromPath(pathItem *huma.PathItem) []*huma.Operation {
+	if pathItem == nil {
+		return nil
+	}
+
+	return []*huma.Operation{
+		pathItem.Get,
+		pathItem.Post,
+		pathItem.Put,
+		pathItem.Patch,
+		pathItem.Delete,
+		pathItem.Head,
+		pathItem.Options,
+		pathItem.Trace,
+	}
+}
+
+func ensureContentExamples(content map[string]*huma.MediaType, schemas map[string]*huma.Schema) {
+	for _, media := range content {
+		if media == nil {
+			continue
+		}
+		if media.Example != nil || len(media.Examples) > 0 {
+			continue
+		}
+		media.Example = exampleForSchema("response", media.Schema, schemas)
+	}
+}
+
+func exampleForSchema(name string, schema *huma.Schema, schemas map[string]*huma.Schema) any {
+	if schema == nil {
+		return map[string]any{}
+	}
+
+	if len(schema.Examples) > 0 {
+		return schema.Examples[0]
+	}
+
+	if schema.Ref != "" {
+		resolved := schemas[schemaNameFromRef(schema.Ref)]
+		if resolved != nil && len(resolved.Examples) > 0 {
+			return resolved.Examples[0]
+		}
+		return map[string]any{}
+	}
+
+	return scalarOrStructuredExample(name, schema)
+}
+
+func scalarOrStructuredExample(name string, schema *huma.Schema) any {
+	switch schema.Type {
+	case "boolean":
+		return true
+	case "integer", "number":
+		return 1
+	case "array":
+		return []any{scalarOrStructuredExample(name, schema.Items)}
+	case schemaTypeString:
+		if len(schema.Enum) > 0 {
+			return schema.Enum[0]
+		}
+		if strings.Contains(strings.ToLower(name), "id") {
+			return "id_example"
+		}
+		return "example"
+	case "object":
+		obj := map[string]any{}
+		for propName, propSchema := range schema.Properties {
+			if propSchema == nil {
+				continue
+			}
+			if len(propSchema.Examples) > 0 {
+				obj[propName] = propSchema.Examples[0]
+				continue
+			}
+			obj[propName] = scalarOrStructuredExample(propName, propSchema)
+		}
+		return obj
+	default:
+		return map[string]any{}
+	}
+}
+
+func schemaNameFromRef(ref string) string {
+	return strings.TrimPrefix(ref, "#/components/schemas/")
 }
 
 func setResponseExamples(doc *huma.OpenAPI) {

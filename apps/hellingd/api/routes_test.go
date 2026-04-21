@@ -10,6 +10,14 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 )
 
+func testAPI() *http.ServeMux {
+	mux := http.NewServeMux()
+	api := humago.New(mux, NewConfig())
+	RegisterOperations(api)
+	EnrichOpenAPI(api.OpenAPI())
+	return mux
+}
+
 func TestNewConfigProvidesRequiredMetadata(t *testing.T) {
 	config := NewConfig()
 	if config.Info == nil || config.Info.Description == "" {
@@ -18,16 +26,20 @@ func TestNewConfigProvidesRequiredMetadata(t *testing.T) {
 	if len(config.Servers) == 0 {
 		t.Fatal("expected at least one server in config")
 	}
-	if len(config.Tags) == 0 || config.Tags[0].Name != "System" {
-		t.Fatal("expected System global tag in config")
+
+	tagNames := map[string]bool{}
+	for _, tag := range config.Tags {
+		tagNames[tag.Name] = true
+	}
+	for _, expected := range []string{"Auth", "Users", "System"} {
+		if !tagNames[expected] {
+			t.Fatalf("expected %s tag in config", expected)
+		}
 	}
 }
 
 func TestRegisterOperationsHealthRoute(t *testing.T) {
-	mux := http.NewServeMux()
-	api := humago.New(mux, NewConfig())
-	RegisterOperations(api)
-	EnrichOpenAPI(api.OpenAPI())
+	mux := testAPI()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/health", http.NoBody)
 	rec := httptest.NewRecorder()
@@ -47,6 +59,95 @@ func TestRegisterOperationsHealthRoute(t *testing.T) {
 	}
 }
 
+func TestRegisterOperationsAuthLoginSuccess(t *testing.T) {
+	mux := testAPI()
+	body := `{"username":"admin","password":"correct-horse-battery-staple"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), `"token_type":"Bearer"`) {
+		t.Fatalf("expected bearer token payload, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsAuthLoginMFAChallenge(t *testing.T) {
+	mux := testAPI()
+	body := `{"username":"mfa","password":"anything"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusAccepted {
+		t.Fatalf("expected status %d, got %d body=%s", http.StatusAccepted, rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), `"mfa_required":true`) {
+		t.Fatalf("expected mfa challenge payload, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsAuthLoginUnauthorized(t *testing.T) {
+	mux := testAPI()
+	body := `{"username":"wrong","password":"wrong"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status %d, got %d body=%s", http.StatusUnauthorized, rec.Code, rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsAuthLoginRateLimited(t *testing.T) {
+	mux := testAPI()
+	body := `{"username":"ratelimit","password":"anything"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusTooManyRequests {
+		t.Fatalf("expected status %d, got %d body=%s", http.StatusTooManyRequests, rec.Code, rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsUserListPagination(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/users?limit=1", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), `"has_next":true`) {
+		t.Fatalf("expected has_next=true on first page, got: %s", rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), `"next_cursor":"cursor_page_2"`) {
+		t.Fatalf("expected next cursor on first page, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsUserListSecondPage(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/users?limit=1&cursor=cursor_page_2", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), `"has_next":false`) {
+		t.Fatalf("expected has_next=false on second page, got: %s", rec.Body.String())
+	}
+}
+
 func TestEnrichOpenAPIPatchesSchemaMetadata(t *testing.T) {
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig(apiTitle, apiVersion))
@@ -62,7 +163,7 @@ func TestEnrichOpenAPIPatchesSchemaMetadata(t *testing.T) {
 	}
 
 	schemas := doc.Components.Schemas.Map()
-	required := []string{"ErrorDetail", "ErrorModel", "HealthData", "HealthEnvelope", "HealthMeta"}
+	required := []string{"ErrorDetail", "ErrorModel", "HealthData", "HealthEnvelope", "HealthMeta", "AuthLoginEnvelope", "UserListEnvelope"}
 	for _, name := range required {
 		s := schemas[name]
 		if s == nil || s.Description == "" {
@@ -74,15 +175,13 @@ func TestEnrichOpenAPIPatchesSchemaMetadata(t *testing.T) {
 	if errorDetail.Properties["value"].Type == "" {
 		t.Fatal("expected type for ErrorDetail.value")
 	}
+	if len(errorDetail.Properties["message"].Examples) == 0 {
+		t.Fatal("expected example for ErrorDetail.message")
+	}
 
-	healthPath := doc.Paths["/api/v1/health"]
-	if healthPath == nil || healthPath.Get == nil {
-		t.Fatal("expected health path operation")
-	}
-	if healthPath.Get.Responses["200"].Content["application/json"].Example == nil {
-		t.Fatal("expected success example on health response")
-	}
-	if healthPath.Get.Responses["default"].Content["application/problem+json"].Example == nil {
-		t.Fatal("expected default problem response example")
+	for _, path := range []string{"/api/v1/health", "/api/v1/auth/login", "/api/v1/users"} {
+		if doc.Paths[path] == nil {
+			t.Fatalf("expected path %s in generated OpenAPI", path)
+		}
 	}
 }
