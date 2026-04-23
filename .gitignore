@@ -5,6 +5,8 @@ IMPLEMENTATION-PLAN.md
 
 # Claude Code
 .claude/
+.claude-cache/
+.claude-plans/
 .remember/
 .task/
 CLAUDE.md
