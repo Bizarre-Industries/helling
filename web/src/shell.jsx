@@ -1036,7 +1036,10 @@ const Copyable = ({ text, mono = true }) => {
     e.stopPropagation();
     try {
       navigator.clipboard.writeText(text);
-    } catch (err) {}
+    } catch (err) {
+      // Clipboard access may fail (permissions, insecure context, unsupported API).
+      console.warn('Clipboard write failed:', err);
+    }
     setOk(true);
     setTimeout(() => setOk(false), 1200);
   };
