@@ -1,22 +1,55 @@
 /* Helling WebUI — app root */
 /* eslint-disable */
-import React, { useState, useEffect, useCallback, Fragment } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './shell.jsx';
 import './infra.jsx';
 import './pages.jsx';
 import './pages2.jsx';
 
 const {
-  TopBar, ResourceTree, TaskDrawer, CommandPalette,
-  ToastStack, Modal, ConfirmModal,
-  PageDashboard, PageInstances, PageInstanceDetail, PageContainers, PageKubernetes,
-  PageStorage, PageNetworking, PageFirewall, PageImages, PageBackups, PageSchedules,
-  PageTemplates, PageBMC, PageCluster, PageUsers, PageAudit, PageLogs, PageOps,
-  PageSettings, PageLogin,
-  PageSetup, PageNewInstance, PageConsole, PageMetrics, PageAlerts,
-  PageRBAC, PageFirewallEditor, PageMarketplace, PageFileBrowser,
-  PageSearchResults, PageContainerDetail, PageUserDetail,
-  WizardCreateInstance, ModalInstallApp, ModalFirewallRule, ModalCloudInit,
+  TopBar,
+  ResourceTree,
+  TaskDrawer,
+  CommandPalette,
+  ToastStack,
+  Modal,
+  ConfirmModal,
+  PageDashboard,
+  PageInstances,
+  PageInstanceDetail,
+  PageContainers,
+  PageKubernetes,
+  PageStorage,
+  PageNetworking,
+  PageFirewall,
+  PageImages,
+  PageBackups,
+  PageSchedules,
+  PageTemplates,
+  PageBMC,
+  PageCluster,
+  PageUsers,
+  PageAudit,
+  PageLogs,
+  PageOps,
+  PageSettings,
+  PageLogin,
+  PageSetup,
+  PageNewInstance,
+  PageConsole,
+  PageMetrics,
+  PageAlerts,
+  PageRBAC,
+  PageFirewallEditor,
+  PageMarketplace,
+  PageFileBrowser,
+  PageSearchResults,
+  PageContainerDetail,
+  PageUserDetail,
+  WizardCreateInstance,
+  ModalInstallApp,
+  ModalFirewallRule,
+  ModalCloudInit,
 } = window;
 
 const CRUMBS = {
@@ -52,13 +85,19 @@ function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [density, setDensity] = useState('compact');
   const [theme, setTheme] = useState(() => {
-    try { return localStorage.getItem('helling-theme') || 'dark'; } catch { return 'dark'; }
+    try {
+      return localStorage.getItem('helling-theme') || 'dark';
+    } catch {
+      return 'dark';
+    }
   });
   const [modalState, setModalState] = useState(null); // {kind, props}
 
   useEffect(() => {
     document.body.classList.toggle('light-mode', theme === 'light');
-    try { localStorage.setItem('helling-theme', theme); } catch {}
+    try {
+      localStorage.setItem('helling-theme', theme);
+    } catch {}
   }, [theme]);
 
   // attach density + expose modal opener globally
@@ -67,7 +106,7 @@ function App() {
   }, [density]);
 
   useEffect(() => {
-    window.openModal = (kind, props) => setModalState({kind, props: props || {}});
+    window.openModal = (kind, props) => setModalState({ kind, props: props || {} });
     window.closeModal = () => setModalState(null);
   }, []);
 
@@ -75,13 +114,21 @@ function App() {
     setPage(p);
     setPaletteOpen(false);
   }, []);
-  useEffect(() => { window.__nav = nav; }, [nav]);
+  useEffect(() => {
+    window.__nav = nav;
+  }, [nav]);
 
   useEffect(() => {
     const onKey = (e) => {
       const meta = e.metaKey || e.ctrlKey;
-      if (meta && e.key.toLowerCase() === 'k') { e.preventDefault(); setPaletteOpen(true); }
-      if (e.ctrlKey && e.key === '`') { e.preventDefault(); setDrawerOpen(d=>!d); }
+      if (meta && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+      if (e.ctrlKey && e.key === '`') {
+        e.preventDefault();
+        setDrawerOpen((d) => !d);
+      }
       if (e.key === 'Escape' && paletteOpen) setPaletteOpen(false);
     };
     window.addEventListener('keydown', onKey);
@@ -89,18 +136,22 @@ function App() {
   }, [paletteOpen]);
 
   if (!setupDone) {
-    return <>
-      <PageSetup onDone={()=>setSetupDone(true)}/>
-      <ToastStack/>
-      {modalState && <ModalHost state={modalState} onClose={()=>setModalState(null)}/>}
-    </>;
+    return (
+      <>
+        <PageSetup onDone={() => setSetupDone(true)} />
+        <ToastStack />
+        {modalState && <ModalHost state={modalState} onClose={() => setModalState(null)} />}
+      </>
+    );
   }
 
   if (!authed) {
-    return <>
-      <PageLogin onLogin={()=>setAuthed(true)} onEnterSetup={()=>setSetupDone(false)}/>
-      <ToastStack/>
-    </>;
+    return (
+      <>
+        <PageLogin onLogin={() => setAuthed(true)} onEnterSetup={() => setSetupDone(false)} />
+        <ToastStack />
+      </>
+    );
   }
 
   // figure out crumbs + page render
@@ -108,84 +159,120 @@ function App() {
   if (page.startsWith('instance:')) {
     const name = page.split(':')[1];
     crumbs = ['Datacenter', 'Instances', name];
-    body = <PageInstanceDetail name={name} onNav={nav}/>;
+    body = <PageInstanceDetail name={name} onNav={nav} />;
   } else if (page.startsWith('console:')) {
     const name = page.split(':')[1];
     crumbs = ['Datacenter', 'Instances', name, 'Console'];
-    body = <PageConsole name={name} onNav={nav}/>;
+    body = <PageConsole name={name} onNav={nav} />;
   } else if (page.startsWith('container:')) {
     const name = page.split(':')[1];
     crumbs = ['Datacenter', 'Containers', name];
-    body = <PageContainerDetail name={name} onNav={nav}/>;
+    body = <PageContainerDetail name={name} onNav={nav} />;
   } else if (page.startsWith('cluster:')) {
     crumbs = ['Datacenter', 'Kubernetes', page.split(':')[1]];
-    body = <PageKubernetes/>;
+    body = <PageKubernetes />;
   } else if (page.startsWith('files:')) {
     const [, scope, id] = page.split(':');
-    crumbs = [scope === 'backup' ? 'Resources' : 'Datacenter', scope==='backup'?'Backups':'Containers', id, 'Files'];
-    body = <PageFileBrowser scope={scope} id={id} onNav={nav}/>;
+    crumbs = [
+      scope === 'backup' ? 'Resources' : 'Datacenter',
+      scope === 'backup' ? 'Backups' : 'Containers',
+      id,
+      'Files',
+    ];
+    body = <PageFileBrowser scope={scope} id={id} onNav={nav} />;
   } else if (page.startsWith('rbac:')) {
     const u = page.split(':')[1];
     crumbs = ['Admin', 'Users', u];
-    body = <PageUserDetail user={u} onNav={nav}/>;
+    body = <PageUserDetail user={u} onNav={nav} />;
   } else if (page === 'new-instance') {
     crumbs = ['Datacenter', 'Instances', 'New'];
-    body = <PageNewInstance onNav={nav}/>;
+    body = <PageNewInstance onNav={nav} />;
   } else {
     crumbs = CRUMBS[page] || ['Datacenter', page];
     const M = {
-      dashboard: PageDashboard, instances: PageInstances, containers: PageContainers,
-      kubernetes: PageKubernetes, storage: PageStorage, networking: PageNetworking,
-      firewall: PageFirewall, images: PageImages, backups: PageBackups,
-      schedules: PageSchedules, templates: PageTemplates, bmc: PageBMC,
-      cluster: PageCluster, users: PageUsers, audit: PageAudit, logs: PageLogs,
-      ops: PageOps, settings: PageSettings,
-      metrics: PageMetrics, alerts: PageAlerts, marketplace: PageMarketplace,
+      dashboard: PageDashboard,
+      instances: PageInstances,
+      containers: PageContainers,
+      kubernetes: PageKubernetes,
+      storage: PageStorage,
+      networking: PageNetworking,
+      firewall: PageFirewall,
+      images: PageImages,
+      backups: PageBackups,
+      schedules: PageSchedules,
+      templates: PageTemplates,
+      bmc: PageBMC,
+      cluster: PageCluster,
+      users: PageUsers,
+      audit: PageAudit,
+      logs: PageLogs,
+      ops: PageOps,
+      settings: PageSettings,
+      metrics: PageMetrics,
+      alerts: PageAlerts,
+      marketplace: PageMarketplace,
       search: PageSearchResults,
-      access: PageRBAC, rbac: PageRBAC,
+      access: PageRBAC,
+      rbac: PageRBAC,
       'firewall-editor': PageFirewallEditor,
     };
     const P = M[page] || PageDashboard;
-    body = <P onNav={nav}/>;
+    body = <P onNav={nav} />;
   }
 
   return (
-    <div style={{display:'flex', flexDirection:'column', height:'100vh', overflow:'hidden'}}>
-      <TopBar onOpenPalette={()=>setPaletteOpen(true)} page={page} crumbs={crumbs} onNav={nav}
-        density={density} onDensity={setDensity}
-        theme={theme} onTheme={setTheme}
-        onLogout={()=>setAuthed(false)}/>
-      <div style={{display:'flex', flex:1, overflow:'hidden', minHeight:0}}>
-        <ResourceTree page={page} onNav={nav}/>
-        <main style={{flex:1, overflow:'auto', background:'var(--h-bg)', paddingBottom: drawerOpen ? 340 : 36}}>
-          <div key={page} className="page-fade">{body}</div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <TopBar
+        onOpenPalette={() => setPaletteOpen(true)}
+        page={page}
+        crumbs={crumbs}
+        onNav={nav}
+        density={density}
+        onDensity={setDensity}
+        theme={theme}
+        onTheme={setTheme}
+        onLogout={() => setAuthed(false)}
+      />
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
+        <ResourceTree page={page} onNav={nav} />
+        <main
+          style={{
+            flex: 1,
+            overflow: 'auto',
+            background: 'var(--h-bg)',
+            paddingBottom: drawerOpen ? 340 : 36,
+          }}
+        >
+          <div key={page} className="page-fade">
+            {body}
+          </div>
         </main>
       </div>
-      <TaskDrawer open={drawerOpen} onToggle={()=>setDrawerOpen(d=>!d)}/>
-      <CommandPalette open={paletteOpen} onClose={()=>setPaletteOpen(false)} onNav={nav}/>
-      <ToastStack/>
-      {modalState && <ModalHost state={modalState} onClose={()=>setModalState(null)}/>}
+      <TaskDrawer open={drawerOpen} onToggle={() => setDrawerOpen((d) => !d)} />
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onNav={nav} />
+      <ToastStack />
+      {modalState && <ModalHost state={modalState} onClose={() => setModalState(null)} />}
     </div>
   );
 }
 
 // modal host — dispatches on kind
-function ModalHost({state, onClose}) {
-  const {kind, props} = state;
+function ModalHost({ state, onClose }) {
+  const { kind, props } = state;
   if (kind === 'confirm') {
-    return <ConfirmModal open={true} onClose={onClose} {...props}/>;
+    return <ConfirmModal open={true} onClose={onClose} {...props} />;
   }
   if (kind === 'create-vm') {
-    return <WizardCreateInstance onClose={onClose} {...props}/>;
+    return <WizardCreateInstance onClose={onClose} {...props} />;
   }
   if (kind === 'install-app') {
-    return <ModalInstallApp onClose={onClose} {...props}/>;
+    return <ModalInstallApp onClose={onClose} {...props} />;
   }
   if (kind === 'new-rule') {
-    return <ModalFirewallRule onClose={onClose} {...props}/>;
+    return <ModalFirewallRule onClose={onClose} {...props} />;
   }
   if (kind === 'edit-cloud-init') {
-    return <ModalCloudInit onClose={onClose} {...props}/>;
+    return <ModalCloudInit onClose={onClose} {...props} />;
   }
   return null;
 }
