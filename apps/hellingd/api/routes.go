@@ -1214,6 +1214,18 @@ func RegisterOperations(api huma.API) {
 	registerKubernetesScale(api)
 	registerKubernetesUpgrade(api)
 	registerKubernetesKubeconfig(api)
+	registerSystemInfo(api)
+	registerSystemHardware(api)
+	registerSystemConfigGet(api)
+	registerSystemConfigPut(api)
+	registerSystemUpgrade(api)
+	registerSystemDiagnostics(api)
+	registerFirewallHostList(api)
+	registerFirewallHostCreate(api)
+	registerFirewallHostDelete(api)
+	registerAuditQuery(api)
+	registerAuditExport(api)
+	registerEventsSse(api)
 	registerHealth(api)
 }
 
@@ -2404,6 +2416,705 @@ func registerAuthTokenRevoke(api huma.API) {
 			Body: AuthTokenRevokeEnvelope{
 				Data: AuthTokenRevokeData{},
 				Meta: AuthTokenRevokeMeta{RequestID: "req_auth_token_revoke"},
+			},
+		}, nil
+	})
+}
+
+// ─── System domain stubs ──────────────────────────────────────────────────
+const (
+	systemConfigKeyKnown   = "auth.session_inactivity_timeout"
+	systemConfigKeyMissing = "does.not.exist"
+)
+
+// SystemMeta is the standard metadata envelope for the system domain.
+type SystemMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// SystemInfoData mirrors `helling system info` output.
+type SystemInfoData struct {
+	Hostname string `json:"hostname" doc:"System hostname."`
+	Version  string `json:"version" doc:"Running hellingd version (semver)."`
+	Uptime   string `json:"uptime" doc:"Human-readable uptime (e.g. 14d 3h)."`
+	Arch     string `json:"arch" doc:"Host architecture (amd64/arm64)."`
+	Kernel   string `json:"kernel" doc:"Kernel release string."`
+}
+
+// SystemInfoEnvelope is the success envelope for system info.
+type SystemInfoEnvelope struct {
+	Data SystemInfoData `json:"data"`
+	Meta SystemMeta     `json:"meta"`
+}
+
+// SystemInfoOutput is the response shape for GET /api/v1/system/info.
+type SystemInfoOutput struct {
+	Body SystemInfoEnvelope
+}
+
+// SystemHardwareData summarizes detected hardware.
+type SystemHardwareData struct {
+	CPU     string `json:"cpu" doc:"CPU model string."`
+	Cores   int    `json:"cores" doc:"Physical core count." minimum:"1"`
+	RAMGB   int    `json:"ram_gb" doc:"Total RAM in GiB." minimum:"1"`
+	DiskGB  int    `json:"disk_gb" doc:"Total primary disk capacity in GiB." minimum:"1"`
+	Network string `json:"network" doc:"Primary NIC description."`
+}
+
+// SystemHardwareEnvelope is the success envelope for system hardware.
+type SystemHardwareEnvelope struct {
+	Data SystemHardwareData `json:"data"`
+	Meta SystemMeta         `json:"meta"`
+}
+
+// SystemHardwareOutput is the response shape for GET /api/v1/system/hardware.
+type SystemHardwareOutput struct {
+	Body SystemHardwareEnvelope
+}
+
+// SystemConfigGetInput binds the path key.
+type SystemConfigGetInput struct {
+	Key string `path:"key" minLength:"1" maxLength:"128" doc:"Config key (dot-separated)."`
+}
+
+// SystemConfigData wraps a single config key/value.
+type SystemConfigData struct {
+	Key   string `json:"key" doc:"Config key."`
+	Value string `json:"value" doc:"Config value as a string."`
+}
+
+// SystemConfigEnvelope is the success envelope for config reads/writes.
+type SystemConfigEnvelope struct {
+	Data SystemConfigData `json:"data"`
+	Meta SystemMeta       `json:"meta"`
+}
+
+// SystemConfigGetOutput is the response shape for GET /api/v1/system/config/{key}.
+type SystemConfigGetOutput struct {
+	Body SystemConfigEnvelope
+}
+
+// SystemConfigPutRequest carries the new value.
+type SystemConfigPutRequest struct {
+	Value string `json:"value" minLength:"1" maxLength:"1024" doc:"Config value to store."`
+}
+
+// SystemConfigPutInput combines path key with value body.
+type SystemConfigPutInput struct {
+	Key  string                 `path:"key" minLength:"1" maxLength:"128" doc:"Config key."`
+	Body SystemConfigPutRequest `doc:"Config update payload."`
+}
+
+// SystemConfigPutOutput is the response shape for PUT /api/v1/system/config/{key}.
+type SystemConfigPutOutput struct {
+	Body SystemConfigEnvelope
+}
+
+// SystemUpgradeRequest triggers an upgrade check or rollback.
+type SystemUpgradeRequest struct {
+	Rollback bool `json:"rollback,omitempty" doc:"If true, revert to the previous version instead of upgrading."`
+}
+
+// SystemUpgradeInput wraps the upgrade body.
+type SystemUpgradeInput struct {
+	Body SystemUpgradeRequest `doc:"Upgrade action payload."`
+}
+
+// SystemUpgradeData reports the action result.
+type SystemUpgradeData struct {
+	FromVersion string `json:"from_version" doc:"Version prior to the action."`
+	ToVersion   string `json:"to_version" doc:"Version after the action."`
+	Status      string `json:"status" doc:"Upgrade status." enum:"scheduled,rolling_back,no_change"`
+}
+
+// SystemUpgradeEnvelope is the success envelope for upgrade responses.
+type SystemUpgradeEnvelope struct {
+	Data SystemUpgradeData `json:"data"`
+	Meta SystemMeta        `json:"meta"`
+}
+
+// SystemUpgradeOutput is the response shape for POST /api/v1/system/upgrade.
+type SystemUpgradeOutput struct {
+	Body SystemUpgradeEnvelope
+}
+
+// SystemDiagnosticsCheck is a single diagnostic probe result.
+type SystemDiagnosticsCheck struct {
+	Name    string `json:"name" doc:"Check name."`
+	Status  string `json:"status" doc:"Check status." enum:"pass,warn,fail"`
+	Message string `json:"message,omitempty" doc:"Optional detail message."`
+}
+
+// SystemDiagnosticsData is the full self-test report.
+type SystemDiagnosticsData struct {
+	Checks []SystemDiagnosticsCheck `json:"checks" doc:"Ordered list of diagnostic probes."`
+	Passed int                      `json:"passed" doc:"Count of passing checks." minimum:"0"`
+	Failed int                      `json:"failed" doc:"Count of failing checks." minimum:"0"`
+}
+
+// SystemDiagnosticsEnvelope is the success envelope for diagnostics.
+type SystemDiagnosticsEnvelope struct {
+	Data SystemDiagnosticsData `json:"data"`
+	Meta SystemMeta            `json:"meta"`
+}
+
+// SystemDiagnosticsOutput is the response shape for GET /api/v1/system/diagnostics.
+type SystemDiagnosticsOutput struct {
+	Body SystemDiagnosticsEnvelope
+}
+
+func registerSystemInfo(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "systemInfo",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/system/info",
+		Summary:     "System info",
+		Description: "Returns hostname, hellingd version, uptime, and host kernel/arch.",
+		Tags:        []string{"System"},
+	}, func(ctx context.Context, input *struct{}) (*SystemInfoOutput, error) {
+		_ = ctx
+		_ = input
+		return &SystemInfoOutput{
+			Body: SystemInfoEnvelope{
+				Data: SystemInfoData{
+					Hostname: "helling-stub", Version: "0.1.0-alpha",
+					Uptime: "14d 3h", Arch: "amd64", Kernel: "6.1.0-stub",
+				},
+				Meta: SystemMeta{RequestID: "req_system_info"},
+			},
+		}, nil
+	})
+}
+
+func registerSystemHardware(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "systemHardware",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/system/hardware",
+		Summary:     "Host hardware summary",
+		Description: "Returns CPU/RAM/disk/network capabilities detected on the host.",
+		Tags:        []string{"System"},
+	}, func(ctx context.Context, input *struct{}) (*SystemHardwareOutput, error) {
+		_ = ctx
+		_ = input
+		return &SystemHardwareOutput{
+			Body: SystemHardwareEnvelope{
+				Data: SystemHardwareData{
+					CPU: "Intel Xeon Silver 4214 (stub)", Cores: 12, RAMGB: 64,
+					DiskGB: 1024, Network: "2x10GbE",
+				},
+				Meta: SystemMeta{RequestID: "req_system_hardware"},
+			},
+		}, nil
+	})
+}
+
+func registerSystemConfigGet(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "systemConfigGet",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/system/config/{key}",
+		Summary:     "Read a config value",
+		Description: "Returns a single config key. 404 if unknown.",
+		Tags:        []string{"System"},
+		Errors:      []int{http.StatusNotFound},
+	}, func(ctx context.Context, input *SystemConfigGetInput) (*SystemConfigGetOutput, error) {
+		_ = ctx
+		if input.Key == systemConfigKeyMissing {
+			return nil, huma.Error404NotFound("SYSTEM_CONFIG_KEY_NOT_FOUND")
+		}
+		val := "30m"
+		if input.Key != systemConfigKeyKnown {
+			val = "stub"
+		}
+		return &SystemConfigGetOutput{
+			Body: SystemConfigEnvelope{
+				Data: SystemConfigData{Key: input.Key, Value: val},
+				Meta: SystemMeta{RequestID: "req_system_config_get"},
+			},
+		}, nil
+	})
+}
+
+func registerSystemConfigPut(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "systemConfigPut",
+		Method:      http.MethodPut,
+		Path:        "/api/v1/system/config/{key}",
+		Summary:     "Write a config value",
+		Description: "Upserts a single config key. Validation beyond shape is deferred to the service layer.",
+		Tags:        []string{"System"},
+		RequestBody: &huma.RequestBody{
+			Description: "Config value payload.",
+			Required:    true,
+		},
+	}, func(ctx context.Context, input *SystemConfigPutInput) (*SystemConfigPutOutput, error) {
+		_ = ctx
+		return &SystemConfigPutOutput{
+			Body: SystemConfigEnvelope{
+				Data: SystemConfigData{Key: input.Key, Value: input.Body.Value},
+				Meta: SystemMeta{RequestID: "req_system_config_put"},
+			},
+		}, nil
+	})
+}
+
+func registerSystemUpgrade(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "systemUpgrade",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/system/upgrade",
+		Summary:     "Check or apply a system upgrade",
+		Description: "Schedules an upgrade (or rollback if `rollback: true`). Stub reports status without mutating state.",
+		Tags:        []string{"System"},
+		RequestBody: &huma.RequestBody{
+			Description: "Upgrade action payload.",
+			Required:    false,
+		},
+	}, func(ctx context.Context, input *SystemUpgradeInput) (*SystemUpgradeOutput, error) {
+		_ = ctx
+		status := "scheduled"
+		from, to := "0.1.0-alpha", "0.1.0-beta"
+		if input.Body.Rollback {
+			status = "rolling_back"
+			from, to = "0.1.0-beta", "0.1.0-alpha"
+		}
+		return &SystemUpgradeOutput{
+			Body: SystemUpgradeEnvelope{
+				Data: SystemUpgradeData{FromVersion: from, ToVersion: to, Status: status},
+				Meta: SystemMeta{RequestID: "req_system_upgrade"},
+			},
+		}, nil
+	})
+}
+
+func registerSystemDiagnostics(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "systemDiagnostics",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/system/diagnostics",
+		Summary:     "Run self-diagnostics",
+		Description: "Runs a suite of self-checks and returns per-check status. Stub always returns a fixed report.",
+		Tags:        []string{"System"},
+	}, func(ctx context.Context, input *struct{}) (*SystemDiagnosticsOutput, error) {
+		_ = ctx
+		_ = input
+		checks := []SystemDiagnosticsCheck{
+			{Name: "journal-writable", Status: "pass"},
+			{Name: "incus-socket", Status: "pass"},
+			{Name: "podman-socket", Status: "pass"},
+			{Name: "disk-space", Status: "warn", Message: "/var at 78%"},
+		}
+		return &SystemDiagnosticsOutput{
+			Body: SystemDiagnosticsEnvelope{
+				Data: SystemDiagnosticsData{Checks: checks, Passed: 3, Failed: 0},
+				Meta: SystemMeta{RequestID: "req_system_diagnostics"},
+			},
+		}, nil
+	})
+}
+
+// ─── Firewall domain stubs ────────────────────────────────────────────────
+const (
+	firewallRuleIDExisting = "fwr_01JZFW00000000000000001"
+	firewallRuleIDUnknown  = "fwr_missing"
+)
+
+// FirewallMeta is the metadata envelope for firewall endpoints.
+type FirewallMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// FirewallHostRule is a single host-level nftables rule.
+type FirewallHostRule struct {
+	ID       string `json:"id" doc:"Rule identifier."`
+	Chain    string `json:"chain" doc:"nftables chain name."`
+	Priority int    `json:"priority" doc:"Rule priority within the chain." minimum:"0"`
+	Action   string `json:"action" doc:"Rule verdict." enum:"accept,drop,reject"`
+	Expr     string `json:"expr" doc:"Rule expression (nft syntax)."`
+	Enabled  bool   `json:"enabled" doc:"Whether the rule is currently enforced."`
+}
+
+// FirewallHostPageMeta is pagination metadata for firewall list responses.
+type FirewallHostPageMeta struct {
+	HasNext    bool   `json:"has_next" doc:"Whether another page is available."`
+	NextCursor string `json:"next_cursor,omitempty" doc:"Opaque cursor for the next page when available."`
+	Limit      int    `json:"limit" doc:"Applied page size." minimum:"1"`
+}
+
+// FirewallHostListInput has pagination controls.
+type FirewallHostListInput struct {
+	Limit  int    `query:"limit" default:"50" minimum:"1" maximum:"500" doc:"Maximum number of rules to return."`
+	Cursor string `query:"cursor" maxLength:"512" doc:"Opaque pagination cursor from previous response."`
+}
+
+// FirewallHostListMeta contains request and paging metadata.
+type FirewallHostListMeta struct {
+	RequestID string               `json:"request_id" doc:"Request correlation ID."`
+	Page      FirewallHostPageMeta `json:"page" doc:"Cursor pagination metadata."`
+}
+
+// FirewallHostListEnvelope follows the list envelope shape.
+type FirewallHostListEnvelope struct {
+	Data []FirewallHostRule   `json:"data"`
+	Meta FirewallHostListMeta `json:"meta"`
+}
+
+// FirewallHostListOutput is the response shape for GET /api/v1/firewall/host.
+type FirewallHostListOutput struct {
+	Body FirewallHostListEnvelope
+}
+
+// FirewallHostCreateRequest adds a new host-level rule.
+type FirewallHostCreateRequest struct {
+	Chain    string `json:"chain" minLength:"1" maxLength:"64" doc:"nftables chain name."`
+	Priority int    `json:"priority" minimum:"0" maximum:"999" doc:"Rule priority."`
+	Action   string `json:"action" doc:"Verdict." enum:"accept,drop,reject"`
+	Expr     string `json:"expr" minLength:"1" maxLength:"1024" doc:"Rule expression (nft syntax)."`
+}
+
+// FirewallHostCreateInput wraps the create body.
+type FirewallHostCreateInput struct {
+	Body FirewallHostCreateRequest `doc:"Rule creation payload."`
+}
+
+// FirewallHostCreateEnvelope follows the success envelope shape for rule create.
+type FirewallHostCreateEnvelope struct {
+	Data FirewallHostRule `json:"data"`
+	Meta FirewallMeta     `json:"meta"`
+}
+
+// FirewallHostCreateOutput is the response shape for POST /api/v1/firewall/host.
+type FirewallHostCreateOutput struct {
+	Body FirewallHostCreateEnvelope
+}
+
+// FirewallHostDeleteInput binds the path id.
+type FirewallHostDeleteInput struct {
+	ID string `path:"id" minLength:"1" maxLength:"64" doc:"Rule identifier."`
+}
+
+// FirewallHostDeleteData is empty on success.
+type FirewallHostDeleteData struct{}
+
+// FirewallHostDeleteEnvelope follows the success envelope shape.
+type FirewallHostDeleteEnvelope struct {
+	Data FirewallHostDeleteData `json:"data"`
+	Meta FirewallMeta           `json:"meta"`
+}
+
+// FirewallHostDeleteOutput is the response shape for DELETE /api/v1/firewall/host/{id}.
+type FirewallHostDeleteOutput struct {
+	Body FirewallHostDeleteEnvelope
+}
+
+var stubFirewallRules = []FirewallHostRule{
+	{ID: firewallRuleIDExisting, Chain: "input", Priority: 100, Action: "accept", Expr: "tcp dport 22 ct state new", Enabled: true},
+	{ID: "fwr_01JZFW00000000000000002", Chain: "input", Priority: 110, Action: "drop", Expr: "tcp dport 0-1023 ct state new", Enabled: true},
+}
+
+//nolint:dupl // deliberate parallel to other cursor-paginated list registrations.
+func registerFirewallHostList(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "firewallHostList",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/firewall/host",
+		Summary:     "List host firewall rules",
+		Description: "Lists host-level nftables rules using cursor pagination.",
+		Tags:        []string{"Firewall"},
+	}, func(ctx context.Context, input *FirewallHostListInput) (*FirewallHostListOutput, error) {
+		_ = ctx
+		limit := input.Limit
+		if limit <= 0 {
+			limit = 50
+		}
+		start := 0
+		if input.Cursor == cursorPage2 {
+			start = 1
+		}
+		if start > len(stubFirewallRules) {
+			start = len(stubFirewallRules)
+		}
+		end := start + limit
+		if end > len(stubFirewallRules) {
+			end = len(stubFirewallRules)
+		}
+		hasNext := end < len(stubFirewallRules)
+		nextCursor := ""
+		if hasNext {
+			nextCursor = cursorPage2
+		}
+		items := append([]FirewallHostRule(nil), stubFirewallRules[start:end]...)
+		return &FirewallHostListOutput{
+			Body: FirewallHostListEnvelope{
+				Data: items,
+				Meta: FirewallHostListMeta{
+					RequestID: "req_firewall_host_list",
+					Page: FirewallHostPageMeta{
+						HasNext:    hasNext,
+						NextCursor: nextCursor,
+						Limit:      limit,
+					},
+				},
+			},
+		}, nil
+	})
+}
+
+func registerFirewallHostCreate(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "firewallHostCreate",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/firewall/host",
+		Summary:     "Add a host firewall rule",
+		Description: "Appends a new host-level nftables rule. Returns the created rule including generated id.",
+		Tags:        []string{"Firewall"},
+		RequestBody: &huma.RequestBody{
+			Description: "Rule creation payload.",
+			Required:    true,
+		},
+	}, func(ctx context.Context, input *FirewallHostCreateInput) (*FirewallHostCreateOutput, error) {
+		_ = ctx
+		return &FirewallHostCreateOutput{
+			Body: FirewallHostCreateEnvelope{
+				Data: FirewallHostRule{
+					ID: "fwr_01JZFW00000000000000003", Chain: input.Body.Chain,
+					Priority: input.Body.Priority, Action: input.Body.Action,
+					Expr: input.Body.Expr, Enabled: true,
+				},
+				Meta: FirewallMeta{RequestID: "req_firewall_host_create"},
+			},
+		}, nil
+	})
+}
+
+func registerFirewallHostDelete(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "firewallHostDelete",
+		Method:      http.MethodDelete,
+		Path:        "/api/v1/firewall/host/{id}",
+		Summary:     "Delete a host firewall rule",
+		Description: "Removes a host-level nftables rule.",
+		Tags:        []string{"Firewall"},
+		Errors:      []int{http.StatusNotFound},
+	}, func(ctx context.Context, input *FirewallHostDeleteInput) (*FirewallHostDeleteOutput, error) {
+		_ = ctx
+		if input.ID == firewallRuleIDUnknown {
+			return nil, huma.Error404NotFound("FIREWALL_RULE_NOT_FOUND")
+		}
+		return &FirewallHostDeleteOutput{
+			Body: FirewallHostDeleteEnvelope{
+				Data: FirewallHostDeleteData{},
+				Meta: FirewallMeta{RequestID: "req_firewall_host_delete"},
+			},
+		}, nil
+	})
+}
+
+// ─── Audit domain stubs ───────────────────────────────────────────────────
+
+// AuditMeta is the metadata envelope for audit endpoints.
+type AuditMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// AuditEvent is one audit-log row surfaced from systemd journal.
+type AuditEvent struct {
+	ID        string `json:"id" doc:"Event identifier."`
+	Timestamp string `json:"timestamp" doc:"Event timestamp (ISO-8601)." format:"date-time"`
+	Actor     string `json:"actor" doc:"Actor who performed the action."`
+	Action    string `json:"action" doc:"Action identifier (dot-separated)."`
+	Target    string `json:"target,omitempty" doc:"Target resource identifier, if applicable."`
+	Outcome   string `json:"outcome" doc:"Action outcome." enum:"allow,deny,error"`
+}
+
+// AuditPageMeta is pagination metadata for audit queries.
+type AuditPageMeta struct {
+	HasNext    bool   `json:"has_next" doc:"Whether another page is available."`
+	NextCursor string `json:"next_cursor,omitempty" doc:"Opaque cursor for the next page when available."`
+	Limit      int    `json:"limit" doc:"Applied page size." minimum:"1"`
+}
+
+// AuditQueryInput carries filter + pagination controls.
+type AuditQueryInput struct {
+	Actor  string `query:"actor" maxLength:"128" doc:"Filter by actor username."`
+	Action string `query:"action" maxLength:"128" doc:"Filter by action identifier."`
+	Limit  int    `query:"limit" default:"100" minimum:"1" maximum:"1000" doc:"Maximum number of events to return."`
+	Cursor string `query:"cursor" maxLength:"512" doc:"Opaque pagination cursor from previous response."`
+}
+
+// AuditQueryMeta contains request and paging metadata.
+type AuditQueryMeta struct {
+	RequestID string        `json:"request_id" doc:"Request correlation ID."`
+	Page      AuditPageMeta `json:"page" doc:"Cursor pagination metadata."`
+}
+
+// AuditQueryEnvelope follows the list envelope shape.
+type AuditQueryEnvelope struct {
+	Data []AuditEvent   `json:"data"`
+	Meta AuditQueryMeta `json:"meta"`
+}
+
+// AuditQueryOutput is the response shape for GET /api/v1/audit.
+type AuditQueryOutput struct {
+	Body AuditQueryEnvelope
+}
+
+// AuditExportInput carries the desired export format.
+type AuditExportInput struct {
+	Format string `query:"format" default:"json" doc:"Export format." enum:"json,csv"`
+}
+
+// AuditExportData wraps the inlined export payload.
+type AuditExportData struct {
+	Format string `json:"format" doc:"Export format." enum:"json,csv"`
+	Body   string `json:"body" doc:"Export payload inlined as a string."`
+}
+
+// AuditExportEnvelope is the success envelope for exports.
+type AuditExportEnvelope struct {
+	Data AuditExportData `json:"data"`
+	Meta AuditMeta       `json:"meta"`
+}
+
+// AuditExportOutput is the response shape for GET /api/v1/audit/export.
+type AuditExportOutput struct {
+	Body AuditExportEnvelope
+}
+
+var stubAuditEvents = []AuditEvent{
+	{ID: "aud_01JZAUD00000000000000001", Timestamp: "2026-04-23T10:00:00Z", Actor: "admin", Action: "auth.login", Outcome: "allow"},
+	{ID: "aud_01JZAUD00000000000000002", Timestamp: "2026-04-23T10:05:00Z", Actor: "admin", Action: "user.create", Target: "user_bob", Outcome: "allow"},
+	{ID: "aud_01JZAUD00000000000000003", Timestamp: "2026-04-23T11:00:00Z", Actor: "alice", Action: "compute.delete", Target: "vm-test", Outcome: "deny"},
+}
+
+func registerAuditQuery(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "auditQuery",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/audit",
+		Summary:     "Query audit events",
+		Description: "Returns audit events, optionally filtered by actor and action, with cursor pagination. Source of truth is the systemd journal (ADR-019).",
+		Tags:        []string{"Audit"},
+	}, func(ctx context.Context, input *AuditQueryInput) (*AuditQueryOutput, error) {
+		_ = ctx
+		filtered := make([]AuditEvent, 0, len(stubAuditEvents))
+		for _, e := range stubAuditEvents {
+			if input.Actor != "" && e.Actor != input.Actor {
+				continue
+			}
+			if input.Action != "" && e.Action != input.Action {
+				continue
+			}
+			filtered = append(filtered, e)
+		}
+		limit := input.Limit
+		if limit <= 0 {
+			limit = 100
+		}
+		if limit > len(filtered) {
+			limit = len(filtered)
+		}
+		return &AuditQueryOutput{
+			Body: AuditQueryEnvelope{
+				Data: filtered[:limit],
+				Meta: AuditQueryMeta{
+					RequestID: "req_audit_query",
+					Page: AuditPageMeta{
+						HasNext:    false,
+						NextCursor: "",
+						Limit:      limit,
+					},
+				},
+			},
+		}, nil
+	})
+}
+
+func registerAuditExport(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "auditExport",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/audit/export",
+		Summary:     "Bulk export audit events",
+		Description: "Returns the filtered audit event stream inlined as either JSON or CSV.",
+		Tags:        []string{"Audit"},
+	}, func(ctx context.Context, input *AuditExportInput) (*AuditExportOutput, error) {
+		_ = ctx
+		body := `[{"id":"aud_01JZAUD00000000000000001","timestamp":"2026-04-23T10:00:00Z","actor":"admin","action":"auth.login","outcome":"allow"}]`
+		if input.Format == "csv" {
+			body = "id,timestamp,actor,action,target,outcome\naud_01JZAUD00000000000000001,2026-04-23T10:00:00Z,admin,auth.login,,allow\n"
+		}
+		return &AuditExportOutput{
+			Body: AuditExportEnvelope{
+				Data: AuditExportData{Format: input.Format, Body: body},
+				Meta: AuditMeta{RequestID: "req_audit_export"},
+			},
+		}, nil
+	})
+}
+
+// ─── Events domain stub (SSE stand-in) ────────────────────────────────────
+// v0.1-alpha exposes the eventsSse operation as a polling snapshot. Real SSE
+// streaming lands with the events bus and WebSocket/SSE infra in v0.1-beta
+// per docs/spec/events.md.
+
+// EventsMeta is the metadata envelope for the events domain.
+type EventsMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// EventRecord is one event drop.
+type EventRecord struct {
+	ID        string `json:"id" doc:"Event identifier."`
+	Type      string `json:"type" doc:"Event type (dot-separated)."`
+	Timestamp string `json:"timestamp" doc:"Event timestamp (ISO-8601)." format:"date-time"`
+	Source    string `json:"source" doc:"Origin subsystem." enum:"hellingd,incus,podman,k8s"`
+	Payload   string `json:"payload,omitempty" doc:"Event payload as a JSON string (empty when no body)."`
+}
+
+// EventsSseInput caps the snapshot size.
+type EventsSseInput struct {
+	Limit int `query:"limit" default:"50" minimum:"1" maximum:"500" doc:"Maximum number of recent events to return."`
+}
+
+// EventsSseEnvelope is the success envelope for the events snapshot.
+type EventsSseEnvelope struct {
+	Data []EventRecord `json:"data"`
+	Meta EventsMeta    `json:"meta"`
+}
+
+// EventsSseOutput is the response shape for GET /api/v1/events.
+type EventsSseOutput struct {
+	Body EventsSseEnvelope
+}
+
+var stubEvents = []EventRecord{
+	{ID: "evt_01JZEVT00000000000000001", Type: "instance.created", Timestamp: "2026-04-23T10:00:00Z", Source: "incus"},
+	{ID: "evt_01JZEVT00000000000000002", Type: "schedule.triggered", Timestamp: "2026-04-23T10:05:00Z", Source: "hellingd"},
+}
+
+func registerEventsSse(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "eventsSse",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/events",
+		Summary:     "Recent events snapshot",
+		Description: "Returns a snapshot of recent internal events. Full Server-Sent-Events streaming lands in v0.1-beta.",
+		Tags:        []string{"Events"},
+	}, func(ctx context.Context, input *EventsSseInput) (*EventsSseOutput, error) {
+		_ = ctx
+		limit := input.Limit
+		if limit <= 0 {
+			limit = 50
+		}
+		if limit > len(stubEvents) {
+			limit = len(stubEvents)
+		}
+		return &EventsSseOutput{
+			Body: EventsSseEnvelope{
+				Data: stubEvents[:limit],
+				Meta: EventsMeta{RequestID: "req_events_sse"},
 			},
 		}, nil
 	})

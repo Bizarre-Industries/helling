@@ -7,6 +7,119 @@ servers:
   - url: https://localhost:8006
     description: Local Helling API endpoint.
 paths:
+  /api/v1/audit:
+    get:
+      tags:
+        - Audit
+      summary: Query audit events
+      description: Returns audit events, optionally filtered by actor and action, with cursor pagination. Source of truth is the systemd journal (ADR-019).
+      operationId: auditQuery
+      parameters:
+        - name: actor
+          in: query
+          description: Filter by actor username.
+          explode: false
+          schema:
+            type: string
+            description: Filter by actor username.
+            maxLength: 128
+        - name: action
+          in: query
+          description: Filter by action identifier.
+          explode: false
+          schema:
+            type: string
+            description: Filter by action identifier.
+            maxLength: 128
+        - name: limit
+          in: query
+          description: Maximum number of events to return.
+          explode: false
+          schema:
+            type: integer
+            description: Maximum number of events to return.
+            format: int64
+            default: 100
+            minimum: 1
+            maximum: 1000
+        - name: cursor
+          in: query
+          description: Opaque pagination cursor from previous response.
+          explode: false
+          schema:
+            type: string
+            description: Opaque pagination cursor from previous response.
+            maxLength: 512
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditQueryEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/AuditQueryEnvelope.json
+                data:
+                  - {}
+                meta: {}
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+  /api/v1/audit/export:
+    get:
+      tags:
+        - Audit
+      summary: Bulk export audit events
+      description: Returns the filtered audit event stream inlined as either JSON or CSV.
+      operationId: auditExport
+      parameters:
+        - name: format
+          in: query
+          description: Export format.
+          explode: false
+          schema:
+            type: string
+            description: Export format.
+            default: json
+            enum:
+              - json
+              - csv
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditExportEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/AuditExportEnvelope.json
+                data: {}
+                meta: {}
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
   /api/v1/auth/login:
     post:
       tags:
@@ -615,6 +728,219 @@ paths:
                 meta: {}
         "401":
           description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "422":
+          description: Unprocessable Entity
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+  /api/v1/events:
+    get:
+      tags:
+        - Events
+      summary: Recent events snapshot
+      description: Returns a snapshot of recent internal events. Full Server-Sent-Events streaming lands in v0.1-beta.
+      operationId: eventsSse
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of recent events to return.
+          explode: false
+          schema:
+            type: integer
+            description: Maximum number of recent events to return.
+            format: int64
+            default: 50
+            minimum: 1
+            maximum: 500
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsSseEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/EventsSseEnvelope.json
+                data:
+                  - {}
+                meta: {}
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+  /api/v1/firewall/host:
+    get:
+      tags:
+        - Firewall
+      summary: List host firewall rules
+      description: Lists host-level nftables rules using cursor pagination.
+      operationId: firewallHostList
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of rules to return.
+          explode: false
+          schema:
+            type: integer
+            description: Maximum number of rules to return.
+            format: int64
+            default: 50
+            minimum: 1
+            maximum: 500
+        - name: cursor
+          in: query
+          description: Opaque pagination cursor from previous response.
+          explode: false
+          schema:
+            type: string
+            description: Opaque pagination cursor from previous response.
+            maxLength: 512
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallHostListEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/FirewallHostListEnvelope.json
+                data:
+                  - {}
+                meta: {}
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+    post:
+      tags:
+        - Firewall
+      summary: Add a host firewall rule
+      description: Appends a new host-level nftables rule. Returns the created rule including generated id.
+      operationId: firewallHostCreate
+      requestBody:
+        description: Rule creation payload.
+        content:
+          application/json:
+            schema:
+              description: Rule creation payload.
+              $ref: '#/components/schemas/FirewallHostCreateRequest'
+            example:
+              $schema: https://localhost:8006/schemas/FirewallHostCreateRequest.json
+              action: accept
+              chain: example
+              expr: example
+              priority: 1
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallHostCreateEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/FirewallHostCreateEnvelope.json
+                data: {}
+                meta: {}
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+  /api/v1/firewall/host/{id}:
+    delete:
+      tags:
+        - Firewall
+      summary: Delete a host firewall rule
+      description: Removes a host-level nftables rule.
+      operationId: firewallHostDelete
+      parameters:
+        - name: id
+          in: path
+          description: Rule identifier.
+          required: true
+          schema:
+            type: string
+            description: Rule identifier.
+            minLength: 1
+            maxLength: 64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirewallHostDeleteEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/FirewallHostDeleteEnvelope.json
+                data: {}
+                meta: {}
+        "404":
+          description: Not Found
           content:
             application/problem+json:
               schema:
@@ -1573,6 +1899,267 @@ paths:
                     value: ""
                 status: 400
                 title: Bad Request
+  /api/v1/system/config/{key}:
+    get:
+      tags:
+        - System
+      summary: Read a config value
+      description: Returns a single config key. 404 if unknown.
+      operationId: systemConfigGet
+      parameters:
+        - name: key
+          in: path
+          description: Config key (dot-separated).
+          required: true
+          schema:
+            type: string
+            description: Config key (dot-separated).
+            minLength: 1
+            maxLength: 128
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemConfigEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/SystemConfigEnvelope.json
+                data: {}
+                meta: {}
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "422":
+          description: Unprocessable Entity
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+    put:
+      tags:
+        - System
+      summary: Write a config value
+      description: Upserts a single config key. Validation beyond shape is deferred to the service layer.
+      operationId: systemConfigPut
+      parameters:
+        - name: key
+          in: path
+          description: Config key.
+          required: true
+          schema:
+            type: string
+            description: Config key.
+            minLength: 1
+            maxLength: 128
+      requestBody:
+        description: Config value payload.
+        content:
+          application/json:
+            schema:
+              description: Config update payload.
+              $ref: '#/components/schemas/SystemConfigPutRequest'
+            example:
+              $schema: https://localhost:8006/schemas/SystemConfigPutRequest.json
+              value: example
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemConfigEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/SystemConfigEnvelope.json
+                data: {}
+                meta: {}
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+  /api/v1/system/diagnostics:
+    get:
+      tags:
+        - System
+      summary: Run self-diagnostics
+      description: Runs a suite of self-checks and returns per-check status. Stub always returns a fixed report.
+      operationId: systemDiagnostics
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemDiagnosticsEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/SystemDiagnosticsEnvelope.json
+                data: {}
+                meta: {}
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+  /api/v1/system/hardware:
+    get:
+      tags:
+        - System
+      summary: Host hardware summary
+      description: Returns CPU/RAM/disk/network capabilities detected on the host.
+      operationId: systemHardware
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemHardwareEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/SystemHardwareEnvelope.json
+                data: {}
+                meta: {}
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+  /api/v1/system/info:
+    get:
+      tags:
+        - System
+      summary: System info
+      description: Returns hostname, hellingd version, uptime, and host kernel/arch.
+      operationId: systemInfo
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemInfoEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/SystemInfoEnvelope.json
+                data: {}
+                meta: {}
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+  /api/v1/system/upgrade:
+    post:
+      tags:
+        - System
+      summary: Check or apply a system upgrade
+      description: 'Schedules an upgrade (or rollback if `rollback: true`). Stub reports status without mutating state.'
+      operationId: systemUpgrade
+      requestBody:
+        description: Upgrade action payload.
+        content:
+          application/json:
+            schema:
+              description: Upgrade action payload.
+              $ref: '#/components/schemas/SystemUpgradeRequest'
+            example:
+              $schema: https://localhost:8006/schemas/SystemUpgradeRequest.json
+              rollback: true
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemUpgradeEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/SystemUpgradeEnvelope.json
+                data: {}
+                meta: {}
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
   /api/v1/users:
     get:
       tags:
@@ -2393,6 +2980,209 @@ paths:
                 title: Bad Request
 components:
   schemas:
+    AuditEvent:
+      type: object
+      description: Schema for auditevent.
+      examples:
+        - action: example
+          actor: example
+          id: id_example
+          outcome: allow
+          target: example
+          timestamp: example
+      additionalProperties: false
+      properties:
+        action:
+          type: string
+          description: Action identifier (dot-separated).
+          examples:
+            - example
+        actor:
+          type: string
+          description: Actor who performed the action.
+          examples:
+            - example
+        id:
+          type: string
+          description: Event identifier.
+          examples:
+            - id_example
+        outcome:
+          type: string
+          description: Action outcome.
+          examples:
+            - allow
+          enum:
+            - allow
+            - deny
+            - error
+        target:
+          type: string
+          description: Target resource identifier, if applicable.
+          examples:
+            - example
+        timestamp:
+          type: string
+          description: Event timestamp (ISO-8601).
+          format: date-time
+          examples:
+            - example
+      required:
+        - id
+        - timestamp
+        - actor
+        - action
+        - outcome
+    AuditExportData:
+      type: object
+      description: Schema for auditexportdata.
+      examples:
+        - body: example
+          format: json
+      additionalProperties: false
+      properties:
+        body:
+          type: string
+          description: Export payload inlined as a string.
+          examples:
+            - example
+        format:
+          type: string
+          description: Export format.
+          examples:
+            - json
+          enum:
+            - json
+            - csv
+      required:
+        - format
+        - body
+    AuditExportEnvelope:
+      type: object
+      description: Schema for auditexportenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/AuditExportEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/AuditExportEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/AuditExportData'
+          examples:
+            - body: example
+              format: json
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/AuditMeta'
+          examples:
+            - request_id: id_example
+      required:
+        - data
+        - meta
+    AuditMeta:
+      type: object
+      description: Schema for auditmeta.
+      examples:
+        - request_id: id_example
+      additionalProperties: false
+      properties:
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+    AuditPageMeta:
+      type: object
+      description: Schema for auditpagemeta.
+      examples:
+        - has_next: true
+          limit: 1
+          next_cursor: example
+      additionalProperties: false
+      properties:
+        has_next:
+          type: boolean
+          description: Whether another page is available.
+          examples:
+            - true
+        limit:
+          type: integer
+          description: Applied page size.
+          format: int64
+          examples:
+            - 1
+          minimum: 1
+        next_cursor:
+          type: string
+          description: Opaque cursor for the next page when available.
+          examples:
+            - example
+      required:
+        - has_next
+        - limit
+    AuditQueryEnvelope:
+      type: object
+      description: Schema for auditqueryenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/AuditQueryEnvelope.json
+          data:
+            - {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/AuditQueryEnvelope.json
+          readOnly: true
+        data:
+          type: array
+          description: Property data.
+          examples:
+            - - {}
+          items:
+            $ref: '#/components/schemas/AuditEvent'
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/AuditQueryMeta'
+          examples:
+            - {}
+      required:
+        - data
+        - meta
+    AuditQueryMeta:
+      type: object
+      description: Schema for auditquerymeta.
+      examples:
+        - page: {}
+          request_id: id_example
+      additionalProperties: false
+      properties:
+        page:
+          description: Cursor pagination metadata.
+          $ref: '#/components/schemas/AuditPageMeta'
+          examples:
+            - {}
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+        - page
     AuthLoginData:
       type: object
       description: Schema for authlogindata.
@@ -2458,7 +3248,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthLoginMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -2731,9 +3521,7 @@ components:
           description: Property data.
           $ref: '#/components/schemas/AuthRefreshData'
           examples:
-            - access_token: example
-              expires_in: 1
-              token_type: Bearer
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/AuthRefreshMeta'
@@ -3217,7 +4005,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthTotpDisableMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -3286,7 +4074,10 @@ components:
           description: Property data.
           $ref: '#/components/schemas/AuthTotpSetupData'
           examples:
-            - {}
+            - provisioning_uri: example
+              recovery_codes:
+                - example
+              secret: example
         meta:
           description: Property meta.
           $ref: '#/components/schemas/AuthTotpSetupMeta'
@@ -3464,6 +4255,369 @@ components:
           default: about:blank
           examples:
             - https://example.com/errors/example
+    EventRecord:
+      type: object
+      description: Schema for eventrecord.
+      examples:
+        - id: id_example
+          payload: example
+          source: hellingd
+          timestamp: example
+          type: example
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          description: Event identifier.
+          examples:
+            - id_example
+        payload:
+          type: string
+          description: Event payload as a JSON string (empty when no body).
+          examples:
+            - example
+        source:
+          type: string
+          description: Origin subsystem.
+          examples:
+            - hellingd
+          enum:
+            - hellingd
+            - incus
+            - podman
+            - k8s
+        timestamp:
+          type: string
+          description: Event timestamp (ISO-8601).
+          format: date-time
+          examples:
+            - example
+        type:
+          type: string
+          description: Event type (dot-separated).
+          examples:
+            - example
+      required:
+        - id
+        - type
+        - timestamp
+        - source
+    EventsMeta:
+      type: object
+      description: Schema for eventsmeta.
+      examples:
+        - request_id: id_example
+      additionalProperties: false
+      properties:
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+    EventsSseEnvelope:
+      type: object
+      description: Schema for eventssseenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/EventsSseEnvelope.json
+          data:
+            - {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/EventsSseEnvelope.json
+          readOnly: true
+        data:
+          type: array
+          description: Property data.
+          examples:
+            - - {}
+          items:
+            $ref: '#/components/schemas/EventRecord'
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/EventsMeta'
+          examples:
+            - {}
+      required:
+        - data
+        - meta
+    FirewallHostCreateEnvelope:
+      type: object
+      description: Schema for firewallhostcreateenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/FirewallHostCreateEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/FirewallHostCreateEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/FirewallHostRule'
+          examples:
+            - {}
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/FirewallMeta'
+          examples:
+            - {}
+      required:
+        - data
+        - meta
+    FirewallHostCreateRequest:
+      type: object
+      description: Schema for firewallhostcreaterequest.
+      examples:
+        - $schema: https://localhost:8006/schemas/FirewallHostCreateRequest.json
+          action: accept
+          chain: example
+          expr: example
+          priority: 1
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/FirewallHostCreateRequest.json
+          readOnly: true
+        action:
+          type: string
+          description: Verdict.
+          examples:
+            - accept
+          enum:
+            - accept
+            - drop
+            - reject
+        chain:
+          type: string
+          description: nftables chain name.
+          examples:
+            - example
+          minLength: 1
+          maxLength: 64
+        expr:
+          type: string
+          description: Rule expression (nft syntax).
+          examples:
+            - example
+          minLength: 1
+          maxLength: 1024
+        priority:
+          type: integer
+          description: Rule priority.
+          format: int64
+          examples:
+            - 1
+          minimum: 0
+          maximum: 999
+      required:
+        - chain
+        - priority
+        - action
+        - expr
+    FirewallHostDeleteData:
+      type: object
+      description: Schema for firewallhostdeletedata.
+      examples:
+        - {}
+      additionalProperties: false
+    FirewallHostDeleteEnvelope:
+      type: object
+      description: Schema for firewallhostdeleteenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/FirewallHostDeleteEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/FirewallHostDeleteEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/FirewallHostDeleteData'
+          examples:
+            - {}
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/FirewallMeta'
+          examples:
+            - {}
+      required:
+        - data
+        - meta
+    FirewallHostListEnvelope:
+      type: object
+      description: Schema for firewallhostlistenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/FirewallHostListEnvelope.json
+          data:
+            - {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/FirewallHostListEnvelope.json
+          readOnly: true
+        data:
+          type: array
+          description: Property data.
+          examples:
+            - - {}
+          items:
+            $ref: '#/components/schemas/FirewallHostRule'
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/FirewallHostListMeta'
+          examples:
+            - page: {}
+              request_id: id_example
+      required:
+        - data
+        - meta
+    FirewallHostListMeta:
+      type: object
+      description: Schema for firewallhostlistmeta.
+      examples:
+        - page: {}
+          request_id: id_example
+      additionalProperties: false
+      properties:
+        page:
+          description: Cursor pagination metadata.
+          $ref: '#/components/schemas/FirewallHostPageMeta'
+          examples:
+            - {}
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+        - page
+    FirewallHostPageMeta:
+      type: object
+      description: Schema for firewallhostpagemeta.
+      examples:
+        - has_next: true
+          limit: 1
+          next_cursor: example
+      additionalProperties: false
+      properties:
+        has_next:
+          type: boolean
+          description: Whether another page is available.
+          examples:
+            - true
+        limit:
+          type: integer
+          description: Applied page size.
+          format: int64
+          examples:
+            - 1
+          minimum: 1
+        next_cursor:
+          type: string
+          description: Opaque cursor for the next page when available.
+          examples:
+            - example
+      required:
+        - has_next
+        - limit
+    FirewallHostRule:
+      type: object
+      description: Schema for firewallhostrule.
+      examples:
+        - action: accept
+          chain: example
+          enabled: true
+          expr: example
+          id: id_example
+          priority: 1
+      additionalProperties: false
+      properties:
+        action:
+          type: string
+          description: Rule verdict.
+          examples:
+            - accept
+          enum:
+            - accept
+            - drop
+            - reject
+        chain:
+          type: string
+          description: nftables chain name.
+          examples:
+            - example
+        enabled:
+          type: boolean
+          description: Whether the rule is currently enforced.
+          examples:
+            - true
+        expr:
+          type: string
+          description: Rule expression (nft syntax).
+          examples:
+            - example
+        id:
+          type: string
+          description: Rule identifier.
+          examples:
+            - id_example
+        priority:
+          type: integer
+          description: Rule priority within the chain.
+          format: int64
+          examples:
+            - 1
+          minimum: 0
+      required:
+        - id
+        - chain
+        - priority
+        - action
+        - expr
+        - enabled
+    FirewallMeta:
+      type: object
+      description: Schema for firewallmeta.
+      examples:
+        - request_id: id_example
+      additionalProperties: false
+      properties:
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
     HealthData:
       type: object
       description: Health endpoint payload.
@@ -3549,7 +4703,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/KubernetesCreateMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -3642,7 +4796,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/KubernetesDeleteMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -3680,12 +4834,17 @@ components:
           description: Property data.
           $ref: '#/components/schemas/KubernetesRecord'
           examples:
-            - {}
+            - created_at: example
+              name: example
+              ready_workers: 1
+              status: provisioning
+              version: example
+              workers: 1
         meta:
           description: Property meta.
           $ref: '#/components/schemas/KubernetesGetMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -3742,7 +4901,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/KubernetesKubeconfigMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -3788,7 +4947,8 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/KubernetesListMeta'
           examples:
-            - {}
+            - page: {}
+              request_id: id_example
       required:
         - data
         - meta
@@ -3804,9 +4964,7 @@ components:
           description: Cursor pagination metadata.
           $ref: '#/components/schemas/KubernetesPageMeta'
           examples:
-            - has_next: true
-              limit: 1
-              next_cursor: example
+            - {}
         request_id:
           type: string
           description: Request correlation ID.
@@ -3923,12 +5081,7 @@ components:
           description: Property data.
           $ref: '#/components/schemas/KubernetesRecord'
           examples:
-            - created_at: example
-              name: example
-              ready_workers: 1
-              status: provisioning
-              version: example
-              workers: 1
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/KubernetesScaleMeta'
@@ -4063,13 +5216,7 @@ components:
           description: Property data.
           $ref: '#/components/schemas/ScheduleRecord'
           examples:
-            - cron_expr: example
-              enabled: true
-              id: id_example
-              name: example
-              next_run: example
-              target: example
-              type: backup
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleCreateMeta'
@@ -4175,7 +5322,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleDeleteMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -4213,7 +5360,13 @@ components:
           description: Property data.
           $ref: '#/components/schemas/ScheduleRecord'
           examples:
-            - {}
+            - cron_expr: example
+              enabled: true
+              id: id_example
+              name: example
+              next_run: example
+              target: example
+              type: backup
         meta:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleGetMeta'
@@ -4431,9 +5584,7 @@ components:
           description: Property data.
           $ref: '#/components/schemas/ScheduleRunNowData'
           examples:
-            - id: id_example
-              start_at: example
-              status: triggered
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleRunNowMeta'
@@ -4476,13 +5627,7 @@ components:
           description: Property data.
           $ref: '#/components/schemas/ScheduleRecord'
           examples:
-            - cron_expr: example
-              enabled: true
-              id: id_example
-              name: example
-              next_run: example
-              target: example
-              type: backup
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleUpdateMeta'
@@ -4539,6 +5684,423 @@ components:
           examples:
             - example
           maxLength: 128
+    SystemConfigData:
+      type: object
+      description: Schema for systemconfigdata.
+      examples:
+        - key: example
+          value: example
+      additionalProperties: false
+      properties:
+        key:
+          type: string
+          description: Config key.
+          examples:
+            - example
+        value:
+          type: string
+          description: Config value as a string.
+          examples:
+            - example
+      required:
+        - key
+        - value
+    SystemConfigEnvelope:
+      type: object
+      description: Schema for systemconfigenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/SystemConfigEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/SystemConfigEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/SystemConfigData'
+          examples:
+            - {}
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/SystemMeta'
+          examples:
+            - {}
+      required:
+        - data
+        - meta
+    SystemConfigPutRequest:
+      type: object
+      description: Schema for systemconfigputrequest.
+      examples:
+        - $schema: https://localhost:8006/schemas/SystemConfigPutRequest.json
+          value: example
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/SystemConfigPutRequest.json
+          readOnly: true
+        value:
+          type: string
+          description: Config value to store.
+          examples:
+            - example
+          minLength: 1
+          maxLength: 1024
+      required:
+        - value
+    SystemDiagnosticsCheck:
+      type: object
+      description: Schema for systemdiagnosticscheck.
+      examples:
+        - message: example
+          name: example
+          status: pass
+      additionalProperties: false
+      properties:
+        message:
+          type: string
+          description: Optional detail message.
+          examples:
+            - example
+        name:
+          type: string
+          description: Check name.
+          examples:
+            - example
+        status:
+          type: string
+          description: Check status.
+          examples:
+            - pass
+          enum:
+            - pass
+            - warn
+            - fail
+      required:
+        - name
+        - status
+    SystemDiagnosticsData:
+      type: object
+      description: Schema for systemdiagnosticsdata.
+      examples:
+        - checks:
+            - {}
+          failed: 1
+          passed: 1
+      additionalProperties: false
+      properties:
+        checks:
+          type: array
+          description: Ordered list of diagnostic probes.
+          examples:
+            - - {}
+          items:
+            $ref: '#/components/schemas/SystemDiagnosticsCheck'
+        failed:
+          type: integer
+          description: Count of failing checks.
+          format: int64
+          examples:
+            - 1
+          minimum: 0
+        passed:
+          type: integer
+          description: Count of passing checks.
+          format: int64
+          examples:
+            - 1
+          minimum: 0
+      required:
+        - checks
+        - passed
+        - failed
+    SystemDiagnosticsEnvelope:
+      type: object
+      description: Schema for systemdiagnosticsenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/SystemDiagnosticsEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/SystemDiagnosticsEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/SystemDiagnosticsData'
+          examples:
+            - checks:
+                - {}
+              failed: 1
+              passed: 1
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/SystemMeta'
+          examples:
+            - request_id: id_example
+      required:
+        - data
+        - meta
+    SystemHardwareData:
+      type: object
+      description: Schema for systemhardwaredata.
+      examples:
+        - cores: 1
+          cpu: example
+          disk_gb: 1
+          network: example
+          ram_gb: 1
+      additionalProperties: false
+      properties:
+        cores:
+          type: integer
+          description: Physical core count.
+          format: int64
+          examples:
+            - 1
+          minimum: 1
+        cpu:
+          type: string
+          description: CPU model string.
+          examples:
+            - example
+        disk_gb:
+          type: integer
+          description: Total primary disk capacity in GiB.
+          format: int64
+          examples:
+            - 1
+          minimum: 1
+        network:
+          type: string
+          description: Primary NIC description.
+          examples:
+            - example
+        ram_gb:
+          type: integer
+          description: Total RAM in GiB.
+          format: int64
+          examples:
+            - 1
+          minimum: 1
+      required:
+        - cpu
+        - cores
+        - ram_gb
+        - disk_gb
+        - network
+    SystemHardwareEnvelope:
+      type: object
+      description: Schema for systemhardwareenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/SystemHardwareEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/SystemHardwareEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/SystemHardwareData'
+          examples:
+            - {}
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/SystemMeta'
+          examples:
+            - {}
+      required:
+        - data
+        - meta
+    SystemInfoData:
+      type: object
+      description: Schema for systeminfodata.
+      examples:
+        - arch: example
+          hostname: example
+          kernel: example
+          uptime: example
+          version: example
+      additionalProperties: false
+      properties:
+        arch:
+          type: string
+          description: Host architecture (amd64/arm64).
+          examples:
+            - example
+        hostname:
+          type: string
+          description: System hostname.
+          examples:
+            - example
+        kernel:
+          type: string
+          description: Kernel release string.
+          examples:
+            - example
+        uptime:
+          type: string
+          description: Human-readable uptime (e.g. 14d 3h).
+          examples:
+            - example
+        version:
+          type: string
+          description: Running hellingd version (semver).
+          examples:
+            - example
+      required:
+        - hostname
+        - version
+        - uptime
+        - arch
+        - kernel
+    SystemInfoEnvelope:
+      type: object
+      description: Schema for systeminfoenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/SystemInfoEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/SystemInfoEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/SystemInfoData'
+          examples:
+            - {}
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/SystemMeta'
+          examples:
+            - {}
+      required:
+        - data
+        - meta
+    SystemMeta:
+      type: object
+      description: Schema for systemmeta.
+      examples:
+        - request_id: id_example
+      additionalProperties: false
+      properties:
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+    SystemUpgradeData:
+      type: object
+      description: Schema for systemupgradedata.
+      examples:
+        - from_version: example
+          status: scheduled
+          to_version: example
+      additionalProperties: false
+      properties:
+        from_version:
+          type: string
+          description: Version prior to the action.
+          examples:
+            - example
+        status:
+          type: string
+          description: Upgrade status.
+          examples:
+            - scheduled
+          enum:
+            - scheduled
+            - rolling_back
+            - no_change
+        to_version:
+          type: string
+          description: Version after the action.
+          examples:
+            - example
+      required:
+        - from_version
+        - to_version
+        - status
+    SystemUpgradeEnvelope:
+      type: object
+      description: Schema for systemupgradeenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/SystemUpgradeEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/SystemUpgradeEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/SystemUpgradeData'
+          examples:
+            - from_version: example
+              status: scheduled
+              to_version: example
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/SystemMeta'
+          examples:
+            - {}
+      required:
+        - data
+        - meta
+    SystemUpgradeRequest:
+      type: object
+      description: Schema for systemupgraderequest.
+      examples:
+        - $schema: https://localhost:8006/schemas/SystemUpgradeRequest.json
+          rollback: true
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/SystemUpgradeRequest.json
+          readOnly: true
+        rollback:
+          type: boolean
+          description: If true, revert to the previous version instead of upgrading.
+          examples:
+            - true
     UserCreateData:
       type: object
       description: Schema for usercreatedata.
@@ -4606,7 +6168,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/UserCreateMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -4793,17 +6355,12 @@ components:
           description: Property data.
           $ref: '#/components/schemas/UserGetData'
           examples:
-            - id: id_example
-              last_login: example
-              role: admin
-              status: active
-              totp_enabled: true
-              username: example
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/UserGetMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -4849,7 +6406,8 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/UserListMeta'
           examples:
-            - {}
+            - page: {}
+              request_id: id_example
       required:
         - data
         - meta
@@ -4865,9 +6423,7 @@ components:
           description: Cursor pagination metadata.
           $ref: '#/components/schemas/UserPageMeta'
           examples:
-            - has_next: true
-              limit: 1
-              next_cursor: example
+            - {}
         request_id:
           type: string
           description: Request correlation ID.
@@ -4997,7 +6553,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/UserSetScopeMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -5344,7 +6900,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/WebhookGetMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -5390,8 +6946,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/WebhookListMeta'
           examples:
-            - page: {}
-              request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -5560,15 +7115,12 @@ components:
           description: Property data.
           $ref: '#/components/schemas/WebhookTestData'
           examples:
-            - id: id_example
-              latency_ms: 1
-              status: delivered
-              status_code: 1
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/WebhookTestMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -5617,7 +7169,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/WebhookUpdateMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
