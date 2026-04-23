@@ -14,7 +14,11 @@ function __startTick() {
     __tickListeners.forEach((fn) => {
       try {
         fn(t);
-      } catch (e) {}
+      } catch (e) {
+        if (typeof console !== 'undefined' && console.error) {
+          console.error('Tick listener failed:', e);
+        }
+      }
     });
   }, 1000);
 }
@@ -43,7 +47,9 @@ function __notifyStore() {
   __storeListeners.forEach((fn) => {
     try {
       fn();
-    } catch (e) {}
+    } catch (e) {
+      console.error('Store listener error:', e);
+    }
   });
 }
 function useStore() {
@@ -87,7 +93,7 @@ function instanceAction(name, action) {
     const prevCpu = inst.cpuPct,
       prevRam = inst.ramPct,
       prevUp = inst.uptime;
-    inst.status = action === 'pause' ? 'stopped' : 'stopped';
+    inst.status = 'stopped';
     inst.cpuPct = 0;
     inst.ramPct = action === 'pause' ? inst.ramPct : 0;
     pushTask({ op: 'instance.' + action, target: name });
@@ -1003,7 +1009,11 @@ const STATUS_BADGE = {
 
 const Kbd = ({ k }) => {
   // platform format: on mac, cmd-k => ⌘K
-  const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform || '');
+  const isMac =
+    typeof navigator !== 'undefined' &&
+    /Mac/i.test(
+      navigator.userAgentData?.platform || navigator.userAgent || navigator.platform || ''
+    );
   const parts = String(k).split(/[-\s]/);
   const fmt = (p) => {
     if (isMac)
@@ -1036,7 +1046,10 @@ const Copyable = ({ text, mono = true }) => {
     e.stopPropagation();
     try {
       navigator.clipboard.writeText(text);
-    } catch (err) {}
+    } catch (err) {
+      // Clipboard access may fail (permissions, insecure context, unsupported API).
+      console.warn('Clipboard write failed:', err);
+    }
     setOk(true);
     setTimeout(() => setOk(false), 1200);
   };
