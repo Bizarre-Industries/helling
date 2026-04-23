@@ -748,6 +748,139 @@ func TestRegisterOperationsWebhookTestNotFound(t *testing.T) {
 	}
 }
 
+func TestRegisterOperationsKubernetesListPagination(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/kubernetes?limit=1", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), `"has_next":true`) {
+		t.Fatalf("expected has_next=true, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsKubernetesCreateSuccess(t *testing.T) {
+	mux := testAPI()
+	body := `{"name":"dev-cluster","version":"v1.30.5+k3s1","workers":1}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/kubernetes", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), `"status":"provisioning"`) {
+		t.Fatalf("expected provisioning status, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsKubernetesCreateConflict(t *testing.T) {
+	mux := testAPI()
+	body := `{"name":"prod-cluster","version":"v1.30.5+k3s1","workers":3}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/kubernetes", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("expected %d, got %d", http.StatusConflict, rec.Code)
+	}
+}
+
+func TestRegisterOperationsKubernetesGetNotFound(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/kubernetes/missing-cluster", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected %d, got %d", http.StatusNotFound, rec.Code)
+	}
+}
+
+func TestRegisterOperationsKubernetesGetSuccess(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/kubernetes/prod-cluster", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+}
+
+func TestRegisterOperationsKubernetesDeleteSuccess(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/kubernetes/prod-cluster", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+}
+
+func TestRegisterOperationsKubernetesDeleteNotFound(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/kubernetes/missing-cluster", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected %d, got %d", http.StatusNotFound, rec.Code)
+	}
+}
+
+func TestRegisterOperationsKubernetesScaleSuccess(t *testing.T) {
+	mux := testAPI()
+	body := `{"workers":5}`
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/kubernetes/prod-cluster/scale", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), `"workers":5`) {
+		t.Fatalf("expected workers=5, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsKubernetesUpgradeSuccess(t *testing.T) {
+	mux := testAPI()
+	body := `{"version":"v1.31.1+k3s1"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/kubernetes/prod-cluster/upgrade", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), `"status":"upgrading"`) {
+		t.Fatalf("expected upgrading status, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsKubernetesKubeconfigSuccess(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/kubernetes/prod-cluster/kubeconfig", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), "apiVersion: v1") {
+		t.Fatalf("expected kubeconfig yaml body, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsKubernetesKubeconfigNotFound(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/kubernetes/missing-cluster/kubeconfig", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected %d, got %d", http.StatusNotFound, rec.Code)
+	}
+}
+
 func TestEnrichOpenAPIPatchesSchemaMetadata(t *testing.T) {
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig(apiTitle, apiVersion))

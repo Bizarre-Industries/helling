@@ -487,6 +487,227 @@ var stubWebhooks = []WebhookRecord{
 	{ID: "whk_01JZWEBHOOK0000000000002", Name: "discord-alerts", URL: "https://discord.com/api/webhooks/stub", Events: []string{"schedule.failed"}, Enabled: false},
 }
 
+const (
+	kubernetesNameExisting = "prod-cluster"
+	kubernetesNameUnknown  = "missing-cluster"
+)
+
+// KubernetesRecord is a k3s cluster summary.
+type KubernetesRecord struct {
+	Name         string `json:"name" doc:"Cluster name (also the URL-path identifier)."`
+	Version      string `json:"version" doc:"k3s version."`
+	Status       string `json:"status" doc:"Cluster status." enum:"provisioning,ready,upgrading,error"`
+	Workers      int    `json:"workers" doc:"Declared worker count." minimum:"0"`
+	ReadyWorkers int    `json:"ready_workers" doc:"Workers currently ready." minimum:"0"`
+	CreatedAt    string `json:"created_at" doc:"ISO-8601 creation timestamp." format:"date-time"`
+}
+
+// KubernetesListInput has pagination controls.
+type KubernetesListInput struct {
+	Limit  int    `query:"limit" default:"50" minimum:"1" maximum:"500" doc:"Maximum number of clusters to return."`
+	Cursor string `query:"cursor" maxLength:"512" doc:"Opaque pagination cursor from previous response."`
+}
+
+// KubernetesPageMeta is pagination metadata for cluster lists.
+type KubernetesPageMeta struct {
+	HasNext    bool   `json:"has_next" doc:"Whether another page is available."`
+	NextCursor string `json:"next_cursor,omitempty" doc:"Opaque cursor for the next page when available."`
+	Limit      int    `json:"limit" doc:"Applied page size." minimum:"1"`
+}
+
+// KubernetesListMeta contains request and paging metadata.
+type KubernetesListMeta struct {
+	RequestID string             `json:"request_id" doc:"Request correlation ID."`
+	Page      KubernetesPageMeta `json:"page" doc:"Cursor pagination metadata."`
+}
+
+// KubernetesListEnvelope follows the list envelope shape.
+type KubernetesListEnvelope struct {
+	Data []KubernetesRecord `json:"data"`
+	Meta KubernetesListMeta `json:"meta"`
+}
+
+// KubernetesListOutput is the response shape for GET /api/v1/kubernetes.
+type KubernetesListOutput struct {
+	Body KubernetesListEnvelope
+}
+
+// KubernetesCreateRequest creates a k3s cluster.
+type KubernetesCreateRequest struct {
+	Name    string `json:"name" minLength:"1" maxLength:"64" pattern:"^[a-z0-9-]+$" doc:"Cluster name. Lowercase alphanumerics and hyphens."`
+	Version string `json:"version" minLength:"1" maxLength:"32" doc:"Requested k3s version (e.g. v1.30.5+k3s1)."`
+	Workers int    `json:"workers" minimum:"0" maximum:"64" doc:"Worker count to provision."`
+}
+
+// KubernetesCreateInput wraps the create body.
+type KubernetesCreateInput struct {
+	Body KubernetesCreateRequest `doc:"Cluster creation payload."`
+}
+
+// KubernetesCreateMeta contains request metadata.
+type KubernetesCreateMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// KubernetesCreateEnvelope follows the success envelope shape.
+type KubernetesCreateEnvelope struct {
+	Data KubernetesRecord     `json:"data"`
+	Meta KubernetesCreateMeta `json:"meta"`
+}
+
+// KubernetesCreateOutput is the response shape for POST /api/v1/kubernetes.
+type KubernetesCreateOutput struct {
+	Body KubernetesCreateEnvelope
+}
+
+// KubernetesGetInput binds the path name.
+type KubernetesGetInput struct {
+	Name string `path:"name" minLength:"1" maxLength:"64" doc:"Cluster name."`
+}
+
+// KubernetesGetMeta contains request metadata.
+type KubernetesGetMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// KubernetesGetEnvelope follows the success envelope shape.
+type KubernetesGetEnvelope struct {
+	Data KubernetesRecord  `json:"data"`
+	Meta KubernetesGetMeta `json:"meta"`
+}
+
+// KubernetesGetOutput is the response shape for GET /api/v1/kubernetes/{name}.
+type KubernetesGetOutput struct {
+	Body KubernetesGetEnvelope
+}
+
+// KubernetesDeleteInput binds the path name.
+type KubernetesDeleteInput struct {
+	Name string `path:"name" minLength:"1" maxLength:"64" doc:"Cluster name."`
+}
+
+// KubernetesDeleteData is empty on success.
+type KubernetesDeleteData struct{}
+
+// KubernetesDeleteMeta contains request metadata.
+type KubernetesDeleteMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// KubernetesDeleteEnvelope follows the success envelope shape.
+type KubernetesDeleteEnvelope struct {
+	Data KubernetesDeleteData `json:"data"`
+	Meta KubernetesDeleteMeta `json:"meta"`
+}
+
+// KubernetesDeleteOutput is the response shape for DELETE /api/v1/kubernetes/{name}.
+type KubernetesDeleteOutput struct {
+	Body KubernetesDeleteEnvelope
+}
+
+// KubernetesScaleRequest specifies the desired worker count.
+type KubernetesScaleRequest struct {
+	Workers int `json:"workers" minimum:"0" maximum:"64" doc:"Desired worker count."`
+}
+
+// KubernetesScaleInput combines path name with scale body.
+type KubernetesScaleInput struct {
+	Name string                 `path:"name" minLength:"1" maxLength:"64" doc:"Cluster name."`
+	Body KubernetesScaleRequest `doc:"Scale target payload."`
+}
+
+// KubernetesScaleMeta contains request metadata.
+type KubernetesScaleMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// KubernetesScaleEnvelope follows the success envelope shape.
+type KubernetesScaleEnvelope struct {
+	Data KubernetesRecord    `json:"data"`
+	Meta KubernetesScaleMeta `json:"meta"`
+}
+
+// KubernetesScaleOutput is the response shape for PATCH /api/v1/kubernetes/{name}/scale.
+type KubernetesScaleOutput struct {
+	Body KubernetesScaleEnvelope
+}
+
+// KubernetesUpgradeRequest specifies a target k3s version.
+type KubernetesUpgradeRequest struct {
+	Version string `json:"version" minLength:"1" maxLength:"32" doc:"Target k3s version."`
+}
+
+// KubernetesUpgradeInput combines path name with upgrade body.
+type KubernetesUpgradeInput struct {
+	Name string                   `path:"name" minLength:"1" maxLength:"64" doc:"Cluster name."`
+	Body KubernetesUpgradeRequest `doc:"Upgrade target payload."`
+}
+
+// KubernetesUpgradeMeta contains request metadata.
+type KubernetesUpgradeMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// KubernetesUpgradeEnvelope follows the success envelope shape.
+type KubernetesUpgradeEnvelope struct {
+	Data KubernetesRecord      `json:"data"`
+	Meta KubernetesUpgradeMeta `json:"meta"`
+}
+
+// KubernetesUpgradeOutput is the response shape for POST /api/v1/kubernetes/{name}/upgrade.
+type KubernetesUpgradeOutput struct {
+	Body KubernetesUpgradeEnvelope
+}
+
+// KubernetesKubeconfigInput binds the path name.
+type KubernetesKubeconfigInput struct {
+	Name string `path:"name" minLength:"1" maxLength:"64" doc:"Cluster name."`
+}
+
+// KubernetesKubeconfigData returns the kubeconfig inline.
+type KubernetesKubeconfigData struct {
+	Kubeconfig string `json:"kubeconfig" doc:"kubeconfig YAML contents."`
+}
+
+// KubernetesKubeconfigMeta contains request metadata.
+type KubernetesKubeconfigMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// KubernetesKubeconfigEnvelope follows the success envelope shape.
+type KubernetesKubeconfigEnvelope struct {
+	Data KubernetesKubeconfigData `json:"data"`
+	Meta KubernetesKubeconfigMeta `json:"meta"`
+}
+
+// KubernetesKubeconfigOutput is the response shape for GET /api/v1/kubernetes/{name}/kubeconfig.
+type KubernetesKubeconfigOutput struct {
+	Body KubernetesKubeconfigEnvelope
+}
+
+var stubKubernetesClusters = []KubernetesRecord{
+	{Name: kubernetesNameExisting, Version: "v1.30.5+k3s1", Status: "ready", Workers: 3, ReadyWorkers: 3, CreatedAt: "2026-03-01T00:00:00Z"},
+	{Name: "staging-cluster", Version: "v1.30.5+k3s1", Status: "ready", Workers: 1, ReadyWorkers: 1, CreatedAt: "2026-03-15T00:00:00Z"},
+}
+
+const kubernetesStubKubeconfig = `apiVersion: v1
+kind: Config
+clusters:
+  - cluster:
+      server: https://127.0.0.1:6443
+    name: helling-stub
+contexts:
+  - context:
+      cluster: helling-stub
+      user: helling-stub
+    name: helling-stub
+current-context: helling-stub
+users:
+  - name: helling-stub
+    user:
+      token: stub-kubeconfig-token
+`
+
 // UserCreateRequest creates a new PAM-backed user account.
 type UserCreateRequest struct {
 	Username string `json:"username" minLength:"1" maxLength:"64" doc:"Unix-safe username. PAM constraints apply."`
@@ -986,6 +1207,13 @@ func RegisterOperations(api huma.API) {
 	registerWebhookUpdate(api)
 	registerWebhookDelete(api)
 	registerWebhookTest(api)
+	registerKubernetesList(api)
+	registerKubernetesCreate(api)
+	registerKubernetesGet(api)
+	registerKubernetesDelete(api)
+	registerKubernetesScale(api)
+	registerKubernetesUpgrade(api)
+	registerKubernetesKubeconfig(api)
 	registerHealth(api)
 }
 
@@ -1785,6 +2013,219 @@ func registerWebhookTest(api huma.API) {
 					Latency:    42,
 				},
 				Meta: WebhookTestMeta{RequestID: "req_webhook_test"},
+			},
+		}, nil
+	})
+}
+
+//nolint:dupl // deliberate parallel to other list registrations.
+func registerKubernetesList(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "kubernetesList",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/kubernetes",
+		Summary:     "List k3s clusters",
+		Description: "Lists managed k3s clusters with cursor pagination.",
+		Tags:        []string{"Kubernetes"},
+	}, func(ctx context.Context, input *KubernetesListInput) (*KubernetesListOutput, error) {
+		_ = ctx
+		limit := input.Limit
+		if limit <= 0 {
+			limit = 50
+		}
+		start := 0
+		if input.Cursor == cursorPage2 {
+			start = 1
+		}
+		if start > len(stubKubernetesClusters) {
+			start = len(stubKubernetesClusters)
+		}
+		end := start + limit
+		if end > len(stubKubernetesClusters) {
+			end = len(stubKubernetesClusters)
+		}
+		hasNext := end < len(stubKubernetesClusters)
+		nextCursor := ""
+		if hasNext {
+			nextCursor = cursorPage2
+		}
+		items := append([]KubernetesRecord(nil), stubKubernetesClusters[start:end]...)
+		return &KubernetesListOutput{
+			Body: KubernetesListEnvelope{
+				Data: items,
+				Meta: KubernetesListMeta{
+					RequestID: "req_kubernetes_list",
+					Page: KubernetesPageMeta{
+						HasNext:    hasNext,
+						NextCursor: nextCursor,
+						Limit:      limit,
+					},
+				},
+			},
+		}, nil
+	})
+}
+
+func registerKubernetesCreate(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "kubernetesCreate",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/kubernetes",
+		Summary:     "Create a k3s cluster",
+		Description: "Provisions a new k3s cluster via cloud-init. Returns the newly-created cluster in `provisioning` status.",
+		Tags:        []string{"Kubernetes"},
+		RequestBody: &huma.RequestBody{
+			Description: "Cluster creation payload.",
+			Required:    true,
+		},
+		Errors: []int{http.StatusConflict},
+	}, func(ctx context.Context, input *KubernetesCreateInput) (*KubernetesCreateOutput, error) {
+		_ = ctx
+		if input.Body.Name == kubernetesNameExisting {
+			return nil, huma.Error409Conflict("KUBERNETES_ALREADY_EXISTS")
+		}
+		return &KubernetesCreateOutput{
+			Body: KubernetesCreateEnvelope{
+				Data: KubernetesRecord{
+					Name:    input.Body.Name,
+					Version: input.Body.Version,
+					Status:  "provisioning",
+					Workers: input.Body.Workers,
+				},
+				Meta: KubernetesCreateMeta{RequestID: "req_kubernetes_create"},
+			},
+		}, nil
+	})
+}
+
+func registerKubernetesGet(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "kubernetesGet",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/kubernetes/{name}",
+		Summary:     "Get a k3s cluster",
+		Description: "Returns a single cluster by name.",
+		Tags:        []string{"Kubernetes"},
+		Errors:      []int{http.StatusNotFound},
+	}, func(ctx context.Context, input *KubernetesGetInput) (*KubernetesGetOutput, error) {
+		_ = ctx
+		if input.Name == kubernetesNameUnknown {
+			return nil, huma.Error404NotFound("KUBERNETES_NOT_FOUND")
+		}
+		return &KubernetesGetOutput{
+			Body: KubernetesGetEnvelope{
+				Data: KubernetesRecord{
+					Name: input.Name, Version: "v1.30.5+k3s1", Status: "ready",
+					Workers: 3, ReadyWorkers: 3, CreatedAt: "2026-03-01T00:00:00Z",
+				},
+				Meta: KubernetesGetMeta{RequestID: "req_kubernetes_get"},
+			},
+		}, nil
+	})
+}
+
+func registerKubernetesDelete(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "kubernetesDelete",
+		Method:      http.MethodDelete,
+		Path:        "/api/v1/kubernetes/{name}",
+		Summary:     "Delete a k3s cluster",
+		Description: "Tears down the cluster and its underlying Incus resources.",
+		Tags:        []string{"Kubernetes"},
+		Errors:      []int{http.StatusNotFound},
+	}, func(ctx context.Context, input *KubernetesDeleteInput) (*KubernetesDeleteOutput, error) {
+		_ = ctx
+		if input.Name == kubernetesNameUnknown {
+			return nil, huma.Error404NotFound("KUBERNETES_NOT_FOUND")
+		}
+		return &KubernetesDeleteOutput{
+			Body: KubernetesDeleteEnvelope{
+				Data: KubernetesDeleteData{},
+				Meta: KubernetesDeleteMeta{RequestID: "req_kubernetes_delete"},
+			},
+		}, nil
+	})
+}
+
+func registerKubernetesScale(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "kubernetesScale",
+		Method:      http.MethodPatch,
+		Path:        "/api/v1/kubernetes/{name}/scale",
+		Summary:     "Scale a cluster's worker pool",
+		Description: "Adjusts the declared worker count for a cluster.",
+		Tags:        []string{"Kubernetes"},
+		RequestBody: &huma.RequestBody{
+			Description: "Scale target payload.",
+			Required:    true,
+		},
+		Errors: []int{http.StatusNotFound},
+	}, func(ctx context.Context, input *KubernetesScaleInput) (*KubernetesScaleOutput, error) {
+		_ = ctx
+		if input.Name == kubernetesNameUnknown {
+			return nil, huma.Error404NotFound("KUBERNETES_NOT_FOUND")
+		}
+		return &KubernetesScaleOutput{
+			Body: KubernetesScaleEnvelope{
+				Data: KubernetesRecord{
+					Name: input.Name, Version: "v1.30.5+k3s1", Status: "ready",
+					Workers: input.Body.Workers, ReadyWorkers: input.Body.Workers,
+					CreatedAt: "2026-03-01T00:00:00Z",
+				},
+				Meta: KubernetesScaleMeta{RequestID: "req_kubernetes_scale"},
+			},
+		}, nil
+	})
+}
+
+func registerKubernetesUpgrade(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "kubernetesUpgrade",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/kubernetes/{name}/upgrade",
+		Summary:     "Roll-upgrade a cluster",
+		Description: "Starts a rolling upgrade to a new k3s version.",
+		Tags:        []string{"Kubernetes"},
+		RequestBody: &huma.RequestBody{
+			Description: "Upgrade target payload.",
+			Required:    true,
+		},
+		Errors: []int{http.StatusNotFound},
+	}, func(ctx context.Context, input *KubernetesUpgradeInput) (*KubernetesUpgradeOutput, error) {
+		_ = ctx
+		if input.Name == kubernetesNameUnknown {
+			return nil, huma.Error404NotFound("KUBERNETES_NOT_FOUND")
+		}
+		return &KubernetesUpgradeOutput{
+			Body: KubernetesUpgradeEnvelope{
+				Data: KubernetesRecord{
+					Name: input.Name, Version: input.Body.Version, Status: "upgrading",
+					Workers: 3, ReadyWorkers: 3, CreatedAt: "2026-03-01T00:00:00Z",
+				},
+				Meta: KubernetesUpgradeMeta{RequestID: "req_kubernetes_upgrade"},
+			},
+		}, nil
+	})
+}
+
+func registerKubernetesKubeconfig(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "kubernetesKubeconfig",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/kubernetes/{name}/kubeconfig",
+		Summary:     "Download cluster kubeconfig",
+		Description: "Returns the kubeconfig YAML for the named cluster, inlined as a JSON string.",
+		Tags:        []string{"Kubernetes"},
+		Errors:      []int{http.StatusNotFound},
+	}, func(ctx context.Context, input *KubernetesKubeconfigInput) (*KubernetesKubeconfigOutput, error) {
+		_ = ctx
+		if input.Name == kubernetesNameUnknown {
+			return nil, huma.Error404NotFound("KUBERNETES_NOT_FOUND")
+		}
+		return &KubernetesKubeconfigOutput{
+			Body: KubernetesKubeconfigEnvelope{
+				Data: KubernetesKubeconfigData{Kubeconfig: kubernetesStubKubeconfig},
+				Meta: KubernetesKubeconfigMeta{RequestID: "req_kubernetes_kubeconfig"},
 			},
 		}, nil
 	})
