@@ -1503,6 +1503,398 @@ paths:
                     value: ""
                 status: 400
                 title: Bad Request
+  /api/v1/webhooks:
+    get:
+      tags:
+        - Webhooks
+      summary: List webhooks
+      description: Lists webhook subscriptions with cursor pagination.
+      operationId: webhookList
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of webhooks to return.
+          explode: false
+          schema:
+            type: integer
+            description: Maximum number of webhooks to return.
+            format: int64
+            default: 50
+            minimum: 1
+            maximum: 500
+        - name: cursor
+          in: query
+          description: Opaque pagination cursor from previous response.
+          explode: false
+          schema:
+            type: string
+            description: Opaque pagination cursor from previous response.
+            maxLength: 512
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookListEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/WebhookListEnvelope.json
+                data:
+                  - {}
+                meta: {}
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+    post:
+      tags:
+        - Webhooks
+      summary: Create a webhook
+      description: Subscribes a destination URL to one or more event types with HMAC signing.
+      operationId: webhookCreate
+      requestBody:
+        description: Webhook creation payload.
+        content:
+          application/json:
+            schema:
+              description: Webhook creation payload.
+              $ref: '#/components/schemas/WebhookCreateRequest'
+            example:
+              $schema: https://localhost:8006/schemas/WebhookCreateRequest.json
+              events:
+                - example
+              name: example
+              secret: example
+              url: example
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookCreateEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/WebhookCreateEnvelope.json
+                data: {}
+                meta: {}
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+  /api/v1/webhooks/{id}:
+    get:
+      tags:
+        - Webhooks
+      summary: Get a webhook
+      description: Returns a webhook by identifier.
+      operationId: webhookGet
+      parameters:
+        - name: id
+          in: path
+          description: Webhook identifier.
+          required: true
+          schema:
+            type: string
+            description: Webhook identifier.
+            minLength: 1
+            maxLength: 64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookGetEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/WebhookGetEnvelope.json
+                data: {}
+                meta: {}
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "422":
+          description: Unprocessable Entity
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+    delete:
+      tags:
+        - Webhooks
+      summary: Delete a webhook
+      description: Removes the webhook subscription.
+      operationId: webhookDelete
+      parameters:
+        - name: id
+          in: path
+          description: Webhook identifier.
+          required: true
+          schema:
+            type: string
+            description: Webhook identifier.
+            minLength: 1
+            maxLength: 64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDeleteEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/WebhookDeleteEnvelope.json
+                data: {}
+                meta: {}
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "422":
+          description: Unprocessable Entity
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+    patch:
+      tags:
+        - Webhooks
+      summary: Update a webhook
+      description: Applies a partial update. Name, URL, event list, and enabled state are mutable.
+      operationId: webhookUpdate
+      parameters:
+        - name: id
+          in: path
+          description: Webhook identifier.
+          required: true
+          schema:
+            type: string
+            description: Webhook identifier.
+            minLength: 1
+            maxLength: 64
+      requestBody:
+        description: Partial update payload.
+        content:
+          application/json:
+            schema:
+              description: Partial update payload.
+              $ref: '#/components/schemas/WebhookUpdateRequest'
+            example:
+              $schema: https://localhost:8006/schemas/WebhookUpdateRequest.json
+              enabled: true
+              events:
+                - example
+              name: example
+              url: example
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookUpdateEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/WebhookUpdateEnvelope.json
+                data: {}
+                meta: {}
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "422":
+          description: Unprocessable Entity
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+  /api/v1/webhooks/{id}/test:
+    post:
+      tags:
+        - Webhooks
+      summary: Send a synthetic delivery to a webhook
+      description: Fires a test event to the webhook destination and returns the observed status + latency.
+      operationId: webhookTest
+      parameters:
+        - name: id
+          in: path
+          description: Webhook identifier.
+          required: true
+          schema:
+            type: string
+            description: Webhook identifier.
+            minLength: 1
+            maxLength: 64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookTestEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/WebhookTestEnvelope.json
+                data: {}
+                meta: {}
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "422":
+          description: Unprocessable Entity
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
 components:
   schemas:
     AuthLoginData:
@@ -1664,7 +2056,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthLogoutMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -1951,7 +2343,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthSetupMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -2061,7 +2453,10 @@ components:
           description: Property data.
           $ref: '#/components/schemas/AuthTokenCreateData'
           examples:
-            - {}
+            - id: id_example
+              name: example
+              scope: admin
+              token: example
         meta:
           description: Property meta.
           $ref: '#/components/schemas/AuthTokenCreateMeta'
@@ -2147,8 +2542,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthTokenListMeta'
           examples:
-            - page: {}
-              request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -2164,7 +2558,9 @@ components:
           description: Cursor pagination metadata.
           $ref: '#/components/schemas/AuthTokenPageMeta'
           examples:
-            - {}
+            - has_next: true
+              limit: 1
+              next_cursor: example
         request_id:
           type: string
           description: Request correlation ID.
@@ -2280,7 +2676,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthTokenRevokeMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -2452,7 +2848,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthTotpVerifyMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -2656,18 +3052,12 @@ components:
           description: Property data.
           $ref: '#/components/schemas/ScheduleRecord'
           examples:
-            - cron_expr: example
-              enabled: true
-              id: id_example
-              name: example
-              next_run: example
-              target: example
-              type: backup
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleCreateMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -2768,7 +3158,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleDeleteMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -2806,18 +3196,12 @@ components:
           description: Property data.
           $ref: '#/components/schemas/ScheduleRecord'
           examples:
-            - cron_expr: example
-              enabled: true
-              id: id_example
-              name: example
-              next_run: example
-              target: example
-              type: backup
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleGetMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -2863,7 +3247,8 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleListMeta'
           examples:
-            - {}
+            - page: {}
+              request_id: id_example
       required:
         - data
         - meta
@@ -3072,18 +3457,12 @@ components:
           description: Property data.
           $ref: '#/components/schemas/ScheduleRecord'
           examples:
-            - cron_expr: example
-              enabled: true
-              id: id_example
-              name: example
-              next_run: example
-              target: example
-              type: backup
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleUpdateMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -3197,10 +3576,7 @@ components:
           description: Property data.
           $ref: '#/components/schemas/UserCreateData'
           examples:
-            - id: id_example
-              role: admin
-              status: active
-              username: example
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/UserCreateMeta'
@@ -3402,7 +3778,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/UserGetMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -3591,7 +3967,8 @@ components:
           description: Property data.
           $ref: '#/components/schemas/UserSetScopeData'
           examples:
-            - {}
+            - id: id_example
+              scope: default
         meta:
           description: Property meta.
           $ref: '#/components/schemas/UserSetScopeMeta'
@@ -3758,6 +4135,518 @@ components:
           enum:
             - active
             - disabled
+    WebhookCreateEnvelope:
+      type: object
+      description: Schema for webhookcreateenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/WebhookCreateEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/WebhookCreateEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/WebhookRecord'
+          examples:
+            - enabled: true
+              events:
+                - example
+              id: id_example
+              last_sent: example
+              name: example
+              url: example
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/WebhookCreateMeta'
+          examples:
+            - request_id: id_example
+      required:
+        - data
+        - meta
+    WebhookCreateMeta:
+      type: object
+      description: Schema for webhookcreatemeta.
+      examples:
+        - request_id: id_example
+      additionalProperties: false
+      properties:
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+    WebhookCreateRequest:
+      type: object
+      description: Schema for webhookcreaterequest.
+      examples:
+        - $schema: https://localhost:8006/schemas/WebhookCreateRequest.json
+          events:
+            - example
+          name: example
+          secret: example
+          url: example
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/WebhookCreateRequest.json
+          readOnly: true
+        events:
+          type: array
+          description: Event types to subscribe to.
+          examples:
+            - - example
+          items:
+            type: string
+          minItems: 1
+        name:
+          type: string
+          description: Webhook name.
+          examples:
+            - example
+          minLength: 1
+          maxLength: 128
+        secret:
+          type: string
+          description: HMAC signing secret. Stored encrypted.
+          examples:
+            - example
+          minLength: 16
+          maxLength: 256
+        url:
+          type: string
+          description: Destination URL. HTTPS recommended; HTTP allowed only for loopback targets.
+          examples:
+            - example
+          minLength: 1
+          maxLength: 2048
+      required:
+        - name
+        - url
+        - secret
+        - events
+    WebhookDeleteData:
+      type: object
+      description: Schema for webhookdeletedata.
+      examples:
+        - {}
+      additionalProperties: false
+    WebhookDeleteEnvelope:
+      type: object
+      description: Schema for webhookdeleteenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/WebhookDeleteEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/WebhookDeleteEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/WebhookDeleteData'
+          examples:
+            - {}
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/WebhookDeleteMeta'
+          examples:
+            - request_id: id_example
+      required:
+        - data
+        - meta
+    WebhookDeleteMeta:
+      type: object
+      description: Schema for webhookdeletemeta.
+      examples:
+        - request_id: id_example
+      additionalProperties: false
+      properties:
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+    WebhookGetEnvelope:
+      type: object
+      description: Schema for webhookgetenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/WebhookGetEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/WebhookGetEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/WebhookRecord'
+          examples:
+            - enabled: true
+              events:
+                - example
+              id: id_example
+              last_sent: example
+              name: example
+              url: example
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/WebhookGetMeta'
+          examples:
+            - request_id: id_example
+      required:
+        - data
+        - meta
+    WebhookGetMeta:
+      type: object
+      description: Schema for webhookgetmeta.
+      examples:
+        - request_id: id_example
+      additionalProperties: false
+      properties:
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+    WebhookListEnvelope:
+      type: object
+      description: Schema for webhooklistenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/WebhookListEnvelope.json
+          data:
+            - {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/WebhookListEnvelope.json
+          readOnly: true
+        data:
+          type: array
+          description: Property data.
+          examples:
+            - - {}
+          items:
+            $ref: '#/components/schemas/WebhookRecord'
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/WebhookListMeta'
+          examples:
+            - {}
+      required:
+        - data
+        - meta
+    WebhookListMeta:
+      type: object
+      description: Schema for webhooklistmeta.
+      examples:
+        - page: {}
+          request_id: id_example
+      additionalProperties: false
+      properties:
+        page:
+          description: Cursor pagination metadata.
+          $ref: '#/components/schemas/WebhookPageMeta'
+          examples:
+            - has_next: true
+              limit: 1
+              next_cursor: example
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+        - page
+    WebhookPageMeta:
+      type: object
+      description: Schema for webhookpagemeta.
+      examples:
+        - has_next: true
+          limit: 1
+          next_cursor: example
+      additionalProperties: false
+      properties:
+        has_next:
+          type: boolean
+          description: Whether another page is available.
+          examples:
+            - true
+        limit:
+          type: integer
+          description: Applied page size.
+          format: int64
+          examples:
+            - 1
+          minimum: 1
+        next_cursor:
+          type: string
+          description: Opaque cursor for the next page when available.
+          examples:
+            - example
+      required:
+        - has_next
+        - limit
+    WebhookRecord:
+      type: object
+      description: Schema for webhookrecord.
+      examples:
+        - enabled: true
+          events:
+            - example
+          id: id_example
+          last_sent: example
+          name: example
+          url: example
+      additionalProperties: false
+      properties:
+        enabled:
+          type: boolean
+          description: Whether deliveries are currently active.
+          examples:
+            - true
+        events:
+          type: array
+          description: Event types this webhook subscribes to.
+          examples:
+            - - example
+          items:
+            type: string
+        id:
+          type: string
+          description: Webhook identifier.
+          examples:
+            - id_example
+        last_sent:
+          type: string
+          description: ISO-8601 timestamp of last delivery attempt.
+          format: date-time
+          examples:
+            - example
+        name:
+          type: string
+          description: Webhook name.
+          examples:
+            - example
+        url:
+          type: string
+          description: Destination URL.
+          examples:
+            - example
+      required:
+        - id
+        - name
+        - url
+        - events
+        - enabled
+    WebhookTestData:
+      type: object
+      description: Schema for webhooktestdata.
+      examples:
+        - id: id_example
+          latency_ms: 1
+          status: delivered
+          status_code: 1
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          description: Webhook identifier.
+          examples:
+            - id_example
+        latency_ms:
+          type: integer
+          description: Observed latency in milliseconds.
+          format: int64
+          examples:
+            - 1
+          minimum: 0
+        status:
+          type: string
+          description: Synthetic delivery status.
+          examples:
+            - delivered
+          enum:
+            - delivered
+            - failed
+        status_code:
+          type: integer
+          description: HTTP status code returned by the destination.
+          format: int64
+          examples:
+            - 1
+          minimum: 100
+          maximum: 599
+      required:
+        - id
+        - status
+    WebhookTestEnvelope:
+      type: object
+      description: Schema for webhooktestenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/WebhookTestEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/WebhookTestEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/WebhookTestData'
+          examples:
+            - {}
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/WebhookTestMeta'
+          examples:
+            - request_id: id_example
+      required:
+        - data
+        - meta
+    WebhookTestMeta:
+      type: object
+      description: Schema for webhooktestmeta.
+      examples:
+        - request_id: id_example
+      additionalProperties: false
+      properties:
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+    WebhookUpdateEnvelope:
+      type: object
+      description: Schema for webhookupdateenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/WebhookUpdateEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/WebhookUpdateEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/WebhookRecord'
+          examples:
+            - enabled: true
+              events:
+                - example
+              id: id_example
+              last_sent: example
+              name: example
+              url: example
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/WebhookUpdateMeta'
+          examples:
+            - request_id: id_example
+      required:
+        - data
+        - meta
+    WebhookUpdateMeta:
+      type: object
+      description: Schema for webhookupdatemeta.
+      examples:
+        - request_id: id_example
+      additionalProperties: false
+      properties:
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+    WebhookUpdateRequest:
+      type: object
+      description: Schema for webhookupdaterequest.
+      examples:
+        - $schema: https://localhost:8006/schemas/WebhookUpdateRequest.json
+          enabled: true
+          events:
+            - example
+          name: example
+          url: example
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/WebhookUpdateRequest.json
+          readOnly: true
+        enabled:
+          type: boolean
+          description: Enable or disable without deleting.
+          examples:
+            - true
+        events:
+          type: array
+          description: New event subscription list; replaces the existing set.
+          examples:
+            - - example
+          items:
+            type: string
+        name:
+          type: string
+          description: New name.
+          examples:
+            - example
+          maxLength: 128
+        url:
+          type: string
+          description: New destination URL.
+          examples:
+            - example
+          maxLength: 2048
 tags:
   - name: Auth
     description: Authentication and token lifecycle endpoints.

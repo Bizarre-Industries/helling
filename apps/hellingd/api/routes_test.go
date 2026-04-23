@@ -620,6 +620,134 @@ func TestRegisterOperationsScheduleRunNowNotFound(t *testing.T) {
 	}
 }
 
+func TestRegisterOperationsWebhookListPagination(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/webhooks?limit=1", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), `"has_next":true`) {
+		t.Fatalf("expected has_next=true, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsWebhookCreateEchoes(t *testing.T) {
+	mux := testAPI()
+	body := `{"name":"pager","url":"https://example.com/hook","secret":"long-enough-secret-abc","events":["instance.created"]}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/webhooks", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), `"name":"pager"`) {
+		t.Fatalf("expected name echoed, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsWebhookGetSuccess(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/webhooks/whk_01JZWEBHOOK0000000000001", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+}
+
+func TestRegisterOperationsWebhookGetNotFound(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/webhooks/whk_missing", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected %d, got %d", http.StatusNotFound, rec.Code)
+	}
+}
+
+func TestRegisterOperationsWebhookUpdateSuccess(t *testing.T) {
+	mux := testAPI()
+	body := `{"enabled":false}`
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/webhooks/whk_01JZWEBHOOK0000000000001", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), `"enabled":false`) {
+		t.Fatalf("expected enabled=false, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsWebhookUpdateNotFound(t *testing.T) {
+	mux := testAPI()
+	body := `{"enabled":false}`
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/webhooks/whk_missing", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected %d, got %d", http.StatusNotFound, rec.Code)
+	}
+}
+
+func TestRegisterOperationsWebhookDeleteSuccess(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/webhooks/whk_01JZWEBHOOK0000000000001", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+}
+
+func TestRegisterOperationsWebhookDeleteNotFound(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/webhooks/whk_missing", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected %d, got %d", http.StatusNotFound, rec.Code)
+	}
+}
+
+func TestRegisterOperationsWebhookTestSuccess(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/webhooks/whk_01JZWEBHOOK0000000000001/test", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), `"status":"delivered"`) {
+		t.Fatalf("expected delivered status, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsWebhookTestNotFound(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/webhooks/whk_missing/test", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected %d, got %d", http.StatusNotFound, rec.Code)
+	}
+}
+
 func TestEnrichOpenAPIPatchesSchemaMetadata(t *testing.T) {
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig(apiTitle, apiVersion))

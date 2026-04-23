@@ -304,6 +304,189 @@ var stubSchedules = []ScheduleRecord{
 	{ID: "sched_01JZSCHEDULE00000000002", Name: "hourly-snapshot", Type: "snapshot", Target: "vm-db", CronExpr: "*-*-* *:00:00", Enabled: true, NextRun: "2026-04-23T20:00:00Z"},
 }
 
+const (
+	webhookIDExisting = "whk_01JZWEBHOOK0000000000001"
+	webhookIDUnknown  = "whk_missing"
+)
+
+// WebhookRecord is a webhook summary.
+type WebhookRecord struct {
+	ID       string   `json:"id" doc:"Webhook identifier."`
+	Name     string   `json:"name" doc:"Webhook name."`
+	URL      string   `json:"url" doc:"Destination URL."`
+	Events   []string `json:"events" doc:"Event types this webhook subscribes to."`
+	Enabled  bool     `json:"enabled" doc:"Whether deliveries are currently active."`
+	LastSent string   `json:"last_sent,omitempty" doc:"ISO-8601 timestamp of last delivery attempt." format:"date-time"`
+}
+
+// WebhookPageMeta is pagination metadata for webhook lists.
+type WebhookPageMeta struct {
+	HasNext    bool   `json:"has_next" doc:"Whether another page is available."`
+	NextCursor string `json:"next_cursor,omitempty" doc:"Opaque cursor for the next page when available."`
+	Limit      int    `json:"limit" doc:"Applied page size." minimum:"1"`
+}
+
+// WebhookListInput has pagination controls.
+type WebhookListInput struct {
+	Limit  int    `query:"limit" default:"50" minimum:"1" maximum:"500" doc:"Maximum number of webhooks to return."`
+	Cursor string `query:"cursor" maxLength:"512" doc:"Opaque pagination cursor from previous response."`
+}
+
+// WebhookListMeta contains request and paging metadata.
+type WebhookListMeta struct {
+	RequestID string          `json:"request_id" doc:"Request correlation ID."`
+	Page      WebhookPageMeta `json:"page" doc:"Cursor pagination metadata."`
+}
+
+// WebhookListEnvelope follows the list envelope shape.
+type WebhookListEnvelope struct {
+	Data []WebhookRecord `json:"data"`
+	Meta WebhookListMeta `json:"meta"`
+}
+
+// WebhookListOutput is the response shape for GET /api/v1/webhooks.
+type WebhookListOutput struct {
+	Body WebhookListEnvelope
+}
+
+// WebhookCreateRequest creates a new webhook.
+type WebhookCreateRequest struct {
+	Name   string   `json:"name" minLength:"1" maxLength:"128" doc:"Webhook name."`
+	URL    string   `json:"url" minLength:"1" maxLength:"2048" doc:"Destination URL. HTTPS recommended; HTTP allowed only for loopback targets."`
+	Secret string   `json:"secret" minLength:"16" maxLength:"256" doc:"HMAC signing secret. Stored encrypted."`
+	Events []string `json:"events" minItems:"1" doc:"Event types to subscribe to."`
+}
+
+// WebhookCreateInput wraps the create body.
+type WebhookCreateInput struct {
+	Body WebhookCreateRequest `doc:"Webhook creation payload."`
+}
+
+// WebhookCreateMeta contains request metadata.
+type WebhookCreateMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// WebhookCreateEnvelope follows the success envelope shape.
+type WebhookCreateEnvelope struct {
+	Data WebhookRecord     `json:"data"`
+	Meta WebhookCreateMeta `json:"meta"`
+}
+
+// WebhookCreateOutput is the response shape for POST /api/v1/webhooks.
+type WebhookCreateOutput struct {
+	Body WebhookCreateEnvelope
+}
+
+// WebhookGetInput binds the path id.
+type WebhookGetInput struct {
+	ID string `path:"id" minLength:"1" maxLength:"64" doc:"Webhook identifier."`
+}
+
+// WebhookGetMeta contains request metadata.
+type WebhookGetMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// WebhookGetEnvelope follows the success envelope shape.
+type WebhookGetEnvelope struct {
+	Data WebhookRecord  `json:"data"`
+	Meta WebhookGetMeta `json:"meta"`
+}
+
+// WebhookGetOutput is the response shape for GET /api/v1/webhooks/{id}.
+type WebhookGetOutput struct {
+	Body WebhookGetEnvelope
+}
+
+// WebhookUpdateRequest applies a partial update.
+type WebhookUpdateRequest struct {
+	Name    string   `json:"name,omitempty" maxLength:"128" doc:"New name."`
+	URL     string   `json:"url,omitempty" maxLength:"2048" doc:"New destination URL."`
+	Events  []string `json:"events,omitempty" doc:"New event subscription list; replaces the existing set."`
+	Enabled *bool    `json:"enabled,omitempty" doc:"Enable or disable without deleting."`
+}
+
+// WebhookUpdateInput combines path id with update body.
+type WebhookUpdateInput struct {
+	ID   string               `path:"id" minLength:"1" maxLength:"64" doc:"Webhook identifier."`
+	Body WebhookUpdateRequest `doc:"Partial update payload."`
+}
+
+// WebhookUpdateMeta contains request metadata.
+type WebhookUpdateMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// WebhookUpdateEnvelope follows the success envelope shape.
+type WebhookUpdateEnvelope struct {
+	Data WebhookRecord     `json:"data"`
+	Meta WebhookUpdateMeta `json:"meta"`
+}
+
+// WebhookUpdateOutput is the response shape for PATCH /api/v1/webhooks/{id}.
+type WebhookUpdateOutput struct {
+	Body WebhookUpdateEnvelope
+}
+
+// WebhookDeleteInput binds the path id.
+type WebhookDeleteInput struct {
+	ID string `path:"id" minLength:"1" maxLength:"64" doc:"Webhook identifier."`
+}
+
+// WebhookDeleteData is empty on success.
+type WebhookDeleteData struct{}
+
+// WebhookDeleteMeta contains request metadata.
+type WebhookDeleteMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// WebhookDeleteEnvelope follows the success envelope shape.
+type WebhookDeleteEnvelope struct {
+	Data WebhookDeleteData `json:"data"`
+	Meta WebhookDeleteMeta `json:"meta"`
+}
+
+// WebhookDeleteOutput is the response shape for DELETE /api/v1/webhooks/{id}.
+type WebhookDeleteOutput struct {
+	Body WebhookDeleteEnvelope
+}
+
+// WebhookTestInput binds the path id.
+type WebhookTestInput struct {
+	ID string `path:"id" minLength:"1" maxLength:"64" doc:"Webhook identifier."`
+}
+
+// WebhookTestData returns the synthetic delivery status.
+type WebhookTestData struct {
+	ID         string `json:"id" doc:"Webhook identifier."`
+	Status     string `json:"status" doc:"Synthetic delivery status." enum:"delivered,failed"`
+	StatusCode int    `json:"status_code,omitempty" doc:"HTTP status code returned by the destination." minimum:"100" maximum:"599"`
+	Latency    int    `json:"latency_ms,omitempty" doc:"Observed latency in milliseconds." minimum:"0"`
+}
+
+// WebhookTestMeta contains request metadata.
+type WebhookTestMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// WebhookTestEnvelope follows the success envelope shape.
+type WebhookTestEnvelope struct {
+	Data WebhookTestData `json:"data"`
+	Meta WebhookTestMeta `json:"meta"`
+}
+
+// WebhookTestOutput is the response shape for POST /api/v1/webhooks/{id}/test.
+type WebhookTestOutput struct {
+	Body WebhookTestEnvelope
+}
+
+var stubWebhooks = []WebhookRecord{
+	{ID: webhookIDExisting, Name: "slack-incidents", URL: "https://hooks.slack.com/stub", Events: []string{"instance.created", "instance.deleted"}, Enabled: true, LastSent: "2026-04-22T10:00:00Z"},
+	{ID: "whk_01JZWEBHOOK0000000000002", Name: "discord-alerts", URL: "https://discord.com/api/webhooks/stub", Events: []string{"schedule.failed"}, Enabled: false},
+}
+
 // UserCreateRequest creates a new PAM-backed user account.
 type UserCreateRequest struct {
 	Username string `json:"username" minLength:"1" maxLength:"64" doc:"Unix-safe username. PAM constraints apply."`
@@ -797,6 +980,12 @@ func RegisterOperations(api huma.API) {
 	registerScheduleUpdate(api)
 	registerScheduleDelete(api)
 	registerScheduleRunNow(api)
+	registerWebhookList(api)
+	registerWebhookCreate(api)
+	registerWebhookGet(api)
+	registerWebhookUpdate(api)
+	registerWebhookDelete(api)
+	registerWebhookTest(api)
 	registerHealth(api)
 }
 
@@ -1397,6 +1586,205 @@ func registerScheduleRunNow(api huma.API) {
 					StartAt: "2026-04-23T19:05:00Z",
 				},
 				Meta: ScheduleRunNowMeta{RequestID: "req_schedule_run_now"},
+			},
+		}, nil
+	})
+}
+
+//nolint:dupl // deliberate parallel to scheduleList; cursor pagination shape is the repo idiom.
+func registerWebhookList(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "webhookList",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/webhooks",
+		Summary:     "List webhooks",
+		Description: "Lists webhook subscriptions with cursor pagination.",
+		Tags:        []string{"Webhooks"},
+	}, func(ctx context.Context, input *WebhookListInput) (*WebhookListOutput, error) {
+		_ = ctx
+		limit := input.Limit
+		if limit <= 0 {
+			limit = 50
+		}
+		start := 0
+		if input.Cursor == cursorPage2 {
+			start = 1
+		}
+		if start > len(stubWebhooks) {
+			start = len(stubWebhooks)
+		}
+		end := start + limit
+		if end > len(stubWebhooks) {
+			end = len(stubWebhooks)
+		}
+		hasNext := end < len(stubWebhooks)
+		nextCursor := ""
+		if hasNext {
+			nextCursor = cursorPage2
+		}
+		items := append([]WebhookRecord(nil), stubWebhooks[start:end]...)
+		return &WebhookListOutput{
+			Body: WebhookListEnvelope{
+				Data: items,
+				Meta: WebhookListMeta{
+					RequestID: "req_webhook_list",
+					Page: WebhookPageMeta{
+						HasNext:    hasNext,
+						NextCursor: nextCursor,
+						Limit:      limit,
+					},
+				},
+			},
+		}, nil
+	})
+}
+
+func registerWebhookCreate(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "webhookCreate",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/webhooks",
+		Summary:     "Create a webhook",
+		Description: "Subscribes a destination URL to one or more event types with HMAC signing.",
+		Tags:        []string{"Webhooks"},
+		RequestBody: &huma.RequestBody{
+			Description: "Webhook creation payload.",
+			Required:    true,
+		},
+	}, func(ctx context.Context, input *WebhookCreateInput) (*WebhookCreateOutput, error) {
+		_ = ctx
+		return &WebhookCreateOutput{
+			Body: WebhookCreateEnvelope{
+				Data: WebhookRecord{
+					ID:      "whk_01JZWEBHOOK0000000000003",
+					Name:    input.Body.Name,
+					URL:     input.Body.URL,
+					Events:  input.Body.Events,
+					Enabled: true,
+				},
+				Meta: WebhookCreateMeta{RequestID: "req_webhook_create"},
+			},
+		}, nil
+	})
+}
+
+func registerWebhookGet(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "webhookGet",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/webhooks/{id}",
+		Summary:     "Get a webhook",
+		Description: "Returns a webhook by identifier.",
+		Tags:        []string{"Webhooks"},
+		Errors:      []int{http.StatusNotFound},
+	}, func(ctx context.Context, input *WebhookGetInput) (*WebhookGetOutput, error) {
+		_ = ctx
+		if input.ID == webhookIDUnknown {
+			return nil, huma.Error404NotFound("WEBHOOK_NOT_FOUND")
+		}
+		return &WebhookGetOutput{
+			Body: WebhookGetEnvelope{
+				Data: WebhookRecord{
+					ID: input.ID, Name: "slack-incidents", URL: "https://hooks.slack.com/stub",
+					Events: []string{"instance.created"}, Enabled: true, LastSent: "2026-04-22T10:00:00Z",
+				},
+				Meta: WebhookGetMeta{RequestID: "req_webhook_get"},
+			},
+		}, nil
+	})
+}
+
+func registerWebhookUpdate(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "webhookUpdate",
+		Method:      http.MethodPatch,
+		Path:        "/api/v1/webhooks/{id}",
+		Summary:     "Update a webhook",
+		Description: "Applies a partial update. Name, URL, event list, and enabled state are mutable.",
+		Tags:        []string{"Webhooks"},
+		RequestBody: &huma.RequestBody{
+			Description: "Partial update payload.",
+			Required:    true,
+		},
+		Errors: []int{http.StatusNotFound},
+	}, func(ctx context.Context, input *WebhookUpdateInput) (*WebhookUpdateOutput, error) {
+		_ = ctx
+		if input.ID == webhookIDUnknown {
+			return nil, huma.Error404NotFound("WEBHOOK_NOT_FOUND")
+		}
+		name := input.Body.Name
+		if name == "" {
+			name = "slack-incidents"
+		}
+		url := input.Body.URL
+		if url == "" {
+			url = "https://hooks.slack.com/stub"
+		}
+		events := input.Body.Events
+		if len(events) == 0 {
+			events = []string{"instance.created"}
+		}
+		enabled := true
+		if input.Body.Enabled != nil {
+			enabled = *input.Body.Enabled
+		}
+		return &WebhookUpdateOutput{
+			Body: WebhookUpdateEnvelope{
+				Data: WebhookRecord{
+					ID: input.ID, Name: name, URL: url, Events: events, Enabled: enabled,
+				},
+				Meta: WebhookUpdateMeta{RequestID: "req_webhook_update"},
+			},
+		}, nil
+	})
+}
+
+func registerWebhookDelete(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "webhookDelete",
+		Method:      http.MethodDelete,
+		Path:        "/api/v1/webhooks/{id}",
+		Summary:     "Delete a webhook",
+		Description: "Removes the webhook subscription.",
+		Tags:        []string{"Webhooks"},
+		Errors:      []int{http.StatusNotFound},
+	}, func(ctx context.Context, input *WebhookDeleteInput) (*WebhookDeleteOutput, error) {
+		_ = ctx
+		if input.ID == webhookIDUnknown {
+			return nil, huma.Error404NotFound("WEBHOOK_NOT_FOUND")
+		}
+		return &WebhookDeleteOutput{
+			Body: WebhookDeleteEnvelope{
+				Data: WebhookDeleteData{},
+				Meta: WebhookDeleteMeta{RequestID: "req_webhook_delete"},
+			},
+		}, nil
+	})
+}
+
+func registerWebhookTest(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "webhookTest",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/webhooks/{id}/test",
+		Summary:     "Send a synthetic delivery to a webhook",
+		Description: "Fires a test event to the webhook destination and returns the observed status + latency.",
+		Tags:        []string{"Webhooks"},
+		Errors:      []int{http.StatusNotFound},
+	}, func(ctx context.Context, input *WebhookTestInput) (*WebhookTestOutput, error) {
+		_ = ctx
+		if input.ID == webhookIDUnknown {
+			return nil, huma.Error404NotFound("WEBHOOK_NOT_FOUND")
+		}
+		return &WebhookTestOutput{
+			Body: WebhookTestEnvelope{
+				Data: WebhookTestData{
+					ID:         input.ID,
+					Status:     "delivered",
+					StatusCode: 200,
+					Latency:    42,
+				},
+				Meta: WebhookTestMeta{RequestID: "req_webhook_test"},
 			},
 		}, nil
 	})
