@@ -688,6 +688,502 @@ paths:
                     value: ""
                 status: 400
                 title: Bad Request
+  /api/v1/kubernetes:
+    get:
+      tags:
+        - Kubernetes
+      summary: List k3s clusters
+      description: Lists managed k3s clusters with cursor pagination.
+      operationId: kubernetesList
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of clusters to return.
+          explode: false
+          schema:
+            type: integer
+            description: Maximum number of clusters to return.
+            format: int64
+            default: 50
+            minimum: 1
+            maximum: 500
+        - name: cursor
+          in: query
+          description: Opaque pagination cursor from previous response.
+          explode: false
+          schema:
+            type: string
+            description: Opaque pagination cursor from previous response.
+            maxLength: 512
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KubernetesListEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/KubernetesListEnvelope.json
+                data:
+                  - {}
+                meta: {}
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+    post:
+      tags:
+        - Kubernetes
+      summary: Create a k3s cluster
+      description: Provisions a new k3s cluster via cloud-init. Returns the newly-created cluster in `provisioning` status.
+      operationId: kubernetesCreate
+      requestBody:
+        description: Cluster creation payload.
+        content:
+          application/json:
+            schema:
+              description: Cluster creation payload.
+              $ref: '#/components/schemas/KubernetesCreateRequest'
+            example:
+              $schema: https://localhost:8006/schemas/KubernetesCreateRequest.json
+              name: example
+              version: example
+              workers: 1
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KubernetesCreateEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/KubernetesCreateEnvelope.json
+                data: {}
+                meta: {}
+        "409":
+          description: Conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "422":
+          description: Unprocessable Entity
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+  /api/v1/kubernetes/{name}:
+    get:
+      tags:
+        - Kubernetes
+      summary: Get a k3s cluster
+      description: Returns a single cluster by name.
+      operationId: kubernetesGet
+      parameters:
+        - name: name
+          in: path
+          description: Cluster name.
+          required: true
+          schema:
+            type: string
+            description: Cluster name.
+            minLength: 1
+            maxLength: 64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KubernetesGetEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/KubernetesGetEnvelope.json
+                data: {}
+                meta: {}
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "422":
+          description: Unprocessable Entity
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+    delete:
+      tags:
+        - Kubernetes
+      summary: Delete a k3s cluster
+      description: Tears down the cluster and its underlying Incus resources.
+      operationId: kubernetesDelete
+      parameters:
+        - name: name
+          in: path
+          description: Cluster name.
+          required: true
+          schema:
+            type: string
+            description: Cluster name.
+            minLength: 1
+            maxLength: 64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KubernetesDeleteEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/KubernetesDeleteEnvelope.json
+                data: {}
+                meta: {}
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "422":
+          description: Unprocessable Entity
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+  /api/v1/kubernetes/{name}/kubeconfig:
+    get:
+      tags:
+        - Kubernetes
+      summary: Download cluster kubeconfig
+      description: Returns the kubeconfig YAML for the named cluster, inlined as a JSON string.
+      operationId: kubernetesKubeconfig
+      parameters:
+        - name: name
+          in: path
+          description: Cluster name.
+          required: true
+          schema:
+            type: string
+            description: Cluster name.
+            minLength: 1
+            maxLength: 64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KubernetesKubeconfigEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/KubernetesKubeconfigEnvelope.json
+                data: {}
+                meta: {}
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "422":
+          description: Unprocessable Entity
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+  /api/v1/kubernetes/{name}/scale:
+    patch:
+      tags:
+        - Kubernetes
+      summary: Scale a cluster's worker pool
+      description: Adjusts the declared worker count for a cluster.
+      operationId: kubernetesScale
+      parameters:
+        - name: name
+          in: path
+          description: Cluster name.
+          required: true
+          schema:
+            type: string
+            description: Cluster name.
+            minLength: 1
+            maxLength: 64
+      requestBody:
+        description: Scale target payload.
+        content:
+          application/json:
+            schema:
+              description: Scale target payload.
+              $ref: '#/components/schemas/KubernetesScaleRequest'
+            example:
+              $schema: https://localhost:8006/schemas/KubernetesScaleRequest.json
+              workers: 1
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KubernetesScaleEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/KubernetesScaleEnvelope.json
+                data: {}
+                meta: {}
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "422":
+          description: Unprocessable Entity
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+  /api/v1/kubernetes/{name}/upgrade:
+    post:
+      tags:
+        - Kubernetes
+      summary: Roll-upgrade a cluster
+      description: Starts a rolling upgrade to a new k3s version.
+      operationId: kubernetesUpgrade
+      parameters:
+        - name: name
+          in: path
+          description: Cluster name.
+          required: true
+          schema:
+            type: string
+            description: Cluster name.
+            minLength: 1
+            maxLength: 64
+      requestBody:
+        description: Upgrade target payload.
+        content:
+          application/json:
+            schema:
+              description: Upgrade target payload.
+              $ref: '#/components/schemas/KubernetesUpgradeRequest'
+            example:
+              $schema: https://localhost:8006/schemas/KubernetesUpgradeRequest.json
+              version: example
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KubernetesUpgradeEnvelope'
+              example:
+                $schema: https://localhost:8006/schemas/KubernetesUpgradeEnvelope.json
+                data: {}
+                meta: {}
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "422":
+          description: Unprocessable Entity
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorModel'
+              example:
+                detail: validation failed
+                errors:
+                  - location: body.username
+                    message: must not be empty
+                    value: ""
+                status: 400
+                title: Bad Request
   /api/v1/schedules:
     get:
       tags:
@@ -1957,11 +2453,7 @@ components:
           description: Property data.
           $ref: '#/components/schemas/AuthLoginData'
           examples:
-            - access_token: example
-              expires_in: 1
-              mfa_required: true
-              mfa_token: example
-              token_type: Bearer
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/AuthLoginMeta'
@@ -2126,7 +2618,9 @@ components:
           description: Property data.
           $ref: '#/components/schemas/AuthMfaCompleteData'
           examples:
-            - {}
+            - access_token: example
+              expires_in: 1
+              token_type: Bearer
         meta:
           description: Property meta.
           $ref: '#/components/schemas/AuthMfaCompleteMeta'
@@ -2237,7 +2731,9 @@ components:
           description: Property data.
           $ref: '#/components/schemas/AuthRefreshData'
           examples:
-            - {}
+            - access_token: example
+              expires_in: 1
+              token_type: Bearer
         meta:
           description: Property meta.
           $ref: '#/components/schemas/AuthRefreshMeta'
@@ -2343,7 +2839,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthSetupMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -2453,15 +2949,12 @@ components:
           description: Property data.
           $ref: '#/components/schemas/AuthTokenCreateData'
           examples:
-            - id: id_example
-              name: example
-              scope: admin
-              token: example
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/AuthTokenCreateMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -2542,7 +3035,8 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthTokenListMeta'
           examples:
-            - {}
+            - page: {}
+              request_id: id_example
       required:
         - data
         - meta
@@ -2558,9 +3052,7 @@ components:
           description: Cursor pagination metadata.
           $ref: '#/components/schemas/AuthTokenPageMeta'
           examples:
-            - has_next: true
-              limit: 1
-              next_cursor: example
+            - {}
         request_id:
           type: string
           description: Request correlation ID.
@@ -2676,7 +3168,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthTokenRevokeMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -3032,6 +3524,525 @@ components:
             - id_example
       required:
         - request_id
+    KubernetesCreateEnvelope:
+      type: object
+      description: Schema for kubernetescreateenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/KubernetesCreateEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/KubernetesCreateEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/KubernetesRecord'
+          examples:
+            - {}
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/KubernetesCreateMeta'
+          examples:
+            - {}
+      required:
+        - data
+        - meta
+    KubernetesCreateMeta:
+      type: object
+      description: Schema for kubernetescreatemeta.
+      examples:
+        - request_id: id_example
+      additionalProperties: false
+      properties:
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+    KubernetesCreateRequest:
+      type: object
+      description: Schema for kubernetescreaterequest.
+      examples:
+        - $schema: https://localhost:8006/schemas/KubernetesCreateRequest.json
+          name: example
+          version: example
+          workers: 1
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/KubernetesCreateRequest.json
+          readOnly: true
+        name:
+          type: string
+          description: Cluster name. Lowercase alphanumerics and hyphens.
+          examples:
+            - example
+          minLength: 1
+          maxLength: 64
+          pattern: ^[a-z0-9-]+$
+        version:
+          type: string
+          description: Requested k3s version (e.g. v1.30.5+k3s1).
+          examples:
+            - example
+          minLength: 1
+          maxLength: 32
+        workers:
+          type: integer
+          description: Worker count to provision.
+          format: int64
+          examples:
+            - 1
+          minimum: 0
+          maximum: 64
+      required:
+        - name
+        - version
+        - workers
+    KubernetesDeleteData:
+      type: object
+      description: Schema for kubernetesdeletedata.
+      examples:
+        - {}
+      additionalProperties: false
+    KubernetesDeleteEnvelope:
+      type: object
+      description: Schema for kubernetesdeleteenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/KubernetesDeleteEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/KubernetesDeleteEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/KubernetesDeleteData'
+          examples:
+            - {}
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/KubernetesDeleteMeta'
+          examples:
+            - {}
+      required:
+        - data
+        - meta
+    KubernetesDeleteMeta:
+      type: object
+      description: Schema for kubernetesdeletemeta.
+      examples:
+        - request_id: id_example
+      additionalProperties: false
+      properties:
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+    KubernetesGetEnvelope:
+      type: object
+      description: Schema for kubernetesgetenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/KubernetesGetEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/KubernetesGetEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/KubernetesRecord'
+          examples:
+            - {}
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/KubernetesGetMeta'
+          examples:
+            - {}
+      required:
+        - data
+        - meta
+    KubernetesGetMeta:
+      type: object
+      description: Schema for kubernetesgetmeta.
+      examples:
+        - request_id: id_example
+      additionalProperties: false
+      properties:
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+    KubernetesKubeconfigData:
+      type: object
+      description: Schema for kuberneteskubeconfigdata.
+      examples:
+        - kubeconfig: example
+      additionalProperties: false
+      properties:
+        kubeconfig:
+          type: string
+          description: kubeconfig YAML contents.
+          examples:
+            - example
+      required:
+        - kubeconfig
+    KubernetesKubeconfigEnvelope:
+      type: object
+      description: Schema for kuberneteskubeconfigenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/KubernetesKubeconfigEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/KubernetesKubeconfigEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/KubernetesKubeconfigData'
+          examples:
+            - kubeconfig: example
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/KubernetesKubeconfigMeta'
+          examples:
+            - request_id: id_example
+      required:
+        - data
+        - meta
+    KubernetesKubeconfigMeta:
+      type: object
+      description: Schema for kuberneteskubeconfigmeta.
+      examples:
+        - request_id: id_example
+      additionalProperties: false
+      properties:
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+    KubernetesListEnvelope:
+      type: object
+      description: Schema for kuberneteslistenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/KubernetesListEnvelope.json
+          data:
+            - {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/KubernetesListEnvelope.json
+          readOnly: true
+        data:
+          type: array
+          description: Property data.
+          examples:
+            - - {}
+          items:
+            $ref: '#/components/schemas/KubernetesRecord'
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/KubernetesListMeta'
+          examples:
+            - {}
+      required:
+        - data
+        - meta
+    KubernetesListMeta:
+      type: object
+      description: Schema for kuberneteslistmeta.
+      examples:
+        - page: {}
+          request_id: id_example
+      additionalProperties: false
+      properties:
+        page:
+          description: Cursor pagination metadata.
+          $ref: '#/components/schemas/KubernetesPageMeta'
+          examples:
+            - has_next: true
+              limit: 1
+              next_cursor: example
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+        - page
+    KubernetesPageMeta:
+      type: object
+      description: Schema for kubernetespagemeta.
+      examples:
+        - has_next: true
+          limit: 1
+          next_cursor: example
+      additionalProperties: false
+      properties:
+        has_next:
+          type: boolean
+          description: Whether another page is available.
+          examples:
+            - true
+        limit:
+          type: integer
+          description: Applied page size.
+          format: int64
+          examples:
+            - 1
+          minimum: 1
+        next_cursor:
+          type: string
+          description: Opaque cursor for the next page when available.
+          examples:
+            - example
+      required:
+        - has_next
+        - limit
+    KubernetesRecord:
+      type: object
+      description: Schema for kubernetesrecord.
+      examples:
+        - created_at: example
+          name: example
+          ready_workers: 1
+          status: provisioning
+          version: example
+          workers: 1
+      additionalProperties: false
+      properties:
+        created_at:
+          type: string
+          description: ISO-8601 creation timestamp.
+          format: date-time
+          examples:
+            - example
+        name:
+          type: string
+          description: Cluster name (also the URL-path identifier).
+          examples:
+            - example
+        ready_workers:
+          type: integer
+          description: Workers currently ready.
+          format: int64
+          examples:
+            - 1
+          minimum: 0
+        status:
+          type: string
+          description: Cluster status.
+          examples:
+            - provisioning
+          enum:
+            - provisioning
+            - ready
+            - upgrading
+            - error
+        version:
+          type: string
+          description: k3s version.
+          examples:
+            - example
+        workers:
+          type: integer
+          description: Declared worker count.
+          format: int64
+          examples:
+            - 1
+          minimum: 0
+      required:
+        - name
+        - version
+        - status
+        - workers
+        - ready_workers
+        - created_at
+    KubernetesScaleEnvelope:
+      type: object
+      description: Schema for kubernetesscaleenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/KubernetesScaleEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/KubernetesScaleEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/KubernetesRecord'
+          examples:
+            - created_at: example
+              name: example
+              ready_workers: 1
+              status: provisioning
+              version: example
+              workers: 1
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/KubernetesScaleMeta'
+          examples:
+            - request_id: id_example
+      required:
+        - data
+        - meta
+    KubernetesScaleMeta:
+      type: object
+      description: Schema for kubernetesscalemeta.
+      examples:
+        - request_id: id_example
+      additionalProperties: false
+      properties:
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+    KubernetesScaleRequest:
+      type: object
+      description: Schema for kubernetesscalerequest.
+      examples:
+        - $schema: https://localhost:8006/schemas/KubernetesScaleRequest.json
+          workers: 1
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/KubernetesScaleRequest.json
+          readOnly: true
+        workers:
+          type: integer
+          description: Desired worker count.
+          format: int64
+          examples:
+            - 1
+          minimum: 0
+          maximum: 64
+      required:
+        - workers
+    KubernetesUpgradeEnvelope:
+      type: object
+      description: Schema for kubernetesupgradeenvelope.
+      examples:
+        - $schema: https://localhost:8006/schemas/KubernetesUpgradeEnvelope.json
+          data: {}
+          meta: {}
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/KubernetesUpgradeEnvelope.json
+          readOnly: true
+        data:
+          description: Property data.
+          $ref: '#/components/schemas/KubernetesRecord'
+          examples:
+            - {}
+        meta:
+          description: Property meta.
+          $ref: '#/components/schemas/KubernetesUpgradeMeta'
+          examples:
+            - {}
+      required:
+        - data
+        - meta
+    KubernetesUpgradeMeta:
+      type: object
+      description: Schema for kubernetesupgrademeta.
+      examples:
+        - request_id: id_example
+      additionalProperties: false
+      properties:
+        request_id:
+          type: string
+          description: Request correlation ID.
+          examples:
+            - id_example
+      required:
+        - request_id
+    KubernetesUpgradeRequest:
+      type: object
+      description: Schema for kubernetesupgraderequest.
+      examples:
+        - $schema: https://localhost:8006/schemas/KubernetesUpgradeRequest.json
+          version: example
+      additionalProperties: false
+      properties:
+        $schema:
+          type: string
+          description: A URL to the JSON Schema for this object.
+          format: uri
+          examples:
+            - https://localhost:8006/schemas/KubernetesUpgradeRequest.json
+          readOnly: true
+        version:
+          type: string
+          description: Target k3s version.
+          examples:
+            - example
+          minLength: 1
+          maxLength: 32
+      required:
+        - version
     ScheduleCreateEnvelope:
       type: object
       description: Schema for schedulecreateenvelope.
@@ -3052,12 +4063,18 @@ components:
           description: Property data.
           $ref: '#/components/schemas/ScheduleRecord'
           examples:
-            - {}
+            - cron_expr: example
+              enabled: true
+              id: id_example
+              name: example
+              next_run: example
+              target: example
+              type: backup
         meta:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleCreateMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -3158,7 +4175,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleDeleteMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -3201,7 +4218,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleGetMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -3264,7 +4281,9 @@ components:
           description: Cursor pagination metadata.
           $ref: '#/components/schemas/SchedulePageMeta'
           examples:
-            - {}
+            - has_next: true
+              limit: 1
+              next_cursor: example
         request_id:
           type: string
           description: Request correlation ID.
@@ -3457,12 +4476,18 @@ components:
           description: Property data.
           $ref: '#/components/schemas/ScheduleRecord'
           examples:
-            - {}
+            - cron_expr: example
+              enabled: true
+              id: id_example
+              name: example
+              next_run: example
+              target: example
+              type: backup
         meta:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleUpdateMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -3581,7 +4606,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/UserCreateMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -3967,8 +4992,7 @@ components:
           description: Property data.
           $ref: '#/components/schemas/UserSetScopeData'
           examples:
-            - id: id_example
-              scope: default
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/UserSetScopeMeta'
@@ -4079,12 +5103,15 @@ components:
           description: Property data.
           $ref: '#/components/schemas/UserUpdateData'
           examples:
-            - {}
+            - id: id_example
+              role: admin
+              status: active
+              username: example
         meta:
           description: Property meta.
           $ref: '#/components/schemas/UserUpdateMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -4166,7 +5193,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/WebhookCreateMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -4268,7 +5295,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/WebhookDeleteMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -4317,7 +5344,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/WebhookGetMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -4363,7 +5390,8 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/WebhookListMeta'
           examples:
-            - {}
+            - page: {}
+              request_id: id_example
       required:
         - data
         - meta
@@ -4532,7 +5560,10 @@ components:
           description: Property data.
           $ref: '#/components/schemas/WebhookTestData'
           examples:
-            - {}
+            - id: id_example
+              latency_ms: 1
+              status: delivered
+              status_code: 1
         meta:
           description: Property meta.
           $ref: '#/components/schemas/WebhookTestMeta'
