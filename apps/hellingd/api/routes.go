@@ -173,15 +173,271 @@ type AuthRefreshOutput struct {
 }
 
 const (
+	cursorPage2 = "cursor_page_2"
+
 	authRefreshTokenStub  = "stub_refresh_token_01JZREFRESHABCDEFGHJK"
 	authRefreshTokenInval = "invalid"
+	authMfaTokenStub      = "mfa_01JZABC0123456789ABCDEFGJK" //nolint:gosec // G101: stub fixture, not a real credential.
+	authTotpCodeValid     = "123456"
+	authTokenIDExisting   = "tok_01JZTOKEN000000000000001" //nolint:gosec // G101: stub path parameter, not a real credential.
+	authTokenIDUnknown    = "tok_missing"                  //nolint:gosec // G101: stub path parameter, not a real credential.
 )
+
+// AuthSetupRequest is the initial-admin-setup payload.
+type AuthSetupRequest struct {
+	Username string `json:"username" minLength:"1" maxLength:"64" doc:"Username for the initial admin account."`
+	Password string `json:"password" minLength:"8" maxLength:"256" doc:"Password for the initial admin account."`
+}
+
+// AuthSetupInput wraps the setup request body.
+type AuthSetupInput struct {
+	Body AuthSetupRequest `doc:"Initial admin account credentials."`
+}
+
+// AuthSetupData mirrors AuthLoginData on successful first-time setup.
+type AuthSetupData struct {
+	AccessToken string `json:"access_token" doc:"JWT access token issued for the new admin account."`
+	TokenType   string `json:"token_type" doc:"Token scheme." enum:"Bearer"`
+	ExpiresIn   int    `json:"expires_in" doc:"Access token TTL in seconds." minimum:"1"`
+}
+
+// AuthSetupMeta contains request metadata for setup responses.
+type AuthSetupMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// AuthSetupEnvelope follows the Helling success envelope shape.
+type AuthSetupEnvelope struct {
+	Data AuthSetupData `json:"data"`
+	Meta AuthSetupMeta `json:"meta"`
+}
+
+// AuthSetupOutput is the response shape for POST /api/v1/auth/setup.
+type AuthSetupOutput struct {
+	Body AuthSetupEnvelope
+}
+
+// AuthMfaCompleteRequest completes an MFA challenge with a TOTP code.
+type AuthMfaCompleteRequest struct {
+	MfaToken string `json:"mfa_token" minLength:"1" maxLength:"256" doc:"MFA token returned by the login endpoint."`
+	TotpCode string `json:"totp_code" minLength:"6" maxLength:"8" doc:"Six-digit TOTP code from the user's authenticator."`
+}
+
+// AuthMfaCompleteInput wraps the MFA completion body.
+type AuthMfaCompleteInput struct {
+	Body AuthMfaCompleteRequest `doc:"MFA completion payload."`
+}
+
+// AuthMfaCompleteData returns full token pair after successful MFA.
+type AuthMfaCompleteData struct {
+	AccessToken string `json:"access_token" doc:"JWT access token."`
+	TokenType   string `json:"token_type" doc:"Token scheme." enum:"Bearer"`
+	ExpiresIn   int    `json:"expires_in" doc:"Access token TTL in seconds." minimum:"1"`
+}
+
+// AuthMfaCompleteMeta contains request metadata.
+type AuthMfaCompleteMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// AuthMfaCompleteEnvelope follows the Helling success envelope shape.
+type AuthMfaCompleteEnvelope struct {
+	Data AuthMfaCompleteData `json:"data"`
+	Meta AuthMfaCompleteMeta `json:"meta"`
+}
+
+// AuthMfaCompleteOutput is the response shape for POST /api/v1/auth/mfa/complete.
+type AuthMfaCompleteOutput struct {
+	Body AuthMfaCompleteEnvelope
+}
+
+// AuthTotpSetupData returns enrollment artifacts for a new TOTP factor.
+type AuthTotpSetupData struct {
+	ProvisioningURI string   `json:"provisioning_uri" doc:"otpauth:// URI that authenticator apps can scan."`
+	Secret          string   `json:"secret" doc:"Raw base32 TOTP secret for manual entry."`
+	RecoveryCodes   []string `json:"recovery_codes" doc:"One-time recovery codes for out-of-band access."`
+}
+
+// AuthTotpSetupMeta contains request metadata for TOTP setup responses.
+type AuthTotpSetupMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// AuthTotpSetupEnvelope follows the Helling success envelope shape.
+type AuthTotpSetupEnvelope struct {
+	Data AuthTotpSetupData `json:"data"`
+	Meta AuthTotpSetupMeta `json:"meta"`
+}
+
+// AuthTotpSetupOutput is the response shape for POST /api/v1/auth/totp/setup.
+type AuthTotpSetupOutput struct {
+	Body AuthTotpSetupEnvelope
+}
+
+// AuthTotpVerifyRequest confirms a TOTP enrollment with a code.
+type AuthTotpVerifyRequest struct {
+	TotpCode string `json:"totp_code" minLength:"6" maxLength:"8" doc:"TOTP code from the user's authenticator app."`
+}
+
+// AuthTotpVerifyInput wraps the verify request body.
+type AuthTotpVerifyInput struct {
+	Body AuthTotpVerifyRequest `doc:"TOTP verification payload."`
+}
+
+// AuthTotpVerifyData is empty on success; envelope preserved.
+type AuthTotpVerifyData struct{}
+
+// AuthTotpVerifyMeta contains request metadata.
+type AuthTotpVerifyMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// AuthTotpVerifyEnvelope follows the Helling success envelope shape.
+type AuthTotpVerifyEnvelope struct {
+	Data AuthTotpVerifyData `json:"data"`
+	Meta AuthTotpVerifyMeta `json:"meta"`
+}
+
+// AuthTotpVerifyOutput is the response shape for POST /api/v1/auth/totp/verify.
+type AuthTotpVerifyOutput struct {
+	Body AuthTotpVerifyEnvelope
+}
+
+// AuthTotpDisableData is empty on success.
+type AuthTotpDisableData struct{}
+
+// AuthTotpDisableMeta contains request metadata.
+type AuthTotpDisableMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// AuthTotpDisableEnvelope follows the Helling success envelope shape.
+type AuthTotpDisableEnvelope struct {
+	Data AuthTotpDisableData `json:"data"`
+	Meta AuthTotpDisableMeta `json:"meta"`
+}
+
+// AuthTotpDisableOutput is the response shape for POST /api/v1/auth/totp/disable.
+type AuthTotpDisableOutput struct {
+	Body AuthTotpDisableEnvelope
+}
+
+// AuthTokenRecord is an API token summary.
+type AuthTokenRecord struct {
+	ID        string `json:"id" doc:"Token identifier."`
+	Name      string `json:"name" doc:"User-supplied token name."`
+	Scope     string `json:"scope" doc:"Token scope." enum:"admin,user,auditor"`
+	CreatedAt string `json:"created_at" doc:"ISO-8601 timestamp when the token was created." format:"date-time"`
+	LastUsed  string `json:"last_used,omitempty" doc:"ISO-8601 timestamp of last successful use, if any." format:"date-time"`
+}
+
+// AuthTokenPageMeta is pagination metadata for token lists.
+type AuthTokenPageMeta struct {
+	HasNext    bool   `json:"has_next" doc:"Whether another page is available."`
+	NextCursor string `json:"next_cursor,omitempty" doc:"Opaque cursor for the next page when available."`
+	Limit      int    `json:"limit" doc:"Applied page size." minimum:"1"`
+}
+
+// AuthTokenListInput has pagination controls.
+type AuthTokenListInput struct {
+	Limit  int    `query:"limit" default:"50" minimum:"1" maximum:"500" doc:"Maximum number of tokens to return."`
+	Cursor string `query:"cursor" maxLength:"512" doc:"Opaque pagination cursor from previous response."`
+}
+
+// AuthTokenListMeta contains request and paging metadata.
+type AuthTokenListMeta struct {
+	RequestID string            `json:"request_id" doc:"Request correlation ID."`
+	Page      AuthTokenPageMeta `json:"page" doc:"Cursor pagination metadata."`
+}
+
+// AuthTokenListEnvelope follows the Helling list envelope shape.
+type AuthTokenListEnvelope struct {
+	Data []AuthTokenRecord `json:"data"`
+	Meta AuthTokenListMeta `json:"meta"`
+}
+
+// AuthTokenListOutput is the response shape for GET /api/v1/auth/tokens.
+type AuthTokenListOutput struct {
+	Body AuthTokenListEnvelope
+}
+
+// AuthTokenCreateRequest creates a new API token.
+type AuthTokenCreateRequest struct {
+	Name  string `json:"name" minLength:"1" maxLength:"128" doc:"User-visible token name."`
+	Scope string `json:"scope" doc:"Token scope, must be one of the fixed roles." enum:"admin,user,auditor"`
+}
+
+// AuthTokenCreateInput wraps the create request body.
+type AuthTokenCreateInput struct {
+	Body AuthTokenCreateRequest `doc:"Token creation payload."`
+}
+
+// AuthTokenCreateData returns the newly-created token plaintext exactly once.
+type AuthTokenCreateData struct {
+	ID    string `json:"id" doc:"New token identifier."`
+	Name  string `json:"name" doc:"Token name."`
+	Scope string `json:"scope" doc:"Token scope." enum:"admin,user,auditor"`
+	Token string `json:"token" doc:"Plaintext API token. Surfaced only once; store it securely."`
+}
+
+// AuthTokenCreateMeta contains request metadata.
+type AuthTokenCreateMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// AuthTokenCreateEnvelope follows the Helling success envelope shape.
+type AuthTokenCreateEnvelope struct {
+	Data AuthTokenCreateData `json:"data"`
+	Meta AuthTokenCreateMeta `json:"meta"`
+}
+
+// AuthTokenCreateOutput is the response shape for POST /api/v1/auth/tokens.
+type AuthTokenCreateOutput struct {
+	Body AuthTokenCreateEnvelope
+}
+
+// AuthTokenRevokeInput binds the path id.
+type AuthTokenRevokeInput struct {
+	ID string `path:"id" minLength:"1" maxLength:"64" doc:"Token identifier to revoke."`
+}
+
+// AuthTokenRevokeData is empty on success.
+type AuthTokenRevokeData struct{}
+
+// AuthTokenRevokeMeta contains request metadata.
+type AuthTokenRevokeMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// AuthTokenRevokeEnvelope follows the Helling success envelope shape.
+type AuthTokenRevokeEnvelope struct {
+	Data AuthTokenRevokeData `json:"data"`
+	Meta AuthTokenRevokeMeta `json:"meta"`
+}
+
+// AuthTokenRevokeOutput is the response shape for DELETE /api/v1/auth/tokens/{id}.
+type AuthTokenRevokeOutput struct {
+	Body AuthTokenRevokeEnvelope
+}
+
+var stubAuthTokens = []AuthTokenRecord{
+	{ID: authTokenIDExisting, Name: "ci-bot", Scope: "user", CreatedAt: "2026-04-01T00:00:00Z", LastUsed: "2026-04-20T12:00:00Z"},
+	{ID: "tok_01JZTOKEN000000000000002", Name: "auditor-readonly", Scope: "auditor", CreatedAt: "2026-04-10T00:00:00Z"},
+}
 
 // RegisterOperations wires the current Huma spike operations.
 func RegisterOperations(api huma.API) {
+	registerAuthSetup(api)
 	registerAuthLogin(api)
 	registerAuthLogout(api)
 	registerAuthRefresh(api)
+	registerAuthMfaComplete(api)
+	registerAuthTotpSetup(api)
+	registerAuthTotpVerify(api)
+	registerAuthTotpDisable(api)
+	registerAuthTokenList(api)
+	registerAuthTokenCreate(api)
+	registerAuthTokenRevoke(api)
 	registerUserList(api)
 	registerHealth(api)
 }
@@ -326,6 +582,7 @@ func registerAuthRefresh(api huma.API) {
 	})
 }
 
+//nolint:dupl // deliberate parallel to registerAuthTokenList; cursor pagination shape is the repo idiom.
 func registerUserList(api huma.API) {
 	huma.Register(api, huma.Operation{
 		OperationID: "userList",
@@ -343,7 +600,7 @@ func registerUserList(api huma.API) {
 		}
 
 		start := 0
-		if input.Cursor == "cursor_page_2" {
+		if input.Cursor == cursorPage2 {
 			start = 1
 		}
 		if start > len(stubUsers) {
@@ -358,7 +615,7 @@ func registerUserList(api huma.API) {
 		hasNext := end < len(stubUsers)
 		nextCursor := ""
 		if hasNext {
-			nextCursor = "cursor_page_2"
+			nextCursor = cursorPage2
 		}
 
 		users := append([]UserRecord(nil), stubUsers[start:end]...)
@@ -373,6 +630,242 @@ func registerUserList(api huma.API) {
 						Limit:      limit,
 					},
 				},
+			},
+		}, nil
+	})
+}
+
+func registerAuthSetup(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "authSetup",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/auth/setup",
+		Summary:     "Create the initial admin account",
+		Description: "Bootstraps the first administrator on a fresh install. Idempotently refuses if any admin already exists; stub accepts any payload.",
+		Tags:        []string{"Auth"},
+		RequestBody: &huma.RequestBody{
+			Description: "Initial admin credentials.",
+			Required:    true,
+		},
+		Errors: []int{http.StatusConflict},
+	}, func(ctx context.Context, input *AuthSetupInput) (*AuthSetupOutput, error) {
+		_ = ctx
+		_ = input
+		return &AuthSetupOutput{
+			Body: AuthSetupEnvelope{
+				Data: AuthSetupData{
+					AccessToken: "eyJhbGciOiJFZERTQSJ9.setup.stub",
+					TokenType:   "Bearer",
+					ExpiresIn:   900,
+				},
+				Meta: AuthSetupMeta{RequestID: "req_auth_setup"},
+			},
+		}, nil
+	})
+}
+
+func registerAuthMfaComplete(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "authMfaComplete",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/auth/mfa/complete",
+		Summary:     "Complete an MFA challenge with a TOTP code",
+		Description: "Exchanges an mfa_token plus a valid TOTP code for a full JWT access token.",
+		Tags:        []string{"Auth"},
+		RequestBody: &huma.RequestBody{
+			Description: "MFA completion payload.",
+			Required:    true,
+		},
+		Errors: []int{http.StatusUnauthorized},
+	}, func(ctx context.Context, input *AuthMfaCompleteInput) (*AuthMfaCompleteOutput, error) {
+		_ = ctx
+		if input.Body.MfaToken != authMfaTokenStub {
+			return nil, huma.Error401Unauthorized("AUTH_MFA_INVALID")
+		}
+		if input.Body.TotpCode != authTotpCodeValid {
+			return nil, huma.Error401Unauthorized("AUTH_MFA_CODE_INVALID")
+		}
+		return &AuthMfaCompleteOutput{
+			Body: AuthMfaCompleteEnvelope{
+				Data: AuthMfaCompleteData{
+					AccessToken: "eyJhbGciOiJFZERTQSJ9.mfa.stub",
+					TokenType:   "Bearer",
+					ExpiresIn:   900,
+				},
+				Meta: AuthMfaCompleteMeta{RequestID: "req_auth_mfa_complete"},
+			},
+		}, nil
+	})
+}
+
+func registerAuthTotpSetup(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "authTotpSetup",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/auth/totp/setup",
+		Summary:     "Begin TOTP enrollment for the current user",
+		Description: "Issues a new TOTP secret, provisioning URI, and a set of single-use recovery codes. The factor must be confirmed with /auth/totp/verify before it is active.",
+		Tags:        []string{"Auth"},
+	}, func(ctx context.Context, input *struct{}) (*AuthTotpSetupOutput, error) {
+		_ = ctx
+		_ = input
+		return &AuthTotpSetupOutput{
+			Body: AuthTotpSetupEnvelope{
+				Data: AuthTotpSetupData{
+					ProvisioningURI: "otpauth://totp/Helling:admin?secret=JBSWY3DPEHPK3PXP&issuer=Helling",
+					Secret:          "JBSWY3DPEHPK3PXP",
+					RecoveryCodes: []string{
+						"11112222", "33334444", "55556666", "77778888", "99990000",
+						"aaaabbbb", "ccccdddd", "eeeeffff", "gggghhhh", "iiiijjjj",
+					},
+				},
+				Meta: AuthTotpSetupMeta{RequestID: "req_auth_totp_setup"},
+			},
+		}, nil
+	})
+}
+
+func registerAuthTotpVerify(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "authTotpVerify",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/auth/totp/verify",
+		Summary:     "Confirm a pending TOTP enrollment",
+		Description: "Activates the pending TOTP factor when the supplied code is valid.",
+		Tags:        []string{"Auth"},
+		RequestBody: &huma.RequestBody{
+			Description: "TOTP verification payload.",
+			Required:    true,
+		},
+		Errors: []int{http.StatusUnauthorized},
+	}, func(ctx context.Context, input *AuthTotpVerifyInput) (*AuthTotpVerifyOutput, error) {
+		_ = ctx
+		if input.Body.TotpCode != authTotpCodeValid {
+			return nil, huma.Error401Unauthorized("AUTH_TOTP_CODE_INVALID")
+		}
+		return &AuthTotpVerifyOutput{
+			Body: AuthTotpVerifyEnvelope{
+				Data: AuthTotpVerifyData{},
+				Meta: AuthTotpVerifyMeta{RequestID: "req_auth_totp_verify"},
+			},
+		}, nil
+	})
+}
+
+func registerAuthTotpDisable(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "authTotpDisable",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/auth/totp/disable",
+		Summary:     "Disable TOTP for the current user",
+		Description: "Removes the active TOTP factor. Admin-initiated removals are out of scope in v0.1.",
+		Tags:        []string{"Auth"},
+	}, func(ctx context.Context, input *struct{}) (*AuthTotpDisableOutput, error) {
+		_ = ctx
+		_ = input
+		return &AuthTotpDisableOutput{
+			Body: AuthTotpDisableEnvelope{
+				Data: AuthTotpDisableData{},
+				Meta: AuthTotpDisableMeta{RequestID: "req_auth_totp_disable"},
+			},
+		}, nil
+	})
+}
+
+//nolint:dupl // deliberate parallel to registerUserList; cursor pagination shape is the repo idiom.
+func registerAuthTokenList(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "authTokenList",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/auth/tokens",
+		Summary:     "List API tokens",
+		Description: "Lists API tokens belonging to the current user using cursor pagination.",
+		Tags:        []string{"Auth"},
+	}, func(ctx context.Context, input *AuthTokenListInput) (*AuthTokenListOutput, error) {
+		_ = ctx
+		limit := input.Limit
+		if limit <= 0 {
+			limit = 50
+		}
+		start := 0
+		if input.Cursor == cursorPage2 {
+			start = 1
+		}
+		if start > len(stubAuthTokens) {
+			start = len(stubAuthTokens)
+		}
+		end := start + limit
+		if end > len(stubAuthTokens) {
+			end = len(stubAuthTokens)
+		}
+		hasNext := end < len(stubAuthTokens)
+		nextCursor := ""
+		if hasNext {
+			nextCursor = cursorPage2
+		}
+		tokens := append([]AuthTokenRecord(nil), stubAuthTokens[start:end]...)
+		return &AuthTokenListOutput{
+			Body: AuthTokenListEnvelope{
+				Data: tokens,
+				Meta: AuthTokenListMeta{
+					RequestID: "req_auth_token_list",
+					Page: AuthTokenPageMeta{
+						HasNext:    hasNext,
+						NextCursor: nextCursor,
+						Limit:      limit,
+					},
+				},
+			},
+		}, nil
+	})
+}
+
+func registerAuthTokenCreate(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "authTokenCreate",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/auth/tokens",
+		Summary:     "Create a new API token",
+		Description: "Creates and returns a new API token. Plaintext token is surfaced exactly once.",
+		Tags:        []string{"Auth"},
+		RequestBody: &huma.RequestBody{
+			Description: "Token creation payload.",
+			Required:    true,
+		},
+	}, func(ctx context.Context, input *AuthTokenCreateInput) (*AuthTokenCreateOutput, error) {
+		_ = ctx
+		return &AuthTokenCreateOutput{
+			Body: AuthTokenCreateEnvelope{
+				Data: AuthTokenCreateData{
+					ID:    "tok_01JZTOKEN000000000000003",
+					Name:  input.Body.Name,
+					Scope: input.Body.Scope,
+					Token: "htk_live_stubtokenvalue0123456789abcdef",
+				},
+				Meta: AuthTokenCreateMeta{RequestID: "req_auth_token_create"},
+			},
+		}, nil
+	})
+}
+
+func registerAuthTokenRevoke(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "authTokenRevoke",
+		Method:      http.MethodDelete,
+		Path:        "/api/v1/auth/tokens/{id}",
+		Summary:     "Revoke an API token",
+		Description: "Invalidates the given token. Revoking an already-unknown token returns 404.",
+		Tags:        []string{"Auth"},
+		Errors:      []int{http.StatusNotFound},
+	}, func(ctx context.Context, input *AuthTokenRevokeInput) (*AuthTokenRevokeOutput, error) {
+		_ = ctx
+		if input.ID == authTokenIDUnknown {
+			return nil, huma.Error404NotFound("AUTH_TOKEN_NOT_FOUND")
+		}
+		return &AuthTokenRevokeOutput{
+			Body: AuthTokenRevokeEnvelope{
+				Data: AuthTokenRevokeData{},
+				Meta: AuthTokenRevokeMeta{RequestID: "req_auth_token_revoke"},
 			},
 		}, nil
 	})

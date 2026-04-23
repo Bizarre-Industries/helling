@@ -207,6 +207,170 @@ func TestRegisterOperationsAuthRefreshUnknownToken(t *testing.T) {
 	}
 }
 
+func TestRegisterOperationsAuthSetupReturnsTokens(t *testing.T) {
+	mux := testAPI()
+	body := `{"username":"admin","password":"hunter2hunter"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/setup", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), `"token_type":"Bearer"`) {
+		t.Fatalf("expected bearer token, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsAuthMfaCompleteSuccess(t *testing.T) {
+	mux := testAPI()
+	body := `{"mfa_token":"mfa_01JZABC0123456789ABCDEFGJK","totp_code":"123456"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/mfa/complete", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsAuthMfaCompleteInvalidToken(t *testing.T) {
+	mux := testAPI()
+	body := `{"mfa_token":"not-a-real-token","totp_code":"123456"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/mfa/complete", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected %d, got %d", http.StatusUnauthorized, rec.Code)
+	}
+}
+
+func TestRegisterOperationsAuthMfaCompleteBadCode(t *testing.T) {
+	mux := testAPI()
+	body := `{"mfa_token":"mfa_01JZABC0123456789ABCDEFGJK","totp_code":"000000"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/mfa/complete", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected %d, got %d", http.StatusUnauthorized, rec.Code)
+	}
+}
+
+func TestRegisterOperationsAuthTotpSetupReturnsProvisioningURI(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/totp/setup", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), "otpauth://totp") {
+		t.Fatalf("expected provisioning URI in body: %s", rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), `"recovery_codes"`) {
+		t.Fatalf("expected recovery codes in body: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsAuthTotpVerifySuccess(t *testing.T) {
+	mux := testAPI()
+	body := `{"totp_code":"123456"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/totp/verify", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsAuthTotpVerifyBadCode(t *testing.T) {
+	mux := testAPI()
+	body := `{"totp_code":"000000"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/totp/verify", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected %d, got %d", http.StatusUnauthorized, rec.Code)
+	}
+}
+
+func TestRegisterOperationsAuthTotpDisableReturnsEmpty(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/totp/disable", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), `"request_id":"req_auth_totp_disable"`) {
+		t.Fatalf("expected disable request_id, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsAuthTokenListPagination(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/tokens?limit=1", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), `"has_next":true`) {
+		t.Fatalf("expected has_next=true on first page, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsAuthTokenCreateSuccess(t *testing.T) {
+	mux := testAPI()
+	body := `{"name":"ci-bot","scope":"user"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/tokens", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), `"token":"htk_live_`) {
+		t.Fatalf("expected plaintext token in body, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsAuthTokenRevokeSuccess(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/auth/tokens/tok_01JZTOKEN000000000000001", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsAuthTokenRevokeUnknown(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/auth/tokens/tok_missing", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected %d, got %d", http.StatusNotFound, rec.Code)
+	}
+}
+
 func TestEnrichOpenAPIPatchesSchemaMetadata(t *testing.T) {
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig(apiTitle, apiVersion))
