@@ -14,7 +14,11 @@ function __startTick() {
     __tickListeners.forEach((fn) => {
       try {
         fn(t);
-      } catch (e) {}
+      } catch (e) {
+        if (typeof console !== 'undefined' && console.error) {
+          console.error('Tick listener failed:', e);
+        }
+      }
     });
   }, 1000);
 }
