@@ -119,6 +119,191 @@ var stubUsers = []UserRecord{
 
 const userIDUnknown = "user_missing"
 
+const (
+	scheduleIDExisting = "sched_01JZSCHEDULE00000000001"
+	scheduleIDUnknown  = "sched_missing"
+)
+
+// ScheduleRecord is a schedule summary.
+type ScheduleRecord struct {
+	ID       string `json:"id" doc:"Schedule identifier."`
+	Name     string `json:"name" doc:"Schedule name."`
+	Type     string `json:"type" doc:"Schedule kind." enum:"backup,snapshot"`
+	Target   string `json:"target" doc:"Target Incus/Podman resource identifier."`
+	CronExpr string `json:"cron_expr" doc:"Systemd OnCalendar expression (ADR-017)."`
+	Enabled  bool   `json:"enabled" doc:"Whether the underlying systemd timer is enabled."`
+	NextRun  string `json:"next_run,omitempty" doc:"Next scheduled run timestamp (ISO-8601)." format:"date-time"`
+}
+
+// SchedulePageMeta is pagination metadata for schedule lists.
+type SchedulePageMeta struct {
+	HasNext    bool   `json:"has_next" doc:"Whether another page is available."`
+	NextCursor string `json:"next_cursor,omitempty" doc:"Opaque cursor for the next page when available."`
+	Limit      int    `json:"limit" doc:"Applied page size." minimum:"1"`
+}
+
+// ScheduleListInput has pagination controls.
+type ScheduleListInput struct {
+	Limit  int    `query:"limit" default:"50" minimum:"1" maximum:"500" doc:"Maximum number of schedules to return."`
+	Cursor string `query:"cursor" maxLength:"512" doc:"Opaque pagination cursor from previous response."`
+}
+
+// ScheduleListMeta contains request and paging metadata.
+type ScheduleListMeta struct {
+	RequestID string           `json:"request_id" doc:"Request correlation ID."`
+	Page      SchedulePageMeta `json:"page" doc:"Cursor pagination metadata."`
+}
+
+// ScheduleListEnvelope follows the list envelope shape.
+type ScheduleListEnvelope struct {
+	Data []ScheduleRecord `json:"data"`
+	Meta ScheduleListMeta `json:"meta"`
+}
+
+// ScheduleListOutput is the response shape for GET /api/v1/schedules.
+type ScheduleListOutput struct {
+	Body ScheduleListEnvelope
+}
+
+// ScheduleCreateRequest creates a new schedule.
+type ScheduleCreateRequest struct {
+	Name     string `json:"name" minLength:"1" maxLength:"128" doc:"Schedule display name."`
+	Type     string `json:"type" doc:"Schedule kind." enum:"backup,snapshot"`
+	Target   string `json:"target" minLength:"1" maxLength:"256" doc:"Target Incus/Podman resource identifier."`
+	CronExpr string `json:"cron_expr" minLength:"1" maxLength:"256" doc:"Systemd OnCalendar expression."`
+}
+
+// ScheduleCreateInput wraps the create body.
+type ScheduleCreateInput struct {
+	Body ScheduleCreateRequest `doc:"Schedule creation payload."`
+}
+
+// ScheduleCreateData returns the new schedule summary.
+type ScheduleCreateData = ScheduleRecord
+
+// ScheduleCreateMeta contains request metadata.
+type ScheduleCreateMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// ScheduleCreateEnvelope follows the success envelope shape.
+type ScheduleCreateEnvelope struct {
+	Data ScheduleCreateData `json:"data"`
+	Meta ScheduleCreateMeta `json:"meta"`
+}
+
+// ScheduleCreateOutput is the response shape for POST /api/v1/schedules.
+type ScheduleCreateOutput struct {
+	Body ScheduleCreateEnvelope
+}
+
+// ScheduleGetInput binds the path id.
+type ScheduleGetInput struct {
+	ID string `path:"id" minLength:"1" maxLength:"64" doc:"Schedule identifier."`
+}
+
+// ScheduleGetMeta contains request metadata.
+type ScheduleGetMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// ScheduleGetEnvelope follows the success envelope shape.
+type ScheduleGetEnvelope struct {
+	Data ScheduleRecord  `json:"data"`
+	Meta ScheduleGetMeta `json:"meta"`
+}
+
+// ScheduleGetOutput is the response shape for GET /api/v1/schedules/{id}.
+type ScheduleGetOutput struct {
+	Body ScheduleGetEnvelope
+}
+
+// ScheduleUpdateRequest applies a partial update.
+type ScheduleUpdateRequest struct {
+	Name     string `json:"name,omitempty" maxLength:"128" doc:"New name."`
+	CronExpr string `json:"cron_expr,omitempty" maxLength:"256" doc:"New systemd OnCalendar expression."`
+	Enabled  *bool  `json:"enabled,omitempty" doc:"Enable or disable the timer without deleting it."`
+}
+
+// ScheduleUpdateInput combines path id with update body.
+type ScheduleUpdateInput struct {
+	ID   string                `path:"id" minLength:"1" maxLength:"64" doc:"Schedule identifier."`
+	Body ScheduleUpdateRequest `doc:"Partial update payload."`
+}
+
+// ScheduleUpdateMeta contains request metadata.
+type ScheduleUpdateMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// ScheduleUpdateEnvelope follows the success envelope shape.
+type ScheduleUpdateEnvelope struct {
+	Data ScheduleRecord     `json:"data"`
+	Meta ScheduleUpdateMeta `json:"meta"`
+}
+
+// ScheduleUpdateOutput is the response shape for PATCH /api/v1/schedules/{id}.
+type ScheduleUpdateOutput struct {
+	Body ScheduleUpdateEnvelope
+}
+
+// ScheduleDeleteInput binds the path id.
+type ScheduleDeleteInput struct {
+	ID string `path:"id" minLength:"1" maxLength:"64" doc:"Schedule identifier."`
+}
+
+// ScheduleDeleteData is empty on success.
+type ScheduleDeleteData struct{}
+
+// ScheduleDeleteMeta contains request metadata.
+type ScheduleDeleteMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// ScheduleDeleteEnvelope follows the success envelope shape.
+type ScheduleDeleteEnvelope struct {
+	Data ScheduleDeleteData `json:"data"`
+	Meta ScheduleDeleteMeta `json:"meta"`
+}
+
+// ScheduleDeleteOutput is the response shape for DELETE /api/v1/schedules/{id}.
+type ScheduleDeleteOutput struct {
+	Body ScheduleDeleteEnvelope
+}
+
+// ScheduleRunNowInput binds the path id.
+type ScheduleRunNowInput struct {
+	ID string `path:"id" minLength:"1" maxLength:"64" doc:"Schedule identifier."`
+}
+
+// ScheduleRunNowData returns the run status.
+type ScheduleRunNowData struct {
+	ID      string `json:"id" doc:"Schedule identifier."`
+	Status  string `json:"status" doc:"Run status." enum:"triggered"`
+	StartAt string `json:"start_at" doc:"Run start timestamp (ISO-8601)." format:"date-time"`
+}
+
+// ScheduleRunNowMeta contains request metadata.
+type ScheduleRunNowMeta struct {
+	RequestID string `json:"request_id" doc:"Request correlation ID."`
+}
+
+// ScheduleRunNowEnvelope follows the success envelope shape.
+type ScheduleRunNowEnvelope struct {
+	Data ScheduleRunNowData `json:"data"`
+	Meta ScheduleRunNowMeta `json:"meta"`
+}
+
+// ScheduleRunNowOutput is the response shape for POST /api/v1/schedules/{id}/run.
+type ScheduleRunNowOutput struct {
+	Body ScheduleRunNowEnvelope
+}
+
+var stubSchedules = []ScheduleRecord{
+	{ID: scheduleIDExisting, Name: "nightly-backup", Type: "backup", Target: "vm-web", CronExpr: "*-*-* 02:00:00", Enabled: true, NextRun: "2026-04-24T02:00:00Z"},
+	{ID: "sched_01JZSCHEDULE00000000002", Name: "hourly-snapshot", Type: "snapshot", Target: "vm-db", CronExpr: "*-*-* *:00:00", Enabled: true, NextRun: "2026-04-23T20:00:00Z"},
+}
+
 // UserCreateRequest creates a new PAM-backed user account.
 type UserCreateRequest struct {
 	Username string `json:"username" minLength:"1" maxLength:"64" doc:"Unix-safe username. PAM constraints apply."`
@@ -606,6 +791,12 @@ func RegisterOperations(api huma.API) {
 	registerUserUpdate(api)
 	registerUserDelete(api)
 	registerUserSetScope(api)
+	registerScheduleList(api)
+	registerScheduleCreate(api)
+	registerScheduleGet(api)
+	registerScheduleUpdate(api)
+	registerScheduleDelete(api)
+	registerScheduleRunNow(api)
 	registerHealth(api)
 }
 
@@ -1010,6 +1201,202 @@ func registerAuthTokenCreate(api huma.API) {
 					Token: "htk_live_stubtokenvalue0123456789abcdef",
 				},
 				Meta: AuthTokenCreateMeta{RequestID: "req_auth_token_create"},
+			},
+		}, nil
+	})
+}
+
+//nolint:dupl // deliberate parallel to userList and authTokenList; cursor pagination shape is the repo idiom.
+func registerScheduleList(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "scheduleList",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/schedules",
+		Summary:     "List schedules",
+		Description: "Lists backup and snapshot schedules using cursor pagination.",
+		Tags:        []string{"Schedules"},
+	}, func(ctx context.Context, input *ScheduleListInput) (*ScheduleListOutput, error) {
+		_ = ctx
+		limit := input.Limit
+		if limit <= 0 {
+			limit = 50
+		}
+		start := 0
+		if input.Cursor == cursorPage2 {
+			start = 1
+		}
+		if start > len(stubSchedules) {
+			start = len(stubSchedules)
+		}
+		end := start + limit
+		if end > len(stubSchedules) {
+			end = len(stubSchedules)
+		}
+		hasNext := end < len(stubSchedules)
+		nextCursor := ""
+		if hasNext {
+			nextCursor = cursorPage2
+		}
+		items := append([]ScheduleRecord(nil), stubSchedules[start:end]...)
+		return &ScheduleListOutput{
+			Body: ScheduleListEnvelope{
+				Data: items,
+				Meta: ScheduleListMeta{
+					RequestID: "req_schedule_list",
+					Page: SchedulePageMeta{
+						HasNext:    hasNext,
+						NextCursor: nextCursor,
+						Limit:      limit,
+					},
+				},
+			},
+		}, nil
+	})
+}
+
+func registerScheduleCreate(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "scheduleCreate",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/schedules",
+		Summary:     "Create a schedule",
+		Description: "Creates a new backup or snapshot schedule wired to a systemd timer.",
+		Tags:        []string{"Schedules"},
+		RequestBody: &huma.RequestBody{
+			Description: "Schedule creation payload.",
+			Required:    true,
+		},
+	}, func(ctx context.Context, input *ScheduleCreateInput) (*ScheduleCreateOutput, error) {
+		_ = ctx
+		return &ScheduleCreateOutput{
+			Body: ScheduleCreateEnvelope{
+				Data: ScheduleRecord{
+					ID:       "sched_01JZSCHEDULE00000000003",
+					Name:     input.Body.Name,
+					Type:     input.Body.Type,
+					Target:   input.Body.Target,
+					CronExpr: input.Body.CronExpr,
+					Enabled:  true,
+				},
+				Meta: ScheduleCreateMeta{RequestID: "req_schedule_create"},
+			},
+		}, nil
+	})
+}
+
+func registerScheduleGet(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "scheduleGet",
+		Method:      http.MethodGet,
+		Path:        "/api/v1/schedules/{id}",
+		Summary:     "Get a schedule",
+		Description: "Returns a schedule by identifier.",
+		Tags:        []string{"Schedules"},
+		Errors:      []int{http.StatusNotFound},
+	}, func(ctx context.Context, input *ScheduleGetInput) (*ScheduleGetOutput, error) {
+		_ = ctx
+		if input.ID == scheduleIDUnknown {
+			return nil, huma.Error404NotFound("SCHEDULE_NOT_FOUND")
+		}
+		return &ScheduleGetOutput{
+			Body: ScheduleGetEnvelope{
+				Data: ScheduleRecord{
+					ID: input.ID, Name: "nightly-backup", Type: "backup", Target: "vm-web",
+					CronExpr: "*-*-* 02:00:00", Enabled: true, NextRun: "2026-04-24T02:00:00Z",
+				},
+				Meta: ScheduleGetMeta{RequestID: "req_schedule_get"},
+			},
+		}, nil
+	})
+}
+
+func registerScheduleUpdate(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "scheduleUpdate",
+		Method:      http.MethodPatch,
+		Path:        "/api/v1/schedules/{id}",
+		Summary:     "Update a schedule",
+		Description: "Applies a partial update. Name, cron expression, and enabled state are the only mutable fields in v0.1.",
+		Tags:        []string{"Schedules"},
+		RequestBody: &huma.RequestBody{
+			Description: "Partial update payload.",
+			Required:    true,
+		},
+		Errors: []int{http.StatusNotFound},
+	}, func(ctx context.Context, input *ScheduleUpdateInput) (*ScheduleUpdateOutput, error) {
+		_ = ctx
+		if input.ID == scheduleIDUnknown {
+			return nil, huma.Error404NotFound("SCHEDULE_NOT_FOUND")
+		}
+		name := input.Body.Name
+		if name == "" {
+			name = "nightly-backup"
+		}
+		cron := input.Body.CronExpr
+		if cron == "" {
+			cron = "*-*-* 02:00:00"
+		}
+		enabled := true
+		if input.Body.Enabled != nil {
+			enabled = *input.Body.Enabled
+		}
+		return &ScheduleUpdateOutput{
+			Body: ScheduleUpdateEnvelope{
+				Data: ScheduleRecord{
+					ID: input.ID, Name: name, Type: "backup", Target: "vm-web",
+					CronExpr: cron, Enabled: enabled, NextRun: "2026-04-24T02:00:00Z",
+				},
+				Meta: ScheduleUpdateMeta{RequestID: "req_schedule_update"},
+			},
+		}, nil
+	})
+}
+
+func registerScheduleDelete(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "scheduleDelete",
+		Method:      http.MethodDelete,
+		Path:        "/api/v1/schedules/{id}",
+		Summary:     "Delete a schedule",
+		Description: "Removes the schedule and its systemd timer.",
+		Tags:        []string{"Schedules"},
+		Errors:      []int{http.StatusNotFound},
+	}, func(ctx context.Context, input *ScheduleDeleteInput) (*ScheduleDeleteOutput, error) {
+		_ = ctx
+		if input.ID == scheduleIDUnknown {
+			return nil, huma.Error404NotFound("SCHEDULE_NOT_FOUND")
+		}
+		return &ScheduleDeleteOutput{
+			Body: ScheduleDeleteEnvelope{
+				Data: ScheduleDeleteData{},
+				Meta: ScheduleDeleteMeta{RequestID: "req_schedule_delete"},
+			},
+		}, nil
+	})
+}
+
+func registerScheduleRunNow(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "scheduleRunNow",
+		Method:      http.MethodPost,
+		Path:        "/api/v1/schedules/{id}/run",
+		Summary:     "Trigger a schedule immediately",
+		Description: "Fires the schedule's underlying systemd timer now regardless of its next scheduled run.",
+		Tags:        []string{"Schedules"},
+		Errors:      []int{http.StatusNotFound},
+	}, func(ctx context.Context, input *ScheduleRunNowInput) (*ScheduleRunNowOutput, error) {
+		_ = ctx
+		if input.ID == scheduleIDUnknown {
+			return nil, huma.Error404NotFound("SCHEDULE_NOT_FOUND")
+		}
+		return &ScheduleRunNowOutput{
+			Body: ScheduleRunNowEnvelope{
+				Data: ScheduleRunNowData{
+					ID:      input.ID,
+					Status:  "triggered",
+					StartAt: "2026-04-23T19:05:00Z",
+				},
+				Meta: ScheduleRunNowMeta{RequestID: "req_schedule_run_now"},
 			},
 		}, nil
 	})

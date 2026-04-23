@@ -15,7 +15,13 @@ const (
 var defaultTags = []huma.Tag{
 	{Name: "Auth", Description: "Authentication and token lifecycle endpoints."},
 	{Name: "Users", Description: "User account and access management endpoints."},
-	{Name: "System", Description: "System and service health endpoints."},
+	{Name: "Schedules", Description: "Backup and snapshot schedule endpoints (ADR-017 systemd timers)."},
+	{Name: "Webhooks", Description: "Webhook subscription and delivery endpoints."},
+	{Name: "Kubernetes", Description: "k3s cluster lifecycle endpoints."},
+	{Name: "System", Description: "System information, configuration, upgrade, and health endpoints."},
+	{Name: "Firewall", Description: "Host-level nftables firewall endpoints (ADR-018)."},
+	{Name: "Audit", Description: "Audit-log query and export endpoints (ADR-019 journal)."},
+	{Name: "Events", Description: "Internal event stream and recent-event endpoints."},
 }
 
 // NewConfig returns the default Huma configuration for Helling-owned APIs.

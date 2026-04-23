@@ -492,6 +492,134 @@ func TestRegisterOperationsUserSetScopeSuccess(t *testing.T) {
 	}
 }
 
+func TestRegisterOperationsScheduleListPagination(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/schedules?limit=1", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), `"has_next":true`) {
+		t.Fatalf("expected has_next=true, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsScheduleCreateEchoesFields(t *testing.T) {
+	mux := testAPI()
+	body := `{"name":"weekly","type":"snapshot","target":"vm-x","cron_expr":"Sun *-*-* 03:00:00"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/schedules", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), `"name":"weekly"`) {
+		t.Fatalf("expected echoed name, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsScheduleGetSuccess(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/schedules/sched_01JZSCHEDULE00000000001", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+}
+
+func TestRegisterOperationsScheduleGetNotFound(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/schedules/sched_missing", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected %d, got %d", http.StatusNotFound, rec.Code)
+	}
+}
+
+func TestRegisterOperationsScheduleUpdateSuccess(t *testing.T) {
+	mux := testAPI()
+	body := `{"enabled":false}`
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/schedules/sched_01JZSCHEDULE00000000001", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d body=%s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), `"enabled":false`) {
+		t.Fatalf("expected enabled=false in body, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsScheduleUpdateNotFound(t *testing.T) {
+	mux := testAPI()
+	body := `{"enabled":false}`
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/schedules/sched_missing", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected %d, got %d", http.StatusNotFound, rec.Code)
+	}
+}
+
+func TestRegisterOperationsScheduleDeleteSuccess(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/schedules/sched_01JZSCHEDULE00000000001", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+}
+
+func TestRegisterOperationsScheduleDeleteNotFound(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/schedules/sched_missing", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected %d, got %d", http.StatusNotFound, rec.Code)
+	}
+}
+
+func TestRegisterOperationsScheduleRunNowSuccess(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/schedules/sched_01JZSCHEDULE00000000001/run", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected %d, got %d", http.StatusOK, rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), `"status":"triggered"`) {
+		t.Fatalf("expected triggered status, got: %s", rec.Body.String())
+	}
+}
+
+func TestRegisterOperationsScheduleRunNowNotFound(t *testing.T) {
+	mux := testAPI()
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/schedules/sched_missing/run", http.NoBody)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected %d, got %d", http.StatusNotFound, rec.Code)
+	}
+}
+
 func TestEnrichOpenAPIPatchesSchemaMetadata(t *testing.T) {
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig(apiTitle, apiVersion))
