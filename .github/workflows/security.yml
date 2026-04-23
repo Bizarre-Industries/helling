@@ -60,7 +60,7 @@ jobs:
         if: steps.prereq.outputs.skip != 'true'
         run: |
           mkdir -p dist
-          for cmd in apps/hellingd apps/helling-cli apps/helling-proxy apps/helling-agent; do
+          for cmd in apps/hellingd apps/helling-cli; do
             if [ -d "$cmd" ]; then
               name=$(basename "$cmd")
               go build -trimpath -ldflags='-s -w' -o "dist/$name" "./$cmd"

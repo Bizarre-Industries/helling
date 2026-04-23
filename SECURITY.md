@@ -53,8 +53,8 @@ anonymity.
 
 **In scope:**
 
-- Authentication and authorization flaws in hellingd, helling-cli,
-  helling-proxy, helling-agent, or the WebUI
+- Authentication and authorization flaws in hellingd, helling-cli, or the
+  WebUI
 - Privilege escalation paths via the API, CLI, or installer
 - Sensitive data exposure (tokens, credentials, PII, session material)
 - Supply-chain integrity issues in release artifacts, container images, or CI

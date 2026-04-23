@@ -28,7 +28,7 @@ System logs are read from journald; WebUI hits `hellingd` which tails the journa
 
 ### Toolbar
 
-- `Segmented` — source: System | hellingd | caddy | helling-agent | Incus | Podman | All
+- `Segmented` — source: System | hellingd | caddy | Incus | Podman | All
 - `Select` — severity: Emerg..Debug (multi-select)
 - `Input.Search` — message substring (server-side grep)
 - `DatePicker.RangePicker` — time window; default "last 15 min"

@@ -446,7 +446,7 @@ tasks:
       - |
         if [ ! -f go.mod ]; then echo "no go.mod yet; nothing to build"; exit 0; fi
         mkdir -p bin
-        for cmd in apps/hellingd apps/helling-cli apps/helling-proxy apps/helling-agent; do
+        for cmd in apps/hellingd apps/helling-cli; do
           if [ -d "$cmd" ]; then
             name=$(basename "$cmd")
             go build -trimpath -ldflags='-s -w' -o "bin/$name" "./$cmd"
