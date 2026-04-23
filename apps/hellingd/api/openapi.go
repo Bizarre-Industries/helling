@@ -1,10 +1,22 @@
 package api
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 )
+
+// sortedKeys returns the keys of m in deterministic ascending order. Used by
+// the enrichment functions so OpenAPI generation is stable across runs.
+func sortedKeys[V any](m map[string]V) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
+}
 
 const (
 	apiTitle         = "Helling API"
@@ -201,7 +213,8 @@ func enrichHealthMetaSchema(schema *huma.Schema) {
 }
 
 func ensureSchemaFallbackMetadata(schemas map[string]*huma.Schema) {
-	for name, schema := range schemas {
+	for _, name := range sortedKeys(schemas) {
+		schema := schemas[name]
 		ensureSchemaDescription(name, schema)
 		ensureSchemaExample(name, schema, schemas)
 		ensurePropertyMetadata(schema, schemas)
@@ -229,7 +242,8 @@ func ensurePropertyMetadata(schema *huma.Schema, schemas map[string]*huma.Schema
 		return
 	}
 
-	for propName, propSchema := range schema.Properties {
+	for _, propName := range sortedKeys(schema.Properties) {
+		propSchema := schema.Properties[propName]
 		if propSchema == nil {
 			continue
 		}
@@ -246,7 +260,8 @@ func ensurePropertyMetadata(schema *huma.Schema, schemas map[string]*huma.Schema
 }
 
 func ensureMediaExamples(doc *huma.OpenAPI, schemas map[string]*huma.Schema) {
-	for _, pathItem := range doc.Paths {
+	for _, p := range sortedKeys(doc.Paths) {
+		pathItem := doc.Paths[p]
 		for _, operation := range operationsFromPath(pathItem) {
 			if operation == nil {
 				continue
@@ -254,7 +269,8 @@ func ensureMediaExamples(doc *huma.OpenAPI, schemas map[string]*huma.Schema) {
 			if operation.RequestBody != nil {
 				ensureContentExamples(operation.RequestBody.Content, schemas)
 			}
-			for _, response := range operation.Responses {
+			for _, code := range sortedKeys(operation.Responses) {
+				response := operation.Responses[code]
 				if response == nil {
 					continue
 				}
@@ -282,7 +298,8 @@ func operationsFromPath(pathItem *huma.PathItem) []*huma.Operation {
 }
 
 func ensureContentExamples(content map[string]*huma.MediaType, schemas map[string]*huma.Schema) {
-	for _, media := range content {
+	for _, ct := range sortedKeys(content) {
+		media := content[ct]
 		if media == nil {
 			continue
 		}
@@ -331,7 +348,8 @@ func scalarOrStructuredExample(name string, schema *huma.Schema) any {
 		return "example"
 	case "object":
 		obj := map[string]any{}
-		for propName, propSchema := range schema.Properties {
+		for _, propName := range sortedKeys(schema.Properties) {
+			propSchema := schema.Properties[propName]
 			if propSchema == nil {
 				continue
 			}

@@ -3083,7 +3083,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuditMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -3174,7 +3174,9 @@ components:
           description: Cursor pagination metadata.
           $ref: '#/components/schemas/AuditPageMeta'
           examples:
-            - {}
+            - has_next: true
+              limit: 1
+              next_cursor: example
         request_id:
           type: string
           description: Request correlation ID.
@@ -3243,7 +3245,11 @@ components:
           description: Property data.
           $ref: '#/components/schemas/AuthLoginData'
           examples:
-            - {}
+            - access_token: example
+              expires_in: 1
+              mfa_required: true
+              mfa_token: example
+              token_type: Bearer
         meta:
           description: Property meta.
           $ref: '#/components/schemas/AuthLoginMeta'
@@ -3415,7 +3421,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthMfaCompleteMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -3521,7 +3527,9 @@ components:
           description: Property data.
           $ref: '#/components/schemas/AuthRefreshData'
           examples:
-            - {}
+            - access_token: example
+              expires_in: 1
+              token_type: Bearer
         meta:
           description: Property meta.
           $ref: '#/components/schemas/AuthRefreshMeta'
@@ -3627,7 +3635,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthSetupMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -3737,12 +3745,15 @@ components:
           description: Property data.
           $ref: '#/components/schemas/AuthTokenCreateData'
           examples:
-            - {}
+            - id: id_example
+              name: example
+              scope: admin
+              token: example
         meta:
           description: Property meta.
           $ref: '#/components/schemas/AuthTokenCreateMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -3823,8 +3834,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthTokenListMeta'
           examples:
-            - page: {}
-              request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -3956,7 +3966,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthTokenRevokeMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -4005,7 +4015,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthTotpDisableMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -4082,7 +4092,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthTotpSetupMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -4131,7 +4141,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/AuthTotpVerifyMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -4344,7 +4354,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/EventsMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -4494,8 +4504,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/FirewallHostListMeta'
           examples:
-            - page: {}
-              request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -4703,7 +4712,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/KubernetesCreateMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -4796,7 +4805,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/KubernetesDeleteMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -4834,17 +4843,12 @@ components:
           description: Property data.
           $ref: '#/components/schemas/KubernetesRecord'
           examples:
-            - created_at: example
-              name: example
-              ready_workers: 1
-              status: provisioning
-              version: example
-              workers: 1
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/KubernetesGetMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -4947,8 +4951,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/KubernetesListMeta'
           examples:
-            - page: {}
-              request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -5081,12 +5084,17 @@ components:
           description: Property data.
           $ref: '#/components/schemas/KubernetesRecord'
           examples:
-            - {}
+            - created_at: example
+              name: example
+              ready_workers: 1
+              status: provisioning
+              version: example
+              workers: 1
         meta:
           description: Property meta.
           $ref: '#/components/schemas/KubernetesScaleMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -5149,7 +5157,12 @@ components:
           description: Property data.
           $ref: '#/components/schemas/KubernetesRecord'
           examples:
-            - {}
+            - created_at: example
+              name: example
+              ready_workers: 1
+              status: provisioning
+              version: example
+              workers: 1
         meta:
           description: Property meta.
           $ref: '#/components/schemas/KubernetesUpgradeMeta'
@@ -5221,7 +5234,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleCreateMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -5322,7 +5335,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleDeleteMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -5360,13 +5373,7 @@ components:
           description: Property data.
           $ref: '#/components/schemas/ScheduleRecord'
           examples:
-            - cron_expr: example
-              enabled: true
-              id: id_example
-              name: example
-              next_run: example
-              target: example
-              type: backup
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleGetMeta'
@@ -5417,8 +5424,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleListMeta'
           examples:
-            - page: {}
-              request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -5434,9 +5440,7 @@ components:
           description: Cursor pagination metadata.
           $ref: '#/components/schemas/SchedulePageMeta'
           examples:
-            - has_next: true
-              limit: 1
-              next_cursor: example
+            - {}
         request_id:
           type: string
           description: Request correlation ID.
@@ -5584,12 +5588,14 @@ components:
           description: Property data.
           $ref: '#/components/schemas/ScheduleRunNowData'
           examples:
-            - {}
+            - id: id_example
+              start_at: example
+              status: triggered
         meta:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleRunNowMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -5627,12 +5633,18 @@ components:
           description: Property data.
           $ref: '#/components/schemas/ScheduleRecord'
           examples:
-            - {}
+            - cron_expr: example
+              enabled: true
+              id: id_example
+              name: example
+              next_run: example
+              target: example
+              type: backup
         meta:
           description: Property meta.
           $ref: '#/components/schemas/ScheduleUpdateMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -5725,7 +5737,8 @@ components:
           description: Property data.
           $ref: '#/components/schemas/SystemConfigData'
           examples:
-            - {}
+            - key: example
+              value: example
         meta:
           description: Property meta.
           $ref: '#/components/schemas/SystemMeta'
@@ -5852,7 +5865,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/SystemMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -5924,7 +5937,11 @@ components:
           description: Property data.
           $ref: '#/components/schemas/SystemHardwareData'
           examples:
-            - {}
+            - cores: 1
+              cpu: example
+              disk_gb: 1
+              network: example
+              ram_gb: 1
         meta:
           description: Property meta.
           $ref: '#/components/schemas/SystemMeta'
@@ -5995,7 +6012,11 @@ components:
           description: Property data.
           $ref: '#/components/schemas/SystemInfoData'
           examples:
-            - {}
+            - arch: example
+              hostname: example
+              kernel: example
+              uptime: example
+              version: example
         meta:
           description: Property meta.
           $ref: '#/components/schemas/SystemMeta'
@@ -6077,7 +6098,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/SystemMeta'
           examples:
-            - {}
+            - request_id: id_example
       required:
         - data
         - meta
@@ -6163,7 +6184,10 @@ components:
           description: Property data.
           $ref: '#/components/schemas/UserCreateData'
           examples:
-            - {}
+            - id: id_example
+              role: admin
+              status: active
+              username: example
         meta:
           description: Property meta.
           $ref: '#/components/schemas/UserCreateMeta'
@@ -6261,7 +6285,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/UserDeleteMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -6355,7 +6379,12 @@ components:
           description: Property data.
           $ref: '#/components/schemas/UserGetData'
           examples:
-            - {}
+            - id: id_example
+              last_login: example
+              role: admin
+              status: active
+              totp_enabled: true
+              username: example
         meta:
           description: Property meta.
           $ref: '#/components/schemas/UserGetMeta'
@@ -6406,8 +6435,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/UserListMeta'
           examples:
-            - page: {}
-              request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -6548,7 +6576,8 @@ components:
           description: Property data.
           $ref: '#/components/schemas/UserSetScopeData'
           examples:
-            - {}
+            - id: id_example
+              scope: default
         meta:
           description: Property meta.
           $ref: '#/components/schemas/UserSetScopeMeta'
@@ -6667,7 +6696,7 @@ components:
           description: Property meta.
           $ref: '#/components/schemas/UserUpdateMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -6738,13 +6767,7 @@ components:
           description: Property data.
           $ref: '#/components/schemas/WebhookRecord'
           examples:
-            - enabled: true
-              events:
-                - example
-              id: id_example
-              last_sent: example
-              name: example
-              url: example
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/WebhookCreateMeta'
@@ -6889,18 +6912,12 @@ components:
           description: Property data.
           $ref: '#/components/schemas/WebhookRecord'
           examples:
-            - enabled: true
-              events:
-                - example
-              id: id_example
-              last_sent: example
-              name: example
-              url: example
+            - {}
         meta:
           description: Property meta.
           $ref: '#/components/schemas/WebhookGetMeta'
           examples:
-            - request_id: id_example
+            - {}
       required:
         - data
         - meta
@@ -6962,9 +6979,7 @@ components:
           description: Cursor pagination metadata.
           $ref: '#/components/schemas/WebhookPageMeta'
           examples:
-            - has_next: true
-              limit: 1
-              next_cursor: example
+            - {}
         request_id:
           type: string
           description: Request correlation ID.
@@ -7115,7 +7130,10 @@ components:
           description: Property data.
           $ref: '#/components/schemas/WebhookTestData'
           examples:
-            - {}
+            - id: id_example
+              latency_ms: 1
+              status: delivered
+              status_code: 1
         meta:
           description: Property meta.
           $ref: '#/components/schemas/WebhookTestMeta'

@@ -3,22 +3,35 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
+	"crypto/x509"
 	"database/sql"
+	"encoding/pem"
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
 
+	hellingapi "github.com/Bizarre-Industries/Helling/apps/hellingd/api"
+	"github.com/Bizarre-Industries/Helling/apps/hellingd/internal/auth"
 	"github.com/Bizarre-Industries/Helling/apps/hellingd/internal/db"
 	httpserver "github.com/Bizarre-Industries/Helling/apps/hellingd/internal/http"
+	"github.com/Bizarre-Industries/Helling/apps/hellingd/internal/repo/authrepo"
 )
 
 const (
 	defaultAddr = ":8080"
 	defaultDSN  = "file:/var/lib/helling/helling.db?cache=shared"
+
+	accessTokenTTL    = 15 * time.Minute
+	refreshTokenTTL   = 7 * 24 * time.Hour
+	sessionInactivity = 30 * time.Minute
+	jwtIssuer         = "hellingd"
+	jwtKeyPathEnvVar  = "HELLING_JWT_PRIVATE_KEY_PATH"
 )
 
 var defaultServe = func(server *http.Server) error {
@@ -78,7 +91,13 @@ func run(logger *slog.Logger, cfg runConfig, serve func(*http.Server) error) int
 		return 0
 	}
 
-	mux := httpserver.NewMux()
+	authSvc, err := buildAuthService(logger, pool)
+	if err != nil {
+		logger.Error("build auth service", slog.Any("err", err))
+		return 1
+	}
+
+	mux := httpserver.NewMuxWith(hellingapi.Deps{Auth: authSvc})
 
 	server := &http.Server{
 		Addr:              cfg.addr,
@@ -93,6 +112,47 @@ func run(logger *slog.Logger, cfg runConfig, serve func(*http.Server) error) int
 	}
 
 	return 0
+}
+
+// buildAuthService wires the auth service from the DB pool, loading the
+// Ed25519 signing key from disk or generating an ephemeral one for dev.
+func buildAuthService(logger *slog.Logger, pool *sql.DB) (*auth.Service, error) {
+	priv, err := loadOrGenerateSigningKey(logger)
+	if err != nil {
+		return nil, err
+	}
+	signer := auth.NewSigner(priv, jwtIssuer, accessTokenTTL, refreshTokenTTL, sessionInactivity)
+	return auth.NewService(authrepo.New(pool), signer, auth.Argon2idParams{}), nil
+}
+
+func loadOrGenerateSigningKey(logger *slog.Logger) (ed25519.PrivateKey, error) {
+	path := os.Getenv(jwtKeyPathEnvVar)
+	if path == "" {
+		logger.Warn("jwt signing key: generating ephemeral key (set HELLING_JWT_PRIVATE_KEY_PATH for persistence)")
+		_, priv, err := auth.GenerateKey()
+		if err != nil {
+			return nil, fmt.Errorf("generate ed25519 key: %w", err)
+		}
+		return priv, nil
+	}
+	raw, err := os.ReadFile(path) //nolint:gosec // path is operator-controlled
+	if err != nil {
+		return nil, fmt.Errorf("read %s: %w", path, err)
+	}
+	block, _ := pem.Decode(raw)
+	if block == nil {
+		return nil, fmt.Errorf("pem decode %s: empty", path)
+	}
+	parsed, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("parse pkcs8 %s: %w", path, err)
+	}
+	priv, ok := parsed.(ed25519.PrivateKey)
+	if !ok {
+		return nil, fmt.Errorf("parse %s: not an Ed25519 private key", path)
+	}
+	logger.Info("jwt signing key loaded", slog.String("path", path))
+	return priv, nil
 }
 
 // Keep database/sql imported for symbol stability across test stubs of openDB.

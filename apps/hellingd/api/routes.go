@@ -1176,12 +1176,27 @@ var stubAuthTokens = []AuthTokenRecord{
 	{ID: "tok_01JZTOKEN000000000000002", Name: "auditor-readonly", Scope: "auditor", CreatedAt: "2026-04-10T00:00:00Z"},
 }
 
-// RegisterOperations wires the current Huma spike operations.
+// RegisterOperations wires the current Huma spike operations with stubbed
+// handlers, preserving the Huma-spike test coverage.
 func RegisterOperations(api huma.API) {
-	registerAuthSetup(api)
-	registerAuthLogin(api)
-	registerAuthLogout(api)
-	registerAuthRefresh(api)
+	RegisterOperationsWith(api, Deps{})
+}
+
+// RegisterOperationsWith wires the Huma operations, optionally substituting
+// real handlers when deps carries concrete services. Stubs remain the default
+// so contract tests keep passing when deps is zero.
+func RegisterOperationsWith(api huma.API, deps Deps) {
+	if deps.HasAuth() {
+		registerAuthSetupReal(api, deps.Auth)
+		registerAuthLoginReal(api, deps.Auth)
+		registerAuthLogoutReal(api, deps.Auth)
+		registerAuthRefreshReal(api, deps.Auth)
+	} else {
+		registerAuthSetup(api)
+		registerAuthLogin(api)
+		registerAuthLogout(api)
+		registerAuthRefresh(api)
+	}
 	registerAuthMfaComplete(api)
 	registerAuthTotpSetup(api)
 	registerAuthTotpVerify(api)

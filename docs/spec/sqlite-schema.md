@@ -18,19 +18,26 @@ This document defines the Helling-owned SQLite schema for v0.1.
 
 ### 1.1 users
 
-| Column     | Type                 | Notes                      |
-| ---------- | -------------------- | -------------------------- |
-| id         | TEXT PRIMARY KEY     | UUID                       |
-| username   | TEXT UNIQUE NOT NULL | Login identity             |
-| role       | TEXT NOT NULL        | `admin`, `user`, `auditor` |
-| status     | TEXT NOT NULL        | `active`, `disabled`       |
-| created_at | INTEGER NOT NULL     | Unix epoch seconds         |
-| updated_at | INTEGER NOT NULL     | Unix epoch seconds         |
+| Column        | Type                 | Notes                                                           |
+| ------------- | -------------------- | --------------------------------------------------------------- |
+| id            | TEXT PRIMARY KEY     | UUID                                                            |
+| username      | TEXT UNIQUE NOT NULL | Login identity                                                  |
+| role          | TEXT NOT NULL        | `admin`, `user`, `auditor`                                      |
+| status        | TEXT NOT NULL        | `active`, `disabled`                                            |
+| password_hash | TEXT                 | argon2id PHC; NULL for PAM-backed users (see docs/spec/auth.md) |
+| created_at    | INTEGER NOT NULL     | Unix epoch seconds                                              |
+| updated_at    | INTEGER NOT NULL     | Unix epoch seconds                                              |
 
 Checks:
 
 - `role IN ('admin','user','auditor')`
 - `status IN ('active','disabled')`
+
+Notes:
+
+- `password_hash` was added in migration `0002_user_password_hash.sql` to
+  support Helling-managed bootstrap accounts. PAM users keep it NULL and
+  authenticate through `/etc/pam.d/helling` per docs/spec/auth.md §2.1.
 
 ### 1.2 sessions
 
