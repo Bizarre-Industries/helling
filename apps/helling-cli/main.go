@@ -48,6 +48,9 @@ func newRootCmd(out, errOut io.Writer) *cobra.Command {
 	root.AddCommand(newVersionCmd())
 	root.AddCommand(cmd.NewAuthCmd())
 	root.AddCommand(cmd.NewComputeCmd())
+	root.AddCommand(cmd.NewUserCmd())
+	root.AddCommand(cmd.NewWebhookCmd())
+	root.AddCommand(cmd.NewSystemCmd())
 
 	return root
 }

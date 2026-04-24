@@ -75,7 +75,7 @@ func newComputeListCmd() *cobra.Command {
 				output, _ = cmd.Root().PersistentFlags().GetString("output")
 			}
 			switch output {
-			case "json":
+			case outputJSON:
 				return json.NewEncoder(cmd.OutOrStdout()).Encode(arr)
 			default:
 				var b strings.Builder

@@ -23,7 +23,6 @@ func newRenewerTestRepo(t *testing.T) *authrepo.Repo {
 }
 
 func TestRenewer_RotatesExpiringCert(t *testing.T) {
-	t.Parallel()
 	ctx := context.Background()
 	repo := newRenewerTestRepo(t)
 	u, err := repo.CreateUser(ctx, "alice", "admin", "")
@@ -68,7 +67,6 @@ func TestRenewer_RotatesExpiringCert(t *testing.T) {
 }
 
 func TestRenewer_NoOpWhenNothingExpiring(t *testing.T) {
-	t.Parallel()
 	ctx := context.Background()
 	repo := newRenewerTestRepo(t)
 	u, _ := repo.CreateUser(ctx, "bob", "admin", "")
@@ -88,7 +86,6 @@ func TestRenewer_NoOpWhenNothingExpiring(t *testing.T) {
 }
 
 func TestRenewer_RejectsMissingDeps(t *testing.T) {
-	t.Parallel()
 	var r *pki.Renewer
 	if _, err := r.Tick(context.Background()); err == nil {
 		t.Fatal("nil renewer should error")
