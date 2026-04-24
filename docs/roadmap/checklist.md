@@ -8,15 +8,16 @@
 
 ### Proxy
 
-Proxy middleware is wired in hellingd per ADR-014 (`apps/hellingd/internal/proxy/`). Internal CA + per-user cert issuance complete (PRs O-1..O-5); the remaining v0.1-beta gate is per-request TLS Transport selection (PR O-6) and live verification against real Incus + Podman (docs/spec/internal-ca.md).
+Proxy middleware is wired in hellingd per ADR-014 (`apps/hellingd/internal/proxy/`). Internal CA + per-user cert issuance + per-request TLS Transport selection complete (PRs O-1..R). Remaining beta work is live verification against real Incus + Podman upstreams (docs/spec/internal-ca.md).
 
 - [x] Proxy scaffold exists and forwards requests via httputil.ReverseProxy (unit + integration tests in `apps/hellingd/internal/proxy/`)
 - [x] WebSocket upgrades pass through to upstream (covered by `TestProxy_WebSocketUpgradePassesThrough` in PR O-4)
 - [x] Internal CA bootstrap + per-user cert issuance on userCreate (PRs O-1..O-5; gated behind `HELLING_CA_DIR`)
+- [x] Per-user mTLS Transport selector (covered by `TestProxy_UserTLSProvider_ForwardsCert` + fallback variants in PR R / O-6)
 - [ ] `curl -H "Authorization: Bearer $TOKEN" http://unix:/var/lib/helling/hellingd.sock:/api/incus/1.0/instances | jq '.metadata'` returns Incus instances
 - [ ] `curl -H "Authorization: Bearer $TOKEN" http://unix:/var/lib/helling/hellingd.sock:/api/podman/libpod/containers/json | jq '.[0].Names'` returns Podman containers
 - [x] Unauthenticated request to proxy returns 401 (covered by `TestProxy_Unauthenticated_Returns401`)
-- [ ] Non-admin user sees only their Incus project resources (blocked on per-user TLS Transport selector — PR O-6, v0.1-beta)
+- [x] Non-admin user gets per-user Incus identity via mTLS (per-user Transport selector — PR R / O-6)
 
 ### Auth
 
