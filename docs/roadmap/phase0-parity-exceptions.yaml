@@ -22,7 +22,7 @@ exceptions:
 
   - operation_id: authLogin
     missing: both
-    reason: "Server-side shipped in PR B; CLI in PR F, WebUI in PR G"
+    reason: "Server-side in PR B, CLI in PR F (`helling auth login`); cli.md/webui-spec.md surface copy deferred to v0.1-beta"
     target_version: "v0.1.0-alpha"
 
   - operation_id: authRefresh
@@ -32,7 +32,7 @@ exceptions:
 
   - operation_id: authLogout
     missing: both
-    reason: "Server-side shipped in PR B; CLI in PR F, WebUI in PR G"
+    reason: "Server-side in PR B, CLI in PR F (`helling auth logout`); cli.md/webui-spec.md surface copy deferred to v0.1-beta"
     target_version: "v0.1.0-alpha"
 
   # authMfaComplete / authTotp{Setup,Verify,Disable} / authToken{List,Create,Revoke}:
@@ -40,7 +40,7 @@ exceptions:
   # recovery codes + API tokens with bearer-auth). CLI surface in PR F, WebUI in PR G.
   - operation_id: authMfaComplete
     missing: both
-    reason: "Server-side shipped in PR C; CLI in PR F, WebUI in PR G"
+    reason: "Server-side in PR C, CLI MFA prompt wired in PR F; cli.md/webui-spec.md surface copy deferred to v0.1-beta"
     target_version: "v0.1.0-alpha"
 
   - operation_id: authTotpSetup
