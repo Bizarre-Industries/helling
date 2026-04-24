@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"crypto/ed25519"
+	"crypto/tls"
 	"crypto/x509"
 	"database/sql"
 	"encoding/pem"
@@ -110,15 +111,19 @@ func run(logger *slog.Logger, cfg runConfig, serve func(*http.Server) error) int
 		return 1
 	}
 
-	proxyDeps, err := buildProxyDeps(logger, authSvc)
+	var (
+		issuer  hellingapi.CertIssuer
+		userTLS proxy.UserTLSProvider
+	)
+	if ca != nil {
+		issuer = &pki.Issuer{CA: ca, Identity: identity, Repo: authSvc.Repo()}
+		userTLS = &pkiTLSAdapter{repo: authSvc.Repo(), identity: identity}
+	}
+
+	proxyDeps, err := buildProxyDeps(logger, authSvc, userTLS)
 	if err != nil {
 		logger.Error("build proxy", slog.Any("err", err))
 		return 1
-	}
-
-	var issuer hellingapi.CertIssuer
-	if ca != nil {
-		issuer = &pki.Issuer{CA: ca, Identity: identity, Repo: authSvc.Repo()}
 	}
 
 	mux := httpserver.NewMuxWith(hellingapi.Deps{
@@ -153,12 +158,13 @@ type proxyHandlers struct {
 // variables (see apps/hellingd/internal/proxy/proxy.go). Missing envs leave
 // the matching route unmounted so hellingd runs fine in dev without Incus or
 // Podman installed.
-func buildProxyDeps(logger *slog.Logger, authSvc *auth.Service) (proxyHandlers, error) {
+func buildProxyDeps(logger *slog.Logger, authSvc *auth.Service, userTLS proxy.UserTLSProvider) (proxyHandlers, error) {
 	cfg := proxy.ConfigFromEnv()
 	if cfg.IncusURL == "" && cfg.PodmanSocket == "" {
 		logger.Info("proxy disabled (HELLING_INCUS_URL and HELLING_PODMAN_SOCKET unset)")
 		return proxyHandlers{}, nil
 	}
+	cfg.UserTLSProvider = userTLS
 	p, err := proxy.New(&cfg, authSvc, logger)
 	if err != nil {
 		return proxyHandlers{}, err
@@ -175,6 +181,53 @@ func buildProxyDeps(logger *slog.Logger, authSvc *auth.Service) (proxyHandlers, 
 		slog.Bool("podman", cfg.PodmanSocket != ""),
 	)
 	return out, nil
+}
+
+// pkiTLSAdapter bridges authrepo + pki into proxy.UserTLSProvider so the
+// reverse proxy can present per-user mTLS certs to Incus (ADR-024 §6).
+// Returns proxy.ErrNoUserCert when no active row exists or when the cert
+// is past its grace window, signaling the proxy to fall back to the
+// shared admin cert.
+type pkiTLSAdapter struct {
+	repo     *authrepo.Repo
+	identity string
+}
+
+func (a *pkiTLSAdapter) GetTLSCert(ctx context.Context, userID string) (*tls.Certificate, error) {
+	if a == nil || a.repo == nil {
+		return nil, errors.New("pkiTLSAdapter: not configured")
+	}
+	if a.identity == "" {
+		return nil, errors.New("pkiTLSAdapter: missing age identity")
+	}
+	row, err := a.repo.GetActiveUserCertificate(ctx, userID)
+	if err != nil {
+		if errors.Is(err, authrepo.ErrNotFound) {
+			return nil, proxy.ErrNoUserCert
+		}
+		return nil, fmt.Errorf("pkiTLSAdapter: lookup: %w", err)
+	}
+	if pki.Expired(time.Unix(row.ExpiresAt, 0), time.Now()) {
+		return nil, proxy.ErrNoUserCert
+	}
+	certPEM, err := pki.DecryptWithIdentity(a.identity, row.CertPEM)
+	if err != nil {
+		return nil, fmt.Errorf("pkiTLSAdapter: decrypt cert: %w", err)
+	}
+	keyPEM, err := pki.DecryptWithIdentity(a.identity, row.PrivateKeyPEM)
+	if err != nil {
+		return nil, fmt.Errorf("pkiTLSAdapter: decrypt key: %w", err)
+	}
+	pair, err := tls.X509KeyPair(certPEM, keyPEM)
+	if err != nil {
+		return nil, fmt.Errorf("pkiTLSAdapter: x509 keypair: %w", err)
+	}
+	leaf, err := x509.ParseCertificate(pair.Certificate[0])
+	if err != nil {
+		return nil, fmt.Errorf("pkiTLSAdapter: parse leaf: %w", err)
+	}
+	pair.Leaf = leaf
+	return &pair, nil
 }
 
 // ensureInternalCAWithIdentity bootstraps or loads the Helling internal CA

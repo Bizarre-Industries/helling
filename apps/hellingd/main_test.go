@@ -315,7 +315,7 @@ func TestLoadSigningKey_BadKeyTypeErrors(t *testing.T) {
 func TestBuildProxyDeps_NoEnvDisabled(t *testing.T) {
 	t.Setenv("HELLING_INCUS_URL", "")
 	t.Setenv("HELLING_PODMAN_SOCKET", "")
-	out, err := buildProxyDeps(newLogger(io.Discard), nil)
+	out, err := buildProxyDeps(newLogger(io.Discard), nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -328,7 +328,7 @@ func TestBuildProxyDeps_NoEnvDisabled(t *testing.T) {
 func TestBuildProxyDeps_InvalidURL(t *testing.T) {
 	t.Setenv("HELLING_INCUS_URL", "://broken")
 	t.Setenv("HELLING_PODMAN_SOCKET", "")
-	if _, err := buildProxyDeps(newLogger(io.Discard), nil); err == nil {
+	if _, err := buildProxyDeps(newLogger(io.Discard), nil, nil); err == nil {
 		t.Fatal("expected proxy.New error for broken URL")
 	}
 }
@@ -337,7 +337,7 @@ func TestBuildProxyDeps_InvalidURL(t *testing.T) {
 func TestBuildProxyDeps_IncusOnly(t *testing.T) {
 	t.Setenv("HELLING_INCUS_URL", "https://127.0.0.1:8443")
 	t.Setenv("HELLING_PODMAN_SOCKET", "")
-	out, err := buildProxyDeps(newLogger(io.Discard), nil)
+	out, err := buildProxyDeps(newLogger(io.Discard), nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -47,6 +47,10 @@ type Config struct {
 	PodmanSocket string
 	// InsecureSkipVerify allows self-signed upstream certs in dev only.
 	InsecureSkipVerify bool
+	// UserTLSProvider selects per-user mTLS certs for outbound Incus calls
+	// per ADR-024. Nil falls back to the shared admin cert from
+	// HELLING_INCUS_CLIENT_CERT/KEY.
+	UserTLSProvider UserTLSProvider
 }
 
 // ConfigFromEnv reads proxy configuration from the standard environment
@@ -81,11 +85,19 @@ func New(cfg *Config, svc *auth.Service, logger *slog.Logger) (*Proxy, error) {
 	p := &Proxy{cfg: *cfg, svc: svc, logger: logger}
 
 	if cfg.IncusURL != "" {
-		h, err := buildIncusHandler(cfg)
+		shared, err := buildIncusHandler(cfg)
 		if err != nil {
 			return nil, err
 		}
-		p.incus = h
+		if cfg.UserTLSProvider != nil {
+			perUser, err := buildIncusUserHandler(cfg, shared, cfg.UserTLSProvider)
+			if err != nil {
+				return nil, err
+			}
+			p.incus = perUser
+		} else {
+			p.incus = shared
+		}
 	}
 	if cfg.PodmanSocket != "" {
 		h, err := buildPodmanHandler(cfg.PodmanSocket)
@@ -138,6 +150,7 @@ func (p *Proxy) bearerAuth(source string, next http.HandlerFunc) http.Handler {
 		}
 		r.Header.Del("Authorization")
 		r.Header.Set("X-Forwarded-User", userID)
+		r = r.WithContext(withUserID(r.Context(), userID))
 
 		start := time.Now()
 		sw := &statusRecorder{ResponseWriter: w, status: 200}
@@ -146,6 +159,7 @@ func (p *Proxy) bearerAuth(source string, next http.HandlerFunc) http.Handler {
 		// Async audit (non-blocking). Detach from request cancellation but
 		// keep trace values via context.WithoutCancel.
 		if p.svc != nil {
+			//nolint:contextcheck // intentionally detached via WithoutCancel
 			go p.audit(context.WithoutCancel(r.Context()), userID, r.Method, r.URL.Path, source, sw.status, time.Since(start))
 		}
 	})
