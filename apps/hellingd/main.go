@@ -40,6 +40,12 @@ const (
 	// ca.key.age, and ca.crt. When unset, hellingd skips CA bootstrap so dev
 	// runs do not write to /etc/helling.
 	caDirEnvVar = "HELLING_CA_DIR"
+
+	// certRenewalInterval is how often the renewal worker scans
+	// user_certificates for rows nearing the 60-day threshold (spec §4.1).
+	// Hourly is well below the renewal granularity (10-day grace) so we
+	// catch any clock skew or restart-induced gap.
+	certRenewalInterval = 1 * time.Hour
 )
 
 var defaultServe = func(server *http.Server) error {
@@ -116,8 +122,11 @@ func run(logger *slog.Logger, cfg runConfig, serve func(*http.Server) error) int
 		userTLS proxy.UserTLSProvider
 	)
 	if ca != nil {
-		issuer = &pki.Issuer{CA: ca, Identity: identity, Repo: authSvc.Repo()}
+		concreteIssuer := &pki.Issuer{CA: ca, Identity: identity, Repo: authSvc.Repo()}
+		issuer = concreteIssuer
 		userTLS = &pkiTLSAdapter{repo: authSvc.Repo(), identity: identity}
+		renewer := &pki.Renewer{Issuer: concreteIssuer, Repo: authSvc.Repo(), Logger: logger}
+		go renewer.Run(ctx, certRenewalInterval)
 	}
 
 	proxyDeps, err := buildProxyDeps(logger, authSvc, userTLS)
