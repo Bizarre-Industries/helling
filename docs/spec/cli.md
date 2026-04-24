@@ -149,5 +149,18 @@ Helling OpenAPI operationIds whose CLI command names differ from the naive camel
 
 - operationId: healthGet → `helling system health`
 - operationId: eventsSse → `helling events tail`
+- operationId: authSetup → first-boot flow via `helling auth login` (wizard fallback)
+- operationId: authRefresh → auto-refresh inside `client.Do` (no explicit subcommand)
+- operationId: authMfaComplete → `helling auth login` MFA prompt branch + `helling auth mfa` parent
+- operationId: authTotpSetup → `helling auth mfa setup`
+- operationId: authTotpVerify → `helling auth mfa verify`
+- operationId: authTotpDisable → `helling auth mfa disable`
+- operationId: userSetScope → `helling user set-scope`
+- operationId: webhookGet → `helling webhook get`
+- operationId: webhookUpdate → `helling webhook update`
+- operationId: systemHardware → `helling system hardware`
+- operationId: systemConfigGet → `helling system config-get`
+- operationId: systemConfigPut → `helling system config-set`
+- operationId: systemDiagnostics → `helling system diagnostics`
 
 All other operations are covered by the direct command names above (e.g. `helling user list` covers `operationId: userList`).

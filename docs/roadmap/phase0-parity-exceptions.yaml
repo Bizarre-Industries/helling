@@ -16,82 +16,83 @@ exceptions:
   # PR B (argon2id + Ed25519 JWT + cookie-backed refresh sessions per
   # docs/spec/auth.md §2). CLI surface lands in PR F, WebUI in PR G.
   - operation_id: authSetup
-    missing: both
-    reason: "Server-side shipped in PR B; CLI in PR F, WebUI in PR G"
+    missing: webui
+    reason: "Server-side PR B; CLI PR F (first-boot wizard via `helling auth login`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: authLogin
-    missing: both
-    reason: "Server-side in PR B, CLI in PR F (`helling auth login`); cli.md/webui-spec.md surface copy deferred to v0.1-beta"
+    missing: webui
+    reason: "Server-side PR B; CLI PR F (`helling auth login`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: authRefresh
-    missing: both
-    reason: "Server-side shipped in PR B; CLI in PR F, WebUI in PR G"
+    missing: webui
+    reason: "Server-side PR B; CLI PR F (auto-refresh inside client.Do); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: authLogout
-    missing: both
-    reason: "Server-side in PR B, CLI in PR F (`helling auth logout`); cli.md/webui-spec.md surface copy deferred to v0.1-beta"
+    missing: webui
+    reason: "Server-side PR B; CLI PR F (`helling auth logout`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
-  # authMfaComplete / authTotp{Setup,Verify,Disable} / authToken{List,Create,Revoke}:
-  # server-side shipped in PR C (TOTP enrolment + MFA gate on login + argon2id
-  # recovery codes + API tokens with bearer-auth). CLI surface in PR F, WebUI in PR G.
+  # authMfaComplete / authTotp{Setup,Verify,Disable}: server-side in PR C.
+  # CLI shipped in PR W (`helling auth mfa setup|verify|disable`); login MFA
+  # prompt in PR F. WebUI still pending.
   - operation_id: authMfaComplete
-    missing: both
-    reason: "Server-side in PR C, CLI MFA prompt wired in PR F; cli.md/webui-spec.md surface copy deferred to v0.1-beta"
+    missing: webui
+    reason: "Server-side PR C; CLI MFA prompt PR F + `helling auth mfa` PR W; WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: authTotpSetup
-    missing: both
-    reason: "Server-side shipped in PR C; CLI in PR F, WebUI in PR G"
+    missing: webui
+    reason: "Server-side PR C; CLI PR W (`helling auth mfa setup`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: authTotpVerify
-    missing: both
-    reason: "Server-side shipped in PR C; CLI in PR F, WebUI in PR G"
+    missing: webui
+    reason: "Server-side PR C; CLI PR W (`helling auth mfa verify`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: authTotpDisable
-    missing: both
-    reason: "Server-side shipped in PR C; CLI in PR F, WebUI in PR G"
+    missing: webui
+    reason: "Server-side PR C; CLI PR W (`helling auth mfa disable`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
+  # authToken{List,Create,Revoke}: CLI shipped in PR V.
   - operation_id: authTokenList
-    missing: both
-    reason: "Server-side shipped in PR C; CLI in PR F, WebUI in PR G"
+    missing: webui
+    reason: "Server-side PR C; CLI PR V (`helling auth token list`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: authTokenCreate
-    missing: both
-    reason: "Server-side shipped in PR C; CLI in PR F, WebUI in PR G"
+    missing: webui
+    reason: "Server-side PR C; CLI PR V (`helling auth token create`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: authTokenRevoke
-    missing: both
-    reason: "Server-side shipped in PR C; CLI in PR F, WebUI in PR G"
+    missing: webui
+    reason: "Server-side PR C; CLI PR V (`helling auth token revoke`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   # ── Users ──────────────────────────────────────────────────────────────────
   - operation_id: userList
-    missing: both
-    reason: "Server-side shipped in PR I; CLI + WebUI surfaces in v0.1-beta"
+    missing: webui
+    reason: "Server-side PR I; CLI PR T (`helling user list`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: userCreate
-    missing: both
-    reason: "Server-side shipped in PR I; CLI + WebUI surfaces in v0.1-beta"
+    missing: webui
+    reason: "Server-side PR I; CLI PR T (`helling user create`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: userDelete
-    missing: both
-    reason: "Server-side shipped in PR I; CLI + WebUI surfaces in v0.1-beta"
+    missing: webui
+    reason: "Server-side PR I; CLI PR T (`helling user delete`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: userSetScope
-    missing: both
-    reason: "Server-side shipped in PR I; CLI + WebUI surfaces in v0.1-beta"
+    missing: webui
+    reason: "Server-side PR I; CLI PR T (`helling user set-scope`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   # ── Schedules ──────────────────────────────────────────────────────────────
@@ -127,33 +128,33 @@ exceptions:
 
   # ── Webhooks ───────────────────────────────────────────────────────────────
   - operation_id: webhookList
-    missing: both
-    reason: "Server-side shipped in PR K (CRUD + test delivery). CLI + WebUI deferred to v0.1-beta"
+    missing: webui
+    reason: "Server-side PR K; CLI PR T (`helling webhook ...`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: webhookCreate
-    missing: both
-    reason: "Server-side shipped in PR K (CRUD + test delivery). CLI + WebUI deferred to v0.1-beta"
+    missing: webui
+    reason: "Server-side PR K; CLI PR T (`helling webhook ...`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: webhookGet
-    missing: both
-    reason: "Server-side shipped in PR K (CRUD + test delivery). CLI + WebUI deferred to v0.1-beta"
+    missing: webui
+    reason: "Server-side PR K; CLI PR T (`helling webhook ...`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: webhookUpdate
-    missing: both
-    reason: "Server-side shipped in PR K (CRUD + test delivery). CLI + WebUI deferred to v0.1-beta"
+    missing: webui
+    reason: "Server-side PR K; CLI PR T (`helling webhook ...`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: webhookDelete
-    missing: both
-    reason: "Server-side shipped in PR K (CRUD + test delivery). CLI + WebUI deferred to v0.1-beta"
+    missing: webui
+    reason: "Server-side PR K; CLI PR T (`helling webhook ...`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: webhookTest
-    missing: both
-    reason: "Server-side shipped in PR K (CRUD + test delivery). CLI + WebUI deferred to v0.1-beta"
+    missing: webui
+    reason: "Server-side PR K; CLI PR T (`helling webhook ...`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   # ── Kubernetes ─────────────────────────────────────────────────────────────
@@ -194,33 +195,33 @@ exceptions:
 
   # ── System ─────────────────────────────────────────────────────────────────
   - operation_id: systemInfo
-    missing: both
-    reason: "Server-side shipped in PR J (info/hardware/config/upgrade/diagnostics). CLI + WebUI surfaces deferred to v0.1-beta"
+    missing: webui
+    reason: "Server-side PR J; CLI PR T/U (`helling system ...` + `helling system health`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: systemHardware
-    missing: both
-    reason: "Server-side shipped in PR J (info/hardware/config/upgrade/diagnostics). CLI + WebUI surfaces deferred to v0.1-beta"
+    missing: webui
+    reason: "Server-side PR J; CLI PR T/U (`helling system ...` + `helling system health`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: systemConfigGet
-    missing: both
-    reason: "Server-side shipped in PR J (info/hardware/config/upgrade/diagnostics). CLI + WebUI surfaces deferred to v0.1-beta"
+    missing: webui
+    reason: "Server-side PR J; CLI PR T/U (`helling system ...` + `helling system health`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: systemConfigPut
-    missing: both
-    reason: "Server-side shipped in PR J (info/hardware/config/upgrade/diagnostics). CLI + WebUI surfaces deferred to v0.1-beta"
+    missing: webui
+    reason: "Server-side PR J; CLI PR T/U (`helling system ...` + `helling system health`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: systemUpgrade
-    missing: both
-    reason: "Server-side shipped in PR J (info/hardware/config/upgrade/diagnostics). CLI + WebUI surfaces deferred to v0.1-beta"
+    missing: webui
+    reason: "Server-side PR J; CLI PR T/U (`helling system ...` + `helling system health`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   - operation_id: systemDiagnostics
-    missing: both
-    reason: "Server-side shipped in PR J (info/hardware/config/upgrade/diagnostics). CLI + WebUI surfaces deferred to v0.1-beta"
+    missing: webui
+    reason: "Server-side PR J; CLI PR T/U (`helling system ...` + `helling system health`); WebUI pending"
     target_version: "v0.1.0-alpha"
 
   # ── Firewall ───────────────────────────────────────────────────────────────
