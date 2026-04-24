@@ -20,6 +20,7 @@ import (
 	"github.com/Bizarre-Industries/Helling/apps/hellingd/internal/auth"
 	"github.com/Bizarre-Industries/Helling/apps/hellingd/internal/db"
 	httpserver "github.com/Bizarre-Industries/Helling/apps/hellingd/internal/http"
+	"github.com/Bizarre-Industries/Helling/apps/hellingd/internal/pki"
 	"github.com/Bizarre-Industries/Helling/apps/hellingd/internal/proxy"
 	"github.com/Bizarre-Industries/Helling/apps/hellingd/internal/repo/authrepo"
 )
@@ -33,6 +34,11 @@ const (
 	sessionInactivity = 30 * time.Minute
 	jwtIssuer         = "hellingd"
 	jwtKeyPathEnvVar  = "HELLING_JWT_PRIVATE_KEY_PATH"
+
+	// caDirEnvVar overrides the on-host directory containing ca-identity,
+	// ca.key.age, and ca.crt. When unset, hellingd skips CA bootstrap so dev
+	// runs do not write to /etc/helling.
+	caDirEnvVar = "HELLING_CA_DIR"
 )
 
 var defaultServe = func(server *http.Server) error {
@@ -98,6 +104,11 @@ func run(logger *slog.Logger, cfg runConfig, serve func(*http.Server) error) int
 		return 1
 	}
 
+	if _, err := ensureInternalCA(logger); err != nil {
+		logger.Error("ensure internal ca", slog.Any("err", err))
+		return 1
+	}
+
 	proxyDeps, err := buildProxyDeps(logger, authSvc)
 	if err != nil {
 		logger.Error("build proxy", slog.Any("err", err))
@@ -157,6 +168,27 @@ func buildProxyDeps(logger *slog.Logger, authSvc *auth.Service) (proxyHandlers, 
 		slog.Bool("podman", cfg.PodmanSocket != ""),
 	)
 	return out, nil
+}
+
+// ensureInternalCA bootstraps or loads the Helling internal CA per ADR-024
+// when HELLING_CA_DIR is set. Dev runs without that env skip CA setup so we
+// don't touch /etc/helling. Returns nil CA when disabled (callers treat it
+// as "PKI off").
+func ensureInternalCA(logger *slog.Logger) (*pki.CA, error) {
+	dir := os.Getenv(caDirEnvVar)
+	if dir == "" {
+		logger.Info("internal ca disabled (HELLING_CA_DIR unset)")
+		return nil, nil //nolint:nilnil // explicit "feature off" sentinel
+	}
+	ca, created, err := pki.EnsureCA(pki.NewTestPaths(dir), logger)
+	if err != nil {
+		return nil, err
+	}
+	logger.Info("internal ca ready",
+		slog.String("dir", dir),
+		slog.Bool("bootstrapped", created),
+	)
+	return ca, nil
 }
 
 // buildAuthService wires the auth service from the DB pool, loading the
