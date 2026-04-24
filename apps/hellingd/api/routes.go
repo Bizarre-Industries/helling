@@ -1202,6 +1202,11 @@ func RegisterOperationsWith(api huma.API, deps Deps) {
 		registerAuthTokenListReal(api, deps.Auth)
 		registerAuthTokenCreateReal(api, deps.Auth)
 		registerAuthTokenRevokeReal(api, deps.Auth)
+		registerUserListReal(api, deps.Auth)
+		registerUserCreateReal(api, deps.Auth)
+		registerUserGetReal(api, deps.Auth)
+		registerUserDeleteReal(api, deps.Auth)
+		registerUserSetScopeReal(api, deps.Auth)
 	} else {
 		registerAuthSetup(api)
 		registerAuthLogin(api)
@@ -1214,13 +1219,17 @@ func RegisterOperationsWith(api huma.API, deps Deps) {
 		registerAuthTokenList(api)
 		registerAuthTokenCreate(api)
 		registerAuthTokenRevoke(api)
+		registerUserList(api)
+		registerUserCreate(api)
+		registerUserGet(api)
+		registerUserDelete(api)
+		registerUserSetScope(api)
 	}
-	registerUserList(api)
-	registerUserCreate(api)
-	registerUserGet(api)
+	// userUpdate is stub-only for v0.1; the real handler lands with PAM
+	// integration in v0.1-beta. Registering it unconditionally keeps the
+	// OpenAPI contract intact without double-registering the real user list
+	// handlers.
 	registerUserUpdate(api)
-	registerUserDelete(api)
-	registerUserSetScope(api)
 	registerScheduleList(api)
 	registerScheduleCreate(api)
 	registerScheduleGet(api)

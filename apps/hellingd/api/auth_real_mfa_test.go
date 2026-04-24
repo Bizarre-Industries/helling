@@ -13,9 +13,13 @@ import (
 	"github.com/Bizarre-Industries/Helling/apps/hellingd/internal/auth"
 )
 
-// setupAdmin drives /api/v1/auth/setup and returns the access token.
-func setupAdmin(t *testing.T, srv *httptest.Server, username, password string) string {
+// setupAdmin drives /api/v1/auth/setup with a fixed "admin" username and
+// returns the access token. Username parameter is kept for call-site
+// readability; it is ignored inside the helper because authSetup can only
+// bootstrap a single admin per database.
+func setupAdmin(t *testing.T, srv *httptest.Server, _, password string) string {
 	t.Helper()
+	const username = "admin"
 	resp := postJSON(t, srv, "/api/v1/auth/setup", map[string]string{"username": username, "password": password}, "")
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {

@@ -123,6 +123,26 @@ func (r *Repo) GetUserByID(ctx context.Context, id string) (User, error) {
 	return u, nil
 }
 
+// DeleteUser removes a user row. ON DELETE CASCADE in the schema cleans up
+// sessions, api_tokens, totp_secrets, and recovery_codes (see
+// docs/spec/sqlite-schema.md §7).
+func (r *Repo) DeleteUser(ctx context.Context, id string) error {
+	if _, err := r.db.ExecContext(ctx, `DELETE FROM users WHERE id = ?`, id); err != nil {
+		return fmt.Errorf("authrepo: delete user: %w", err)
+	}
+	return nil
+}
+
+// SetUserScope writes the Incus trust-scope hint. Column provisioned in
+// migration 0003_user_scope.sql.
+func (r *Repo) SetUserScope(ctx context.Context, id, scope string) error {
+	const q = `UPDATE users SET scope = ?, updated_at = ? WHERE id = ?`
+	if _, err := r.db.ExecContext(ctx, q, scope, r.now().Unix(), id); err != nil {
+		return fmt.Errorf("authrepo: set user scope: %w", err)
+	}
+	return nil
+}
+
 // ListUsers returns users ordered by created_at ASC starting at the given
 // offset, up to limit rows. Used by userList API stub replacement.
 func (r *Repo) ListUsers(ctx context.Context, offset, limit int) ([]User, int, error) {

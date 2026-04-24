@@ -76,23 +76,23 @@ exceptions:
   # ── Users ──────────────────────────────────────────────────────────────────
   - operation_id: userList
     missing: both
-    reason: "Phase 0 — user management surfaces not yet implemented"
-    target_version: "v0.4.0"
+    reason: "Server-side shipped in PR I; CLI + WebUI surfaces in v0.1-beta"
+    target_version: "v0.1.0-alpha"
 
   - operation_id: userCreate
     missing: both
-    reason: "Phase 0 — user management surfaces not yet implemented"
-    target_version: "v0.4.0"
+    reason: "Server-side shipped in PR I; CLI + WebUI surfaces in v0.1-beta"
+    target_version: "v0.1.0-alpha"
 
   - operation_id: userDelete
     missing: both
-    reason: "Phase 0 — user management surfaces not yet implemented"
-    target_version: "v0.4.0"
+    reason: "Server-side shipped in PR I; CLI + WebUI surfaces in v0.1-beta"
+    target_version: "v0.1.0-alpha"
 
   - operation_id: userSetScope
     missing: both
-    reason: "Phase 0 — user management surfaces not yet implemented; CLI documented as `helling user set-scope` (hyphenated) does not match parity variants of the operationId"
-    target_version: "v0.4.0"
+    reason: "Server-side shipped in PR I; CLI + WebUI surfaces in v0.1-beta"
+    target_version: "v0.1.0-alpha"
 
   # ── Schedules ──────────────────────────────────────────────────────────────
   - operation_id: scheduleList
