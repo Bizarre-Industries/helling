@@ -44,9 +44,23 @@ const {
 // ─── DASHBOARD ──────────────────────────────────────────────────
 function PageDashboard({ onNav }) {
   useStore();
-  const running = INSTANCES.filter((i) => i.status === 'running').length;
-  const stopped = INSTANCES.filter((i) => i.status === 'stopped').length;
-  const cRunning = CONTAINERS.filter((c) => c.status === 'running').length;
+  const mockRunning = INSTANCES.filter((i) => i.status === 'running').length;
+  const mockContainerRunning = CONTAINERS.filter((c) => c.status === 'running').length;
+  // Real-data queries via the ADR-014 proxy. Falls back to mock counts when
+  // the user is not logged in — preserves the dev-only local experience.
+  const counts = window.useDashboardCounts
+    ? window.useDashboardCounts(INSTANCES.length, mockRunning, CONTAINERS.length, mockContainerRunning)
+    : {
+        live: false,
+        totalInstances: INSTANCES.length,
+        runningInstances: mockRunning,
+        totalContainers: CONTAINERS.length,
+        runningContainers: mockContainerRunning,
+        loading: false,
+      };
+  const running = counts.runningInstances;
+  const stopped = counts.totalInstances - counts.runningInstances;
+  const cRunning = counts.runningContainers;
   const health = 87;
 
   return (

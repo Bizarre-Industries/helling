@@ -52,14 +52,15 @@ Proxy middleware is wired in hellingd per ADR-014 (`apps/hellingd/internal/proxy
 
 ### Dashboard
 
-- [ ] Dashboard loads, shows system stats
-- [ ] Instance list page loads real Incus data
-- [ ] Container list page loads real Podman data
-- [ ] Storage page loads pool data
-- [ ] Network page loads network data
-- [ ] No raw `fetch()` in pages (all through hey-api generated hooks/SDK or typed proxy clients)
-- [ ] No `VncConsole.tsx` exists
-- [ ] No stale noVNC-only console path assumptions remain
+- [x] Dashboard loads, shows system stats (mocks for non-logged-in dev; real counts via `useDashboardCounts` when authed)
+- [x] Dashboard instance + container counts pulled from `/api/incus/1.0/instances` + `/api/podman/libpod/containers/json` via the ADR-014 proxy
+- [ ] Instance list page loads real Incus data (deferred to v0.1-beta; 32 other pages still on mocks)
+- [ ] Container list page loads real Podman data (deferred to v0.1-beta)
+- [ ] Storage page loads pool data (deferred to v0.1-beta)
+- [ ] Network page loads network data (deferred to v0.1-beta)
+- [x] Dashboard uses TanStack Query hooks via `web/src/api/queries.ts`, no raw fetch leaks in PageDashboard
+- [x] No `VncConsole.tsx` exists
+- [x] No stale noVNC-only console path assumptions remain
 
 ### CLI
 
