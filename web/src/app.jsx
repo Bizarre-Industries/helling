@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { clearAccessToken, isAuthenticated, subscribeAuthChange } from './api/auth-store';
 import { ErrorBoundary } from './error-boundary';
 import PageLogin from './pages/auth/login';
+import PageSetup from './pages/auth/setup';
 import './shell.jsx';
 import './infra.jsx';
 import './pages.jsx';
@@ -36,7 +37,6 @@ const {
   PageLogs,
   PageOps,
   PageSettings,
-  PageSetup,
   PageNewInstance,
   PageConsole,
   PageMetrics,
