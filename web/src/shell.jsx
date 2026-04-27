@@ -1,7 +1,7 @@
-import * as LucideIcons from 'lucide-react';
 /* Helling WebUI — shared data & small primitives */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { ICONS } from './icons';
 
 // ─── LIVE TICK — 1s heartbeat shared across the app ──────────
 const __tickListeners = new Set();
@@ -203,20 +203,9 @@ setInterval(() => {
   if (touched) __notifyStore();
 }, 1500);
 
-// ─── ICONS (lucide-react; swap name lookup to PascalCase component) ──
-const __iconCache = {};
-function __resolveIcon(n) {
-  if (__iconCache[n] !== undefined) return __iconCache[n];
-  const pascal = n
-    .split('-')
-    .map((p) => (p ? p[0].toUpperCase() + p.slice(1) : ''))
-    .join('');
-  const Comp = LucideIcons[pascal] || LucideIcons[n] || null;
-  __iconCache[n] = Comp;
-  return Comp;
-}
+// ─── ICONS (lucide-react via tree-shakeable barrel; audit F-30 + F-51) ──
 const I = ({ n, s = 14, style, color }) => {
-  const Comp = __resolveIcon(n);
+  const Comp = ICONS[n] || null;
   if (!Comp) {
     return <span style={{ display: 'inline-block', width: s, height: s, ...style }} />;
   }
