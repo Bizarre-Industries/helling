@@ -39,7 +39,7 @@ type ToastBusGlobal = {
   toast?: { success?: (title: string, msg?: string) => void };
 };
 const getToast = () =>
-  (typeof window !== 'undefined' ? (window as unknown as ToastBusGlobal).toast : undefined);
+  typeof window !== 'undefined' ? (window as unknown as ToastBusGlobal).toast : undefined;
 
 const STEPS = ['Welcome', 'Disks', 'Network', 'Admin', 'Review'] as const;
 

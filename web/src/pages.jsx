@@ -3227,70 +3227,6 @@ function PageUsers() {
 }
 
 // ─── AUDIT ──────────────────────────────────────────────────────
-function PageAudit() {
-  return (
-    <div>
-      <div className="toolbar">
-        <div className="lft">
-          <input
-            className="input"
-            style={{ width: 260, height: 28, fontSize: 12 }}
-            placeholder="Filter by user, action, target…"
-          />
-          <div className="seg">
-            <button className="on">24h</button>
-            <button>7d</button>
-            <button>30d</button>
-            <button>Custom</button>
-          </div>
-        </div>
-        <div className="rgt">
-          <button className="btn btn--sm">
-            <I n="download" s={13} /> Export CSV
-          </button>
-        </div>
-      </div>
-      <table className="tbl">
-        <thead>
-          <tr>
-            <th>Timestamp</th>
-            <th>User</th>
-            <th>Action</th>
-            <th>Target</th>
-            <th>Status</th>
-            <th>IP</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {AUDIT.map((a, i) => (
-            <tr key={i}>
-              <td className="mono dim">{a.ts}</td>
-              <td className="mono">{a.user}</td>
-              <td className="mono">{a.action}</td>
-              <td className="mono" style={{ color: 'var(--h-accent)' }}>
-                {a.target}
-              </td>
-              <td>
-                {a.status === 'ok' ? (
-                  <span style={{ color: 'var(--h-success)' }}>✓ ok</span>
-                ) : (
-                  <span style={{ color: 'var(--h-danger)' }}>✕ fail</span>
-                )}
-              </td>
-              <td className="mono dim">{a.ip}</td>
-              <td style={{ textAlign: 'right' }}>
-                <button className="btn btn--sm btn--ghost">
-                  <I n="chevron-right" s={13} />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
 
 // ─── LOGS ───────────────────────────────────────────────────────
 function PageLogs() {
@@ -3685,7 +3621,6 @@ Object.assign(window, {
   PageBMC,
   PageCluster,
   PageUsers,
-  PageAudit,
   PageLogs,
   PageOps,
   PageSettings,

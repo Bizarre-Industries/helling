@@ -16,11 +16,7 @@ interface SwitchProps {
 export function Switch({ on, onChange, label }: SwitchProps) {
   const sw = (
     <label className={`switch${on ? ' on' : ''}`}>
-      <input
-        type="checkbox"
-        checked={!!on}
-        onChange={(e) => onChange?.(e.target.checked)}
-      />
+      <input type="checkbox" checked={!!on} onChange={(e) => onChange?.(e.target.checked)} />
       <span className="s-track" />
       <span className="s-thumb" />
     </label>
