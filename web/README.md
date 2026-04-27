@@ -71,7 +71,7 @@ Per [`docs/spec/auth.md`](../docs/spec/auth.md) §2.2:
 | `src/shell.jsx`                    | TopBar, Sidebar/ResourceTree, primitives, mock data                         |
 | `src/infra.jsx`                    | Modals, toasts, charts                                                      |
 | `src/pages.jsx` + `src/pages2.jsx` | All page components (split historically; audit F-05)                        |
-| `src/error-boundary.jsx`           | Class-based ErrorBoundary used at root + per-route                          |
+| `src/error-boundary.tsx`           | Class-based ErrorBoundary used at root + per-route                          |
 | `src/api/client.ts`                | hey-api fetch client + interceptors                                         |
 | `src/api/auth-store.ts`            | In-memory access-token store + change events                                |
 | `src/api/queries.ts`               | TanStack Query hooks for the few real-API integrations                      |
