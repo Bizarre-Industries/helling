@@ -82,25 +82,39 @@ Proxy middleware is wired in hellingd per ADR-014 (`apps/hellingd/internal/proxy
 - [ ] .devcontainer/devcontainer.json exists
 - [ ] Pre-commit hooks catch stale generated code
 
-### WebUI Audit Phase 1 — Safety Fix-Pass (audit 2026-04-27)
+### WebUI Audit Phase 1 — Safety Fix-Pass (audit 2026-04-27) ✅ shipped
 
-> Source: `docs/audits/webui-2026-04-27.md`. Stack-independent safety + spec-compliance fixes that ship before Phase 2 untangle. Stack decision locked in ADR-051.
+> Commits `5fd90aa`, `1992e3c`, `68fb40b` on main (2026-04-27).
 
-- [ ] **F-37** (security · spec): `web/src/api/auth-store.ts` stores access token in memory only (`docs/spec/auth.md` §2.2); refresh stays in httpOnly cookie set by server
-- [ ] **F-38** (ux): `PageLogin` calls `authLogin` operation from generated SDK; `app.jsx` initialises `authed=false`; MFA stage calls `authMfaComplete`
-- [ ] **F-39** (resilience): root `<ErrorBoundary>` wraps `<App />` in `main.tsx`; per-route boundary inside `App` around page body
-- [ ] **F-41** (dx): fresh-clone build works (`bun install && bun run dev` succeeds); `prepare` script runs `gen:api` or generated/ committed; `web/README.md` documents codegen step
-- [ ] **R-03/F-22** (a11y · visual): `index.html` viewport meta is `width=device-width, initial-scale=1`; CSS gate hides `#root` below 1440px with friendly message
-- [ ] **F-15** (safety): destructive single-target Delete actions require typed confirmation via `ConfirmModal` `confirmMatch={target}`
-- [ ] **F-44** (a11y · theming): `app.css` has `prefers-reduced-motion: reduce` rule killing animations + transitions; first-load reads `prefers-color-scheme` when no theme stored
-- [ ] **F-45** (data freshness): QueryClient default `refetchOnWindowFocus: true`
-- [ ] **F-47** (security smell): scope `ResizeObserver` warning suppression to specific source instead of global handler
-- [ ] **F-50** (consistency): density toggle persists to localStorage like theme
+- [x] **F-37** (security · spec): `web/src/api/auth-store.ts` stores access token in memory only (`docs/spec/auth.md` §2.2); refresh stays in httpOnly cookie set by server
+- [x] **F-38** (ux): `PageLogin` calls `authLogin` operation from generated SDK; `app.jsx` initialises `authed=false`; MFA stage calls `authMfaComplete`
+- [x] **F-39** (resilience): root `<ErrorBoundary>` wraps `<App />` in `main.tsx`; per-route boundary inside `App` around page body
+- [x] **F-41** (dx): fresh-clone build works (`bun install && bun run dev` succeeds); `prepare` script runs `gen:api`; `web/README.md` documents codegen step
+- [x] **R-03/F-22** (a11y · visual): `index.html` viewport meta is `width=device-width, initial-scale=1`; CSS gate hides `#root` below 1440px with friendly message
+- [x] **F-15** (safety): destructive Delete actions (image Delete, cluster Shutdown, bulk Stop ≥3) require typed confirmation via `ConfirmModal` `confirmMatch`
+- [x] **F-44** (a11y · theming): `app.css` has `prefers-reduced-motion: reduce` rule killing animations + transitions; first-load reads `prefers-color-scheme` when no theme stored
+- [x] **F-45** (data freshness): QueryClient default `refetchOnWindowFocus: true`
+- [x] **F-47** (security smell): global `ResizeObserver` warning suppression dropped from `index.html`
+- [x] **F-50** (consistency): density toggle persists to localStorage like theme
+
+### WebUI Audit Phase 2 — Foundation Untangle (audit 2026-04-27)
+
+> Source: `docs/plans/webui-phase-2-6.md` Phase 2. Sub-tasks ship as separate commits; verify gates per sub-section.
+
+- [x] **F-30 + F-51** (perf · 2D): `web/src/icons.ts` barrel; `shell.jsx` `I` component looks up from `ICONS`; bundle 1.26MB → 482KB initial chunk (gzip 265KB → 129KB) — commit `8a08cc5`
+- [x] **F-40** (testing · 2E): vitest scaffold + `web/vitest.config.ts` + `src/test-setup.ts` + 3 smoke tests (auth-store F-37, error-boundary F-39, icons F-30); 14 tests / 543ms — commit `ab83985`
+- [ ] **F-05** (arch · 2A): `pages.jsx` + `pages2.jsx` split into `web/src/pages/<route>/index.tsx` per-route folders; convert to `.tsx`; drop per-file `eslint-disable` banners
+- [ ] **F-07** (arch · 2B): replace `window.*` coupling with `web/src/stores/ui-store.ts` + `system-store.ts` using `useSyncExternalStore`; drop `(window as any)` cast from `main.tsx`
+- [ ] **F-29** (perf · 2C): each page lazy-loaded via `React.lazy`; `<Suspense fallback={<PageSkeleton />}>` wraps body; per-route chunks under 100KB
+- [ ] **F-08** (hygiene · 2A side): biome a11y errors no longer suppressed by per-file disable banners
+- [ ] **F-09** (arch · 2A side): all `web/src/pages/*` are `.tsx` (full TS migration of remaining `.jsx` is Phase 6)
+- [ ] **2F**: fresh-clone build still works post-restructure (`git clean -fdx web/ && cd web && bun install && bun run dev`)
 
 ### WebUI Audit Phase 0 — Stack Decision (locked)
 
 - [x] ADR-051 written and accepted: WebUI commits to antd 6 + pro-components per `docs/spec/webui-spec.md`
 - [x] Audit captured in `docs/audits/webui-2026-04-27.md`
+- [x] Plan persisted at `docs/plans/webui-phase-2-6.md`
 - [ ] No new pages added on hand-rolled stack after 2026-04-27
 
 ---
