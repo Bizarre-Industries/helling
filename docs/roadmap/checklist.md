@@ -82,6 +82,27 @@ Proxy middleware is wired in hellingd per ADR-014 (`apps/hellingd/internal/proxy
 - [ ] .devcontainer/devcontainer.json exists
 - [ ] Pre-commit hooks catch stale generated code
 
+### WebUI Audit Phase 1 — Safety Fix-Pass (audit 2026-04-27)
+
+> Source: `docs/audits/webui-2026-04-27.md`. Stack-independent safety + spec-compliance fixes that ship before Phase 2 untangle. Stack decision locked in ADR-051.
+
+- [ ] **F-37** (security · spec): `web/src/api/auth-store.ts` stores access token in memory only (`docs/spec/auth.md` §2.2); refresh stays in httpOnly cookie set by server
+- [ ] **F-38** (ux): `PageLogin` calls `authLogin` operation from generated SDK; `app.jsx` initialises `authed=false`; MFA stage calls `authMfaComplete`
+- [ ] **F-39** (resilience): root `<ErrorBoundary>` wraps `<App />` in `main.tsx`; per-route boundary inside `App` around page body
+- [ ] **F-41** (dx): fresh-clone build works (`bun install && bun run dev` succeeds); `prepare` script runs `gen:api` or generated/ committed; `web/README.md` documents codegen step
+- [ ] **R-03/F-22** (a11y · visual): `index.html` viewport meta is `width=device-width, initial-scale=1`; CSS gate hides `#root` below 1440px with friendly message
+- [ ] **F-15** (safety): destructive single-target Delete actions require typed confirmation via `ConfirmModal` `confirmMatch={target}`
+- [ ] **F-44** (a11y · theming): `app.css` has `prefers-reduced-motion: reduce` rule killing animations + transitions; first-load reads `prefers-color-scheme` when no theme stored
+- [ ] **F-45** (data freshness): QueryClient default `refetchOnWindowFocus: true`
+- [ ] **F-47** (security smell): scope `ResizeObserver` warning suppression to specific source instead of global handler
+- [ ] **F-50** (consistency): density toggle persists to localStorage like theme
+
+### WebUI Audit Phase 0 — Stack Decision (locked)
+
+- [x] ADR-051 written and accepted: WebUI commits to antd 6 + pro-components per `docs/spec/webui-spec.md`
+- [x] Audit captured in `docs/audits/webui-2026-04-27.md`
+- [ ] No new pages added on hand-rolled stack after 2026-04-27
+
 ---
 
 ## v0.1.0-beta Gate
