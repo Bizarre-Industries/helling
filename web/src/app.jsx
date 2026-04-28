@@ -5,6 +5,7 @@ import { clearAccessToken, isAuthenticated, subscribeAuthChange } from './api/au
 import { ErrorBoundary } from './error-boundary';
 import PageAudit from './pages/admin/audit';
 import PageLogs from './pages/admin/logs';
+import PageOps from './pages/admin/ops';
 import PageLogin from './pages/auth/login';
 import PageSetup from './pages/auth/setup';
 import './shell.jsx';
@@ -35,7 +36,6 @@ const {
   PageBMC,
   PageCluster,
   PageUsers,
-  PageOps,
   PageSettings,
   PageNewInstance,
   PageConsole,

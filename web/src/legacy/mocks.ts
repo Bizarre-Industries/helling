@@ -57,6 +57,11 @@ export interface MockAuditEntry extends Record<string, unknown> {
   status: string;
   ip: string;
 }
+export interface MockWarning extends Record<string, unknown> {
+  sev: 'danger' | 'warn' | 'info';
+  msg: string;
+  target: string;
+}
 
 interface MocksGlobal {
   NODES?: MockNode[];
@@ -74,6 +79,7 @@ interface MocksGlobal {
   TEMPLATES?: Record<string, unknown>[];
   SNAPSHOTS?: Record<string, unknown>[];
   BACKUPS?: Record<string, unknown>[];
+  WARNINGS?: MockWarning[];
 }
 
 const w = (): MocksGlobal =>
@@ -94,3 +100,4 @@ export const getUsers = (): Record<string, unknown>[] => w().USERS ?? [];
 export const getTemplates = (): Record<string, unknown>[] => w().TEMPLATES ?? [];
 export const getSnapshots = (): Record<string, unknown>[] => w().SNAPSHOTS ?? [];
 export const getBackups = (): Record<string, unknown>[] => w().BACKUPS ?? [];
+export const getWarnings = (): MockWarning[] => w().WARNINGS ?? [];

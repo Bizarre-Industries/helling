@@ -80,8 +80,7 @@ export default function PageLogs() {
       >
         {LOG_ROWS.map(([t, l, c, m], i) => (
           <div key={`${t}-${i}`}>
-            <span className="c-dim">{t}</span>{' '}
-            <span className={levelClass[l]}>{l.padEnd(5)}</span>{' '}
+            <span className="c-dim">{t}</span> <span className={levelClass[l]}>{l.padEnd(5)}</span>{' '}
             <span className="c-dim">[{c}]</span>{' '}
             <span style={{ color: l === 'ERROR' ? 'var(--h-danger)' : '#d8d8d8' }}>{m}</span>
           </div>
